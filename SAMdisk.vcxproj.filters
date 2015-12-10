@@ -1,0 +1,416 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="types">
+      <UniqueIdentifier>{d2469576-6b70-44d1-8c41-6d55c876a9cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Commands">
+      <UniqueIdentifier>{b94b4fec-3d1c-4599-a2d0-acc16a825568}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\JupiterAce.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitstreamDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitstreamTrackBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CrashDump.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CRC16.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DemandDisk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DeviceHDD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Disk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DiskUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FluxTrackBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FluxDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\getopt_long.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDFHDD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IBMPC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ioapi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MemFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpectrumPlus3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\precompile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SAMCoupe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SAMdisk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SCP_FTDI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SCP_USB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SCP_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpecialFormat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SuperCardPro.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TrackBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TrackDataParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Trinity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\unzip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win32_error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_copy.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_create.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_dir.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_format.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_info.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_list.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_rpm.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_scan.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_verify.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cmd_view.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\1dd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\2d.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\adf.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\cfi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\cpm.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\d2m.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\d4m.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\d81.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\d80.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\d88.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\dmk.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\ds2.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\dsc.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\dsk.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\dti.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\fdi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\hfe.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\ipf.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\lif.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\mgt.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\msa.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\opd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\s24.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\sad.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\sbt.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\scl.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\scp.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\scp_dev.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\udi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\sdf.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\dfi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\bpb.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\mbd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\raw.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\trd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\td0.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\imd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\builtin.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\kryoflux.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\record.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\unsupp.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\trinload.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\JupiterAce.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BitBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BitstreamDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BitstreamTrackBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CRC16.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DemandDisk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DeviceHDD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Disk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DiskUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FluxTrackBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FluxDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\getopt_long.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HDD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HDFHDD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IBMPC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ioapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MemFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SpectrumPlus3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SAMCoupe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SAMdisk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SCP_FTDI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SCP_USB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SCP_Win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SuperCardPro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ThreadPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrackBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrackDataParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Trinity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\opd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\record.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\trd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unzip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\win32_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\SAMdisk.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.md" />
+  </ItemGroup>
+</Project>

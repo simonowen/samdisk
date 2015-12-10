@@ -1,0 +1,128 @@
+cmake_minimum_required(VERSION 2.6)
+
+project(SAMdisk)
+
+include(CheckIncludeFiles)
+include(CheckFunctionExists)
+include(CheckSymbolExists)
+include(CheckTypeSize)
+include(CheckCXXCompilerFlag)
+
+# Debug, Release, RelWithDebInfo
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-D_DEBUG)
+endif ()
+
+set(CAPSIMAGE ON CACHE BOOL "Enable CAPSImage")
+
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+if (COMPILER_SUPPORTS_CXX11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else ()
+  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
+endif ()
+
+CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" COMPILER_SUPPORTS_STDLIBCXX)
+if (COMPILER_SUPPORTS_STDLIBCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif ()
+
+CHECK_CXX_COMPILER_FLAG("-Weffc++" COMPILER_SUPPORTS_EFFCXX)
+if (COMPILER_SUPPORTS_EFFCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
+endif ()
+
+if (CMAKE_BUILD_TOOL MATCHES "make")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wshadow -pedantic")
+elseif (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake)")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+endif ()
+
+if (APPLE)
+  set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+  set(CMAKE_OSX_ARCHITECTURES i386;x86_64)
+endif ()
+
+include_directories(include src)
+file(GLOB SRC src/*.cpp src/*.c src/types/*.cpp)
+
+add_definitions(-D_FILE_OFFSET_BITS=64)
+
+check_type_size(ssize_t SSIZE_T)
+
+check_symbol_exists(O_BINARY fcntl.h HAVE_O_BINARY)
+
+check_include_files(paths.h HAVE_PATHS_H)
+check_include_files(unistd.h HAVE_UNISTD_H)
+check_include_files(sys/time.h HAVE_SYS_TIME_H)
+check_include_files(sys/ioctl.h HAVE_SYS_IOCTL_H)
+check_include_files(sys/disk.h HAVE_SYS_DISK_H)
+check_include_files(sys/socket.h HAVE_SYS_SOCKET_H)
+check_include_files(arpa/inet.h HAVE_ARPA_INET_H)
+check_include_files(netinet/in.h HAVE_NETINET_IN_H)
+check_include_files(linux/hdreg.h HAVE_LINUX_HDREG_H)
+check_include_files(linux/fs.h HAVE_LINUX_FS_H)
+check_include_files(scsi/scsi.h HAVE_SCSI_SCSI_H)
+check_include_files(scsi/sg.h HAVE_SCSI_SG_H)
+check_include_files(DiskArbitration/DiskArbitration.h HAVE_DISKARBITRATION_DISKARBITRATION_H)
+
+check_function_exists(snprintf HAVE_SNPRINTF)
+check_function_exists(strcasecmp HAVE_STRCASECMP)
+check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
+check_function_exists(lseek64 HAVE_LSEEK64)
+check_function_exists(_lseeki64 HAVE__LSEEKI64)
+check_function_exists(_strcmpi HAVE__STRCMPI)
+check_function_exists(_snprintf HAVE__SNPRINTF)
+
+add_definitions(-DHAVE_CONFIG_H)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
+
+set(CMAKE_THREAD_PREFER_PTHREAD pthread)
+find_package(Threads REQUIRED)
+link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
+find_package(ZLIB REQUIRED)
+if (ZLIB_FOUND)
+  add_definitions(-DHAVE_ZLIB)
+  include_directories(${ZLIB_INCLUDE_DIR})
+  link_libraries(${ZLIB_LIBRARY})
+endif ()
+
+find_package(BZip2)
+if (BZIP2_FOUND)
+  add_definitions(-DHAVE_BZIP2)
+  include_directories(${BZIP2_INCLUDE_DIR})
+  link_libraries(${BZIP2_LIBRARIES})
+endif ()
+
+if (CAPSIMAGE)
+  find_library(CAPSIMAGE_LIBRARY NAMES CAPSimage capsimage ENV LD_LIBRARY_PATH)
+  find_path(CAPSIMAGE_INCLUDE_DIR caps/CapsLibAll.h)
+
+  if (CAPSIMAGE_LIBRARY AND CAPSIMAGE_INCLUDE_DIR)
+    message(STATUS "Found CAPSimage: ${CAPSIMAGE_LIBRARY}")
+    add_definitions(-DHAVE_CAPSIMAGE)
+    include_directories(${CAPSIMAGE_INCLUDE_DIR})
+    if (APPLE)
+      include_directories(${CAPSIMAGE_INCLUDE_DIR}/..) # find_path bug?
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -F /Library/Frameworks -weak_framework CAPSImage")
+    else ()
+      link_libraries(${CAPSIMAGE_LIBRARY})
+    endif ()
+  else ()
+    message(STATUS "CAPSimage not found")
+  endif ()
+endif (CAPSIMAGE)
+
+if (APPLE)
+  find_library(DA_FRAMEWORK DiskArbitration)
+  find_library(CF_FRAMEWORK CoreFoundation)
+  find_library(IOKIT_FRAMEWORK IOKit)
+  link_libraries(${DA_FRAMEWORK} ${CF_FRAMEWORK} ${IOKIT_FRAMEWORK})
+endif ()
+
+add_executable(samdisk ${SRC})
+
+install(TARGETS samdisk DESTINATION bin)

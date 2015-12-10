@@ -1,0 +1,373 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\JupiterAce.cpp" />
+    <ClCompile Include="src\BitBuffer.cpp" />
+    <ClCompile Include="src\BitstreamDecoder.cpp" />
+    <ClCompile Include="src\BitstreamTrackBuffer.cpp" />
+    <ClCompile Include="src\cmd_copy.cpp" />
+    <ClCompile Include="src\CrashDump.cpp" />
+    <ClCompile Include="src\CRC16.cpp" />
+    <ClCompile Include="src\cmd_create.cpp" />
+    <ClCompile Include="src\DemandDisk.cpp" />
+    <ClCompile Include="src\DeviceHDD.cpp" />
+    <ClCompile Include="src\cmd_dir.cpp" />
+    <ClCompile Include="src\Disk.cpp" />
+    <ClCompile Include="src\DiskUtil.cpp" />
+    <ClCompile Include="src\Driver.cpp" />
+    <ClCompile Include="src\FluxTrackBuffer.cpp" />
+    <ClCompile Include="src\FluxDecoder.cpp" />
+    <ClCompile Include="src\cmd_format.cpp" />
+    <ClCompile Include="src\getopt_long.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\HDD.cpp" />
+    <ClCompile Include="src\HDFHDD.cpp" />
+    <ClCompile Include="src\IBMPC.cpp" />
+    <ClCompile Include="src\Image.cpp" />
+    <ClCompile Include="src\cmd_info.cpp" />
+    <ClCompile Include="src\ioapi.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\cmd_list.cpp" />
+    <ClCompile Include="src\MemFile.cpp" />
+    <ClCompile Include="src\SpectrumPlus3.cpp" />
+    <ClCompile Include="src\precompile.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\cmd_rpm.cpp" />
+    <ClCompile Include="src\SAMCoupe.cpp" />
+    <ClCompile Include="src\SAMdisk.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\cmd_scan.cpp" />
+    <ClCompile Include="src\SCP_FTDI.cpp" />
+    <ClCompile Include="src\SCP_USB.cpp" />
+    <ClCompile Include="src\SCP_Win32.cpp" />
+    <ClCompile Include="src\SpecialFormat.cpp" />
+    <ClCompile Include="src\SuperCardPro.cpp" />
+    <ClCompile Include="src\TrackBuffer.cpp" />
+    <ClCompile Include="src\TrackDataParser.cpp" />
+    <ClCompile Include="src\Trinity.cpp" />
+    <ClCompile Include="src\types.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\types\1dd.cpp" />
+    <ClCompile Include="src\types\2d.cpp" />
+    <ClCompile Include="src\types\adf.cpp" />
+    <ClCompile Include="src\types\bpb.cpp" />
+    <ClCompile Include="src\types\builtin.cpp" />
+    <ClCompile Include="src\types\cfi.cpp" />
+    <ClCompile Include="src\types\cpm.cpp" />
+    <ClCompile Include="src\types\d2m.cpp" />
+    <ClCompile Include="src\types\d4m.cpp" />
+    <ClCompile Include="src\types\d80.cpp" />
+    <ClCompile Include="src\types\d81.cpp" />
+    <ClCompile Include="src\types\d88.cpp" />
+    <ClCompile Include="src\types\dfi.cpp" />
+    <ClCompile Include="src\types\dmk.cpp" />
+    <ClCompile Include="src\types\ds2.cpp" />
+    <ClCompile Include="src\types\dsc.cpp" />
+    <ClCompile Include="src\types\dsk.cpp" />
+    <ClCompile Include="src\types\dti.cpp" />
+    <ClCompile Include="src\types\fdi.cpp" />
+    <ClCompile Include="src\types\hfe.cpp" />
+    <ClCompile Include="src\types\imd.cpp" />
+    <ClCompile Include="src\types\ipf.cpp" />
+    <ClCompile Include="src\types\lif.cpp" />
+    <ClCompile Include="src\types\mbd.cpp" />
+    <ClCompile Include="src\types\mgt.cpp" />
+    <ClCompile Include="src\types\msa.cpp" />
+    <ClCompile Include="src\types\opd.cpp" />
+    <ClCompile Include="src\types\raw.cpp" />
+    <ClCompile Include="src\types\record.cpp" />
+    <ClCompile Include="src\types\s24.cpp" />
+    <ClCompile Include="src\types\sad.cpp" />
+    <ClCompile Include="src\types\sbt.cpp" />
+    <ClCompile Include="src\types\scl.cpp" />
+    <ClCompile Include="src\types\scp.cpp" />
+    <ClCompile Include="src\types\kryoflux.cpp" />
+    <ClCompile Include="src\types\scp_dev.cpp" />
+    <ClCompile Include="src\types\sdf.cpp" />
+    <ClCompile Include="src\types\td0.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\types\trd.cpp" />
+    <ClCompile Include="src\types\trinload.cpp" />
+    <ClCompile Include="src\types\udi.cpp" />
+    <ClCompile Include="src\types\unsupp.cpp" />
+    <ClCompile Include="src\unzip.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\Util.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\cmd_verify.cpp" />
+    <ClCompile Include="src\cmd_view.cpp" />
+    <ClCompile Include="src\win32_error.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\JupiterAce.h" />
+    <ClInclude Include="include\BitBuffer.h" />
+    <ClInclude Include="include\BitstreamDecoder.h" />
+    <ClInclude Include="include\BitstreamTrackBuffer.h" />
+    <ClInclude Include="include\CRC16.h" />
+    <ClInclude Include="include\DemandDisk.h" />
+    <ClInclude Include="include\DeviceHDD.h" />
+    <ClInclude Include="include\Disk.h" />
+    <ClInclude Include="include\DiskUtil.h" />
+    <ClInclude Include="include\FluxTrackBuffer.h" />
+    <ClInclude Include="include\FluxDecoder.h" />
+    <ClInclude Include="include\getopt_long.h" />
+    <ClInclude Include="include\HDD.h" />
+    <ClInclude Include="include\HDFHDD.h" />
+    <ClInclude Include="include\IBMPC.h" />
+    <ClInclude Include="include\Image.h" />
+    <ClInclude Include="include\ioapi.h" />
+    <ClInclude Include="include\MemFile.h" />
+    <ClInclude Include="include\SpectrumPlus3.h" />
+    <ClInclude Include="include\resource.h" />
+    <ClInclude Include="include\SAMCoupe.h" />
+    <ClInclude Include="include\SAMdisk.h" />
+    <ClInclude Include="include\SCP_FTDI.h" />
+    <ClInclude Include="include\SCP_USB.h" />
+    <ClInclude Include="include\SCP_Win32.h" />
+    <ClInclude Include="include\SuperCardPro.h" />
+    <ClInclude Include="include\ThreadPool.h" />
+    <ClInclude Include="include\TrackBuffer.h" />
+    <ClInclude Include="include\TrackDataParser.h" />
+    <ClInclude Include="include\Trinity.h" />
+    <ClInclude Include="include\types.h" />
+    <ClInclude Include="include\opd.h" />
+    <ClInclude Include="include\record.h" />
+    <ClInclude Include="include\trd.h" />
+    <ClInclude Include="include\unzip.h" />
+    <ClInclude Include="include\Util.h" />
+    <ClInclude Include="include\utils.h" />
+    <ClInclude Include="include\win32_error.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\SAMdisk.rc">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\include</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.md" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DC06DE50-59A6-48C0-BFC6-DDC87B0CF364}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SAMdisk</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeaderFile>SAMdisk.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;.\include;.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>@if exist \Shared copy "$(TargetPath)" \Shared\</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeaderFile>SAMdisk.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;.\include;.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;setupapi.lib;zlibwapi.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>SAMdisk.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;.\include;.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --brute -9 "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f
+@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>SAMdisk.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;.\include;.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>ws2_32.lib;setupapi.lib;zlibwapi.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
+@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\x64\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

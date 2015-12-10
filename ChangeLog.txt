@@ -1,0 +1,215 @@
+SAMdisk
+-------
+
+Version 3.8.7 (2015-03-08)
+--------------------------
+- Added support for Deep Though .DTI images (Jupiter Ace)
+- Added --ace option to scan for Deep Though encoding in flux images
+- Added --new-drive option for fast stepping and use of disk-change line
+- Added License.txt to clarify free usage and lack of warranty
+- Changed to --old-drive behaviour by default, ignoring BIOS drive type
+- Changed to use cyl 0 instead of current head position for rpm measurement
+- Fixed incorrect CHS handling of large BDOS disks (8GB+)
+- Fixed false-positive on tracks using placeholder 8C 15 CRC
+- Fixed false-positive where tracks matched both XOR and SUM checksums
+- Fixed output of single-sided raw images
+
+Version 3.8.6 (2014-12-23)
+--------------------------
+- Hotfix for crash during 8K sector reading (thanks Gorski!)
+
+Version 3.8.5 (2014-12-21)
+--------------------------
+- Added support for reading HxC .HFE images (currently MFM only)
+- Added preliminary support for TrinLoad network targets (SAM Coupe)
+- Added deleted files to TR-DOS directory listings
+- Added white-listing of two unused 8K track formats
+- Added .88D/D68/D8U/2D as alternative file extensions to D88
+- Added support for D88 images with wrong endian for sector count
+- Restored running 8K checksum logic to better catch false negatives
+- Fixed FDI image writing setting the appropriate checksum bits
+- Fixed wasted space in FDI images by limiting to 2-bit sector sizes
+- Fixed user cyl range being ignored when writing extended TRD images
+- Fixed crash when reading UDI images containing blank tracks
+- Fixed potential crash when removing duplicate sector copies
+- Fixed comment and label propogation from source to target
+
+Version 3.8.4 (2014-08-26)
+--------------------------
+- Added drive wobble for weak sector extraction from a single revolution
+- Added warnings for multiple-copy incompatibilities with EDSK format
+- Added warning is only copy of sector data is truncated at index mark
+- Added warning if blank tracks are missing from end of EDSK images
+- Removed lax 8K CRC condition that was masking real data errors
+- Fixed crash on short sector removal during flux data processing
+- Fixed multiple copies of fake 8K sectors being kept, bloating images
+- Fixed MBD images being read in the wrong track order
+
+Version 3.8.3 (2014-05-26)
+--------------------------
+- Fixed creation of truncated FDI images
+- Fixed potential crash reading multiple copies of over-sized sectors
+- Added SAMdiskHelper support for BDOS and Pro-DOS devices
+- Improved detection of Pro-DOS mass-storage media
+- Improved detection of errors in 8K sectors
+
+Version 3.8.2 (2014-03-24)
+--------------------------
+- Fixed bad CRC calculation of overlapped sectors
+- Added automatic gap2 preservation for converted KBI-19/CAAV-19 tracks
+- Added --keep-overlap to retain full data size in overlapped sectors
+- Relaxed gap removal checks after final sector for cleaner conversions
+- Allow zero-sized gap3 filler during gap removal
+- Allow EDSK final track header to be shorter than index size
+
+Version 3.8.1 (2014-03-11)
+--------------------------
+- Fixed data extent bug reading from stream images (SCP/RAW/DFI)
+- SBT images now auto-execute under SAM DOS, even if not natively bootable
+
+Version 3.8 (2014-03-09)
+------------------------
+- Added support for SuperCard Pro .scp flux disk images (MFM+FM)
+- Added --pll option to control PLL method with flux image scanning
+- Fixed --head giving ambiguous option error due to typo
+- Fixed KBI-19 format slightly overhanging track wrap
+- Improved EOT handling of flux images containing just one revolution
+- Changed --slow-step to --old-drive to better match usage
+
+Version 3.7 (2013-06-24)
+------------------------
+- Added support for KryoFlux and DiscFerret stream images (MFM+FM)
+- Added preliminary support for D4M (FD-4000) disk images
+- Added hex output with --hex or -x, with limited hex using --hex-ish
+- Added --no-gap4b to ignore gap data after the final sector
+- Added --abs-offsets to show absolute rather than relative sector offsets
+- Fixed 'extra byte' EDSK extension being used unnecessarily on CRC errors
+- Fixed crash during CPC weak sector sniffing due to no-data 4th sector
+- Fixed regular image reading reporting transient disk errors
+- Improved support for ED images, including 2.88M raw images
+- Improved gap reading support for IPF images
+- Changed raw track parsing to ignore headers with ID CRC errors
+- Changed raw image writing to use only first cyl to determine format
+- Relaxed D2M sniffing by removing system partition type (0xff) check
+- Reduced gap sync requirement to remove more unwanted gaps
+
+Version 3.6.1 (2013-05-22)
+--------------------------
+- Fixed gap3 override issue during conversion of --all-gaps images
+
+Version 3.6 (2013-05-19)
+------------------------
+- Improved gap extraction for floppy, IPF, and DMK sources
+- Improved track length and sector positions using track data
+- Added warning if FDC refuses to read sectors (128-byte MFM)
+- Added minor EDSK extension for exact-multiple gap data sizes
+- Added CRC16 support to existing 6K sector checksum tests
+- Added detection of unwanted duplicate sectors in bad disk dumps
+- Added support for 1MB TRD and SCL images
+- Added --trim option to write only used sectors to TRD images
+- Added --no-data for data privacy during disk diagnostics
+- Fixed wrong location of rate/encoding extension in EDSK header
+- Fixed SCL input having cyl/head reversed, so file data was wrong
+- Fixed modification effects being applied to merge target on read
+- Fixed image gap3 not being preserved during floppy writing
+- Fixed false CRC warning in gap data of deleted sectors
+- Fixed false FDC corruption when all track CHRN values were 0
+- Changed SCL input CRC fatal error to a warning
+- Changed to require --fix to missing weak sectors and gap CRCs
+- Changed to ignore no-id and id-crc sectors from IPF and DMK
+
+Version 3.5 (2013-01-07)
+------------------------
+- Fixed interleave and skew values for Pro-Dos .cpm images
+- Alignment tweaks to some output formatting
+- Restored code signing to help download validation
+
+Version 3.4 (2012-08-14)
+------------------------
+- Added create command for blank HDD and floppy images
+- Added basic IDEDOS partition listing
+- Added checking of good sectors to track repairing
+- Added support for Velesoft DSK/DS2 transfer images
+- Added --chrn to trust ID header over physical location
+- Added --no-1m to skip 1Mbps data rate scanning
+- Restored --byte-swap for Atom/AtomLite conversion
+- Improved ATA identify data handling
+- Improved scan output to report warnings above affected track
+- Fixed recognition of DSC/HDR, CFI, LIF disk images
+- Fixed floppy image conversion to .raw dump
+- Fixed repaired sectors retaining original track offset
+- Fixed detection of oversized tracks with just 1 sector
+- Fixed HDD firmware string missing final character
+- Fixed log file including empty status messages
+- Fixed AL+ boot sector being mistaken for MBR
+- Reverted to Visual Studio 2005 for old CPU compatibility
+
+Version 3.3 (2012-06-14)
+------------------------
+- Added built-in support for zipped and gzipped files
+- Added support for repairing 8K sectors with bad CRCs
+- Added support for raw hard disk images
+- Added identify device data reading, where available (non-USB)
+- Added --hdf to force HDF version (10 or 11), with v1.1 now the default
+- Added --no-identify to ignore source identify data
+- Added --no-cfa to suppress CFA festures in generated identify data
+- Enhanced identify to include  CHS/LBA28/LBA48 sector counts and CFA
+- Enhanced verbose disk list to show serial+firmware and MBR partitions
+- Changed disk list to show all devices by default, not just BDOS
+- Fixed repairing to blank target tracks, with new density check
+- Fixed HDD access beyond 4GB boundary, extended -s range to 2TB
+- Fixed SAD image writing with custom sector sizes
+- Fixed status messages being written to log and not erased correctly
+- Improved FDC integrity checks during sector reads, for suspect hardware
+- Improved total sector count to CHS mapping
+
+Version 3.2 (2012-04-08)
+------------------------
+- Added general support for 1Mbps data rate, used by ED disks
+- Added 1Mbps support to IMD images, using new track modes 6+7
+- Added --tty option to output console messages to non-console streams
+- Fixed crash reading gap data from oversized sectors (thanks Philippe!)
+- Fixed crash using --verify when writing non-simple images
+- Fixed gap data trimming when writing FDI+IMD images
+
+Version 3.1 (2012-03-18)
+------------------------
+ - Added --repair option to help combine damaged image dumps
+ - Added write support for D88 images
+ - Added support for IMD mixed sector sizes
+ - Added record name from source basename, if no label available
+ - Added more file sizes for raw image recognition
+ - Added verbose track output for floppy->image dumping
+ - Fixed IMD creation using 500Kbps instead of 250Kbps
+ - Fixed bit alignment during IPF track wrapping
+ - Fixed converting images to BDOS format when setting label
+ - Increased --rescan matching distance from 32 to 64 bytes
+ - Updated to zlib 1.2.5, using zlibwapi.dll instead of zlib1.dll
+
+Version 3.0 (2010-06-20)
+------------------------
+ - Largely re-written again, for non-uniform track support
+ - Added +3 protections: Speedlock weak sectors, OperaSoft 32, various motor bug fixes
+ - Added CPC protections: Speedlock/EA weak sectors, Infogrames/Loriciel gaps, KBI-10, KBI-19
+ - Added support for many disk image containers, including EDSK, TD0, DMK, IPF
+ - Added support for zip, gzip and bzip2 archives using zlib1.dll and bzip2.dll
+ - Added directory support for MGT, TR-DOS, Opus, Didaktik and Amstrad CP/M
+ - HDD support for drives up to 2TB, with improved lock/dismount and safety checks
+ - Changed to Unix-style getopt for command-line options
+ - Removed embedded fdrawcmd.sys driver
+
+Version 2.0 (2004-11-27)
+------------------------
+ - Completely re-written, including a new floppy driver (W2K or later only)
+ - Added format, verify, directory listing and scanning support
+ - Works with virus scanners that previously blocked direct access
+ - Consistent speed on all controller types
+
+Version 1.1 (2003-07-29)
+------------------------
+ - Missing disk errors now cancel the copy process
+
+Version 1.0 (2002-12-08)
+------------------------
+ - Initial release by Dave Laundon, with NT4/W2K/XP support
+ - Uses SAMDISK.SYS and SAMDISKL.SYS drivers for 10-sector disk access
