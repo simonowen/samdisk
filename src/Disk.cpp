@@ -525,13 +525,10 @@ Track::AddResult Track::add (Sector &&sector)
 		auto it = std::find_if(begin(), end(), [&] (const Sector &s) {
 			auto offset_min = std::min(sector.offset, s.offset);
 			auto offset_max = std::max(sector.offset, s.offset);
-			auto distance = offset_max - offset_min;
+			auto distance = std::min(offset_max - offset_min, tracklen + offset_min - offset_max);
 
-			if (tracklen > offset_max)
-				distance = std::min(distance, tracklen + offset_min - offset_max);
-
-			// Use bitstream offset, which isn't affected by motor speed but may be thrown off by PLL sync
-			if (sector.offset && distance < COMPARE_TOLERANCE_BITS)
+			// Compare bitstream distance, which isn't affected by motor speed but may be thrown off by PLL sync
+			if (distance < COMPARE_TOLERANCE_BITS)
 			{
 				assert(sector.header == s.header);
 				return true;

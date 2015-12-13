@@ -763,7 +763,7 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 					s.set_badidcrc(crc != 0);
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* IDAM (id=" << header.sector << ") at offset " << am_offset << '\n';
+					if (opt.debug) util::cout << "* IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 
 					// Track good FM sector headers
@@ -781,13 +781,13 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 				if (bitbuf.encoding == Encoding::FM && !seen_fm_sector)
 					break;
 
-				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << '\n';
+				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
 
 			case 0xfc:	// IAM
-				if (opt.debug) util::cout << "* IAM at offset " << am_offset << '\n';
+				if (opt.debug) util::cout << "* IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				break;
 
 			default:

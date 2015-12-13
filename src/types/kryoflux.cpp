@@ -53,9 +53,9 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 	{
 		if (index_time && flux_count >= index_time)
 		{
-			flux_revs.emplace_back(std::move(flux_times));
-			flux_times.clear();
-			flux_times.reserve(data.size() / sizeof(uint32_t));
+			auto reversals = flux_times.size() - (flux_count - index_time);
+			flux_revs.emplace_back(std::vector<uint32_t>(flux_times.begin(), flux_times.begin() + reversals));
+			flux_times.erase(flux_times.begin(), flux_times.begin() + reversals);
 			index_time = 0;
 		}
 
@@ -109,20 +109,22 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 					case 0x02:	// Index
 					{
 						assert(size == 12);
+						assert(index_time == 0);
+
 						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
 						index_time = util::letoh(pdw[0]);
-						assert(index_time >= flux_count);
 						break;
 					}
 
 					case 0x03:	// StreamEnd
 					{
 						assert(size == 8);
-#if 0
+
 						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
-						auto eof_pos = util::letoh(pdw[0]);
+//						auto eof_pos = util::letoh(pdw[0]);
 						auto eof_ret = util::letoh(pdw[1]);
-#endif
+						if (eof_ret != 0)
+							Message(msgWarning, "unsuccessful stream end (%u) on %s", eof_ret, CH(cylhead.cyl, cylhead.head));
 						break;
 					}
 
