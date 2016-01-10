@@ -510,7 +510,7 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 
 				for (int i = 0; i < pt->sectors; ++i)
 				{
-					auto &sector = track[i];
+					auto sector = track[i];
 
 					if (sector.offset)
 						offsets.push_back(util::htole(static_cast<uint16_t>(sector.offset / 16)));
@@ -519,6 +519,14 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 
 					auto rpm_time = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
 					auto track_capacity = GetTrackCapacity(rpm_time, sector.datarate, sector.encoding);
+
+					// Accept only normal and deleted DAMs, removing the data field for other types.
+					// Hercule II (CPC) has a non-standard DAM (0xFD), and expects it to be unreadable.
+					if (sector.dam != 0xfb && sector.dam != 0xf8)
+					{
+						Message(msgWarning, "discarding data from %s due to non-standard DAM", CHR(cyl, head, sector.header.sector));
+						sector.remove_data();
+					}
 
 					uint8_t status1 = 0, status2 = 0;
 					if (sector.has_badidcrc()) status1 |= SR1_CRC_ERROR;
