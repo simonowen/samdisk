@@ -151,7 +151,7 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	if (has_badidcrc())
 		return Merge::Unchanged;
 
-	// If there's enough data to check the CRC, override the supplied state
+	// If there's enough data, check the CRC state
 	if (static_cast<int>(data.size()) >= (size() + 2))
 	{
 		CRC16 crc;
@@ -159,7 +159,7 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		crc.add(new_dam);
 		auto bad_data_crc = crc.add(data.data(), size() + 2) != 0;
 		assert(bad_crc == bad_data_crc);
-		bad_crc = bad_data_crc;
+		(void)bad_data_crc;
 	}
 
 	// If the exising sector has good data, ignore supplied data if it's bad
