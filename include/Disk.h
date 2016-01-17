@@ -247,6 +247,7 @@ public:
 	bool is_repeated (const Sector &sector) const;
 
 	void clear ();
+	void add (Track &&track);
 	AddResult add (Sector &&sector);
 	Sector remove (int index);
 	const Sector &get_sector (const Header &header) const;

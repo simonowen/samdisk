@@ -25,19 +25,44 @@ protected:
 	{
 		m_supercardpro->SelectDrive(0);
 
-		if (m_supercardpro->Seek(cylhead.cyl, cylhead.head))
+		if (!m_supercardpro->Seek(cylhead.cyl, cylhead.head))
+			throw util::exception(m_supercardpro->GetErrorStatusText());
+
+		std::vector<std::vector<uint32_t>> flux_revs;
+		auto rev_limit = std::max(opt.retries, opt.rescans + 1);
+		auto first = true;
+		Track track;
+
+		for (auto total_revs = 0; total_revs < rev_limit; )
 		{
-			std::vector<std::vector<uint32_t>> flux_revs;
+			auto revs = std::min(rev_limit - total_revs, SuperCardPro::MAX_FLUX_REVS);
 
-			// Read at least 2 revolutions, but increase if requested.
-			// Divide by 3 as each is scanned at 3 slightly different data rates.
-			auto revs = std::min(2, opt.retries / 3);
+			// Start with 2 revolutions by default, as it's faster if the track is error free.
+			// This only applies if there isn't a custom rescan count requiring more.
+			if (first && opt.rescans < 2)
+				revs = 2;
+			first = false;
 
-			if (m_supercardpro->ReadFlux(revs, flux_revs))
-				return scan_flux(cylhead, flux_revs);
+			if (!m_supercardpro->ReadFlux(revs, flux_revs))
+				throw util::exception(m_supercardpro->GetErrorStatusText());
+
+			track.add(scan_flux(cylhead, flux_revs));
+			total_revs += revs;
+
+			// Have we read at least the minimum number of track scans?
+			if (total_revs >= opt.rescans)
+			{
+				auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {
+					return !sector.has_data() || sector.has_baddatacrc();
+				});
+
+				// Stop if there are no errors left to fix
+				if (it == track.end())
+					break;
+			}
 		}
 
-		throw util::exception(m_supercardpro->GetErrorStatusText());
+		return track;
 	}
 
 	void preload (const Range &/*range*/) override
@@ -56,7 +81,7 @@ bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 
 	auto supercardpro = SuperCardPro::Open();
 	if (!supercardpro)
-		throw util::exception("SuperCard Pro device not found");
+		throw util::exception("failed to open SuperCard Pro device");
 
 	auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
 

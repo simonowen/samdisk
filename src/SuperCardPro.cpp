@@ -134,7 +134,8 @@ bool SuperCardPro::Seek (int cyl_, int head_)
 
 bool SuperCardPro::ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs)
 {
-	revs = std::max(1, std::min(revs, MAX_FLUX_REVS));
+	// Read at least 2 revolutions, as a sector data may span index position
+	revs = std::max(2, std::min(revs, MAX_FLUX_REVS));
 
 	uint8_t info[2] = { static_cast<uint8_t>(revs), ff_Index };
 	if (!SendCmd(CMD_READFLUX, info, sizeof(info)))

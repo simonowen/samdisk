@@ -20,11 +20,11 @@ typedef struct
 	uint8_t revision;		// (version << 4) | revision, 0x39 = v3.9
 	uint8_t disk_type;
 	uint8_t revolutions;	// number of stored revolutions
-	uint8_t start_track;	// 0-165
+	uint8_t start_track;
 	uint8_t end_track;
 	uint8_t flags;
 	uint8_t bitcell_width;	// 0 = 16 bits, non-zero = number of bits
-	uint8_t heads;			// 0 = both header, 1 = head 0 only, 2 = head 1 only
+	uint8_t heads;			// 0 = both heads, 1 = head 0 only, 2 = head 1 only
 	uint8_t reserved;		// should be zero?
 	uint8_t checksum[4];	// 32-bit checksum from after header to EOF (unless SCP_FLAG_MODE is set)
 } SCP_FILE_HEADER;
@@ -78,12 +78,9 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 	else if (fh.start_track > fh.end_track)
 		throw util::exception("start track (", fh.start_track, ") > end track (", fh.end_track, ")");
 
-	std::vector<uint32_t> tdh_offsets(83 * 2);	// ToDo: use constants
+	std::vector<uint32_t> tdh_offsets(fh.end_track + 1);
 	if (!file.read(tdh_offsets))
 		throw util::exception("short file reading track offset index");
-
-	for (auto &offset : tdh_offsets)
-		offset = util::letoh<uint32_t>(offset);
 
 	auto scp_disk = std::make_shared<SCPDisk>();
 
@@ -93,6 +90,9 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 		auto cyl = tracknr >> 1;
 		auto head = tracknr & 1;
 		CylHead cylhead(cyl, head);
+
+		if (!tdh_offsets[tracknr])
+			continue;
 
 		if (!file.seek(tdh_offsets[tracknr]) || !file.read(&tdh, sizeof(tdh)))
 			throw util::exception("short file reading ", cylhead, " track header");
@@ -109,7 +109,7 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 
 		for (uint8_t rev = 0; rev < fh.revolutions; ++rev)
 		{
-//			auto index_time  = util::letoh<uint32_t>(rev_index[rev*3 + 0]);
+//			auto index_time  = util::letoh<uint32_t>(rev_index[rev * 3 + 0]);
 			auto flux_count = util::letoh<uint32_t>(rev_index[rev * 3 + 1]);
 			auto data_offset = util::letoh<uint32_t>(rev_index[rev * 3 + 2]);
 

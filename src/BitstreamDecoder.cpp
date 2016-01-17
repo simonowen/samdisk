@@ -512,10 +512,7 @@ Track scan_flux_amiga (const CylHead &cylhead, const std::vector<std::vector<uin
 				bitbuf.index();
 		}
 
-		Track t = scan_bitstream_amiga(cylhead, bitbuf);
-		track.tracklen = t.tracklen;
-		for (Sector &s : t.sectors())
-			track.add(std::move(s));
+		track.add(scan_bitstream_amiga(cylhead, bitbuf));
 
 		// Check for missing data fields or data CRC errors
 		auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {
@@ -979,10 +976,7 @@ Track scan_flux_mfm_fm (const CylHead &cylhead, const std::vector<std::vector<ui
 					bitbuf.index();
 			}
 
-			Track t = scan_bitstream_mfm_fm(cylhead, bitbuf);
-			track.tracklen = t.tracklen;
-			for (Sector &s : t.sectors())
-				track.add(std::move(s));
+			track.add(scan_bitstream_mfm_fm(cylhead, bitbuf));
 
 			// Check for missing data fields or data CRC errors (potential weak sectors)
 			auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {

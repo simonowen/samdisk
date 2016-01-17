@@ -511,6 +511,19 @@ void Track::clear ()
 	tracklen = 0;
 }
 
+void Track::add (Track &&track)
+{
+	// Use longest track length
+	tracklen = std::max(tracklen, track.tracklen);
+
+	// Merge supplied sectors into existing track
+	for (auto &s : track.sectors())
+	{
+		assert(s.offset != 0);
+		add(std::move(s));
+	}
+}
+
 Track::AddResult Track::add (Sector &&sector)
 {
 	// If there's no positional information, simply append
