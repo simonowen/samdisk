@@ -530,7 +530,7 @@ Track::AddResult Track::add (Sector &&sector)
 	if (sector.offset == 0)
 	{
 		m_sectors.emplace_back(std::move(sector));
-		return AddResult::addAppend;
+		return AddResult::Append;
 	}
 	else
 	{
@@ -558,13 +558,13 @@ Track::AddResult Track::add (Sector &&sector)
 				return sector.offset < s.offset;
 			});
 			m_sectors.emplace(it, std::move(sector));
-			return AddResult::addInsert;
+			return AddResult::Insert;
 		}
 		else
 		{
 			// Merge details with the existing sector
 			it->merge(std::move(sector));
-			return AddResult::addMerge;
+			return AddResult::Merge;
 		}
 	}
 }

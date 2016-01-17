@@ -228,7 +228,7 @@ private:
 class Track
 {
 public:
-	enum class AddResult { addAppend, addInsert, addMerge };
+	enum class AddResult { Unchanged, Append, Insert, Merge };
 
 public:
 	explicit Track (int sectors = 0);	// sectors to reserve

@@ -71,7 +71,7 @@ enum HfeTrackEncoding
 #endif
 
 
-class HFEDisk : public DemandDisk
+class HFEDisk final : public DemandDisk
 {
 public:
 	void add_track_data (const CylHead &cylhead, BitBuffer &&bitbuf)

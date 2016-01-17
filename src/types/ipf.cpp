@@ -17,7 +17,7 @@ typedef struct
 } IPF_HEADER;
 
 
-class IPFDisk : public DemandDisk
+class IPFDisk final : public DemandDisk
 {
 public:
 	void add_track_data (const CylHead &cylhead, BitBuffer &&bitbuf)

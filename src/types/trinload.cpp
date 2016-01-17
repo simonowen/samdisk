@@ -8,7 +8,7 @@
 #include "Trinity.h"
 #include "DemandDisk.h"
 
-class TrinLoadDisk : public DemandDisk
+class TrinLoadDisk final : public DemandDisk
 {
 public:
 	explicit TrinLoadDisk (std::unique_ptr<Trinity> trinity)

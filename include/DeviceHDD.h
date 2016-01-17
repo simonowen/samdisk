@@ -1,7 +1,7 @@
 #ifndef DEVICEHDD_H
 #define DEVICEHDD_H
 
-class DeviceHDD : public HDD
+class DeviceHDD final : public HDD
 {
 public:
 	DeviceHDD ();

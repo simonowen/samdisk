@@ -1,7 +1,7 @@
 #ifndef HDFHDD_H
 #define HDFHDD_H
 
-class HDFHDD : public HDD
+class HDFHDD final : public HDD
 {
 public:
 	bool Open (const std::string &path) override;

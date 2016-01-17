@@ -36,7 +36,7 @@ typedef struct
 } TRACK_DATA_HEADER;
 
 
-class SCPDisk : public DemandDisk
+class SCPDisk final : public DemandDisk
 {
 public:
 	void add_track_data (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data)

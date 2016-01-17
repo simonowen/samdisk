@@ -20,7 +20,7 @@ typedef struct
 } DFI_TRACK_HEADER;
 
 
-class DFIDisk : public DemandDisk
+class DFIDisk final : public DemandDisk
 {
 public:
 	void add_track_data (const CylHead &cylhead, std::vector<uint8_t> &&data)
