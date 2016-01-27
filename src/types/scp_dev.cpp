@@ -25,7 +25,7 @@ protected:
 	{
 		m_supercardpro->SelectDrive(0);
 
-		if (!m_supercardpro->Seek(cylhead.cyl, cylhead.head))
+		if (!m_supercardpro->Seek(cylhead.cyl * opt.step, cylhead.head))
 			throw util::exception(m_supercardpro->GetErrorStatusText());
 
 		std::vector<std::vector<uint32_t>> flux_revs;

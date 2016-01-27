@@ -163,33 +163,6 @@ typedef void * HANDLE;
 #include <netinet/in.h>
 #endif
 
-#ifdef HAVE_SYS_DISK_H
-#include <sys/disk.h>
-#endif
-
-#ifdef __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#include <DiskArbitration/DiskArbitration.h>
-#include <IOKit/storage/IOMedia.h>	// for kIOMediaClass
-#include <IOKit/IOBSD.h>			// for kIOBSDNameKey
-#endif
-
-#ifdef HAVE_LINUX_HDREG_H
-#include <linux/hdreg.h>	// struct hd_driveid etc.
-#endif
-
-#ifdef HAVE_LINUX_FS_H
-#include <linux/fs.h>		// BLKGETSIZE etc.
-#endif
-
-#ifdef HAVE_SCSI_SCSI_H
-#include <scsi/scsi.h>
-#endif
-
-#ifdef HAVE_SCSI_SG_H
-#include <scsi/sg.h>
-#endif
-
 #ifdef HAVE_SYS_TIMEB_H
 #include <sys/timeb.h>
 #endif
@@ -212,10 +185,6 @@ typedef void * HANDLE;
 
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
-#endif
-
-#ifdef HAVE_FTD2XX
-#include "ftd2xx.h"
 #endif
 
 #include "utils.h"

@@ -3,53 +3,56 @@
 #include "SAMdisk.h"
 #include "SCP_FTDI.h"
 
-#ifdef HAVE_FTD2XX
+#ifdef HAVE_FTDI
 
 /*static*/ std::unique_ptr<SuperCardPro> SuperCardProFTDI::Open ()
 {
-	FT_HANDLE hdev;
-	auto serial = static_cast<const void *>("SCP-JIM");
+	auto hdev = ftdi_new();
 
-	if (!CheckLibrary("ftdi2", "FT_OpenEx"))
+	if (!CheckLibrary("ftdi", "ftdi_usb_open_desc"))
 		return nullptr;
 
-	FT_STATUS status = FT_OpenEx(const_cast<PVOID>(serial), FT_OPEN_BY_SERIAL_NUMBER, &hdev);
-	if (status != FT_OK)
+	auto status = ftdi_usb_open_desc(hdev, 0x0403, 0x6015, nullptr, "SCP-JIM");
+	if (status != 0)
+	{
+		ftdi_free(hdev);
 		return nullptr;
+	}
 
 	return std::unique_ptr<SuperCardPro>(new SuperCardProFTDI(hdev));
 }
 
-SuperCardProFTDI::SuperCardProFTDI (FT_HANDLE hdev)
-	: m_hdev(hdev), m_status(FT_OK)
+SuperCardProFTDI::SuperCardProFTDI (ftdi_context *hdev)
+	: m_hdev(hdev)
 {
 }
 
 SuperCardProFTDI::~SuperCardProFTDI ()
 {
-	FT_Close(m_hdev);
+	ftdi_usb_close(m_hdev);
+	ftdi_free(m_hdev);
 }
 
 bool SuperCardProFTDI::Read (void *buf, int len, int *bytes_read)
 {
-	DWORD dwBytesToRead = static_cast<DWORD>(len), dwBytesReturned = 0;
-	m_status = FT_Read(m_hdev, buf, dwBytesToRead, &dwBytesReturned);
-	if (m_status != FT_OK)
+	m_status = ftdi_read_data(m_hdev, reinterpret_cast<uint8_t *>(buf), len);
+	if (m_status < 0)
 		return false;
 
-	*bytes_read = static_cast<int>(dwBytesReturned);
+	*bytes_read = m_status;
+	m_status = 0;
 	return true;
 }
 
 bool SuperCardProFTDI::Write (const void *buf, int len, int *bytes_written)
 {
-	DWORD dwBytesToWrite = static_cast<DWORD>(len), dwBytesWritten = 0;
-	m_status = FT_Write(m_hdev, const_cast<LPVOID>(buf), dwBytesToWrite, &dwBytesWritten);
-	if (m_status != FT_OK)
+	m_status = ftdi_write_data(m_hdev, const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(buf)), len);
+	if (m_status < 0)
 		return false;
 
-	*bytes_written = static_cast<int>(dwBytesWritten);
+	*bytes_written = m_status;
+	m_status = 0;
 	return true;
 }
 
-#endif // HAVE_FTD2XX
+#endif // HAVE_FTDI

@@ -5,6 +5,9 @@
 #include "FluxTrackBuffer.h"
 
 #ifdef HAVE_FTD2XX
+#include "SCP_FTD2XX.h"
+#endif
+#ifdef HAVE_FTDI
 #include "SCP_FTDI.h"
 #endif
 #include "SCP_USB.h"
@@ -20,6 +23,10 @@ std::unique_ptr<SuperCardPro> SuperCardPro::Open ()
 	std::unique_ptr<SuperCardPro> p;
 
 #ifdef HAVE_FTD2XX
+	if (!p)
+		p = SuperCardProFTD2XX::Open();
+#endif
+#ifdef HAVE_FTDI
 	if (!p)
 		p = SuperCardProFTDI::Open();
 #endif
