@@ -90,14 +90,12 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				item_separator(items++);
 				util::cout << colour::YELLOW << "z" << colour::none;	// Zero data stored
 			}
-#if 0
-			// ToDo: take extent into account?
-			else if (sector.has_data() && sector.has_shortdata())
+			else if (sector.has_data() && sector.has_shortdata() && !sector.has_baddatacrc())
 			{
 				item_separator(items++);
-				util::cout << colour::yellow << "-" << (sector.size() - sector.data_size()) << colour::none;	// Less data than sector size
+				util::cout << colour::RED << "-" << (sector.size() - sector.data_size()) << colour::none;	// Less data than sector size
 			}
-#endif
+
 			if (sector.encoding == Encoding::FM && context.sector.encoding == Encoding::MFM)
 			{
 				item_separator(items++);
