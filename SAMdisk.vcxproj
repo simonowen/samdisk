@@ -59,6 +59,7 @@
     </ClCompile>
     <ClCompile Include="src\cmd_list.cpp" />
     <ClCompile Include="src\MemFile.cpp" />
+    <ClCompile Include="src\SCP_FTD2XX.cpp" />
     <ClCompile Include="src\SpectrumPlus3.cpp" />
     <ClCompile Include="src\precompile.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
