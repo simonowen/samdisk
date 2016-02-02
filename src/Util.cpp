@@ -532,7 +532,7 @@ void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls/*=0*
 
 void ReportRange (const Range &range)
 {
-	if (range.cyl_end < 0 || range.head_end < 0)
+	if (range.empty())
 		return;
 
 	if (range.cyls() == 1)
