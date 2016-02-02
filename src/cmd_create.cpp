@@ -62,12 +62,15 @@ bool CreateHddImage (const std::string &path, int nSizeMB_)
 	bool f = false;
 
 	// If no sector count is specified, use the size parameter
-	int64_t llSize = (opt.sectors == -1) ? nSizeMB_ << 20 : opt.sectors << 9;
-	if (llSize < 4 * 1024 * 1024)
+	auto total_size = (opt.sectors == -1) ?
+		static_cast<int64_t>(nSizeMB_) << 20 :
+		static_cast<int64_t>(opt.sectors) << 9;
+
+	if (total_size < 4 * 1024 * 1024)
 		throw util::exception("needs image size in MB (>=4) or sector count with -s");
 
 	// Create the specified HDD image, ensuring we don't overwrite any existing file
-	auto hdd = HDD::CreateDisk(path, llSize, nullptr, false);
+	auto hdd = HDD::CreateDisk(path, total_size, nullptr, false);
 	if (!hdd)
 		Error("create");
 	else
