@@ -270,7 +270,9 @@ public:
 private:
 	std::vector<Sector> m_sectors {};
 
-	static const int COMPARE_TOLERANCE_BITS = 16 * 16;	// sectors within 16 MFM bytes of bitstream distance
+	// Max bitstream position difference for sectors to be considerd the same.
+	// 32 MFM bytes is needed to cope with sync differences after weak sectors.
+	static const int COMPARE_TOLERANCE_BITS = 32 * 16;
 };
 
 class Disk

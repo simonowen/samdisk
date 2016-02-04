@@ -541,7 +541,7 @@ Track::AddResult Track::add (Sector &&sector)
 			auto distance = std::min(offset_max - offset_min, tracklen + offset_min - offset_max);
 
 			// Compare bitstream distance, which isn't affected by motor speed but may be thrown off by PLL sync
-			if (distance < COMPARE_TOLERANCE_BITS)
+			if (distance <= COMPARE_TOLERANCE_BITS)
 			{
 				assert(sector.header == s.header);
 				return true;
