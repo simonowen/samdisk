@@ -20,8 +20,6 @@ struct ScanContext
 };
 
 
-const int MIN_DIFF_BLOCK = 4;
-
 const int DUMP_OFFSETS = 1;
 const int DUMP_DIFF = 2;
 

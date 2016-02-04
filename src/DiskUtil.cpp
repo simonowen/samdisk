@@ -3,6 +3,9 @@
 #include "SAMdisk.h"
 #include "DiskUtil.h"
 
+static const int MIN_DIFF_BLOCK = 16;
+
+
 static void item_separator (int items)
 {
 	if (!items)
@@ -254,7 +257,10 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector)
 		}
 		it = it + same;
 
-		if (same >= MIN_DIFF_BLOCK)
+		// Show the matching block if big enough or if found
+		// at the start of the data field. Other fragments will
+		// be added to the diff block.
+		if (same >= MIN_DIFF_BLOCK || (offset == 0 && same > 0))
 		{
 			if (diff)
 			{
@@ -283,6 +289,8 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector)
 		}
 		it = it + match;
 
+		// Show the filler block if big enough. Filler has matching
+		// bytes in each copy, but a different value across copies.
 		if (match >= MIN_DIFF_BLOCK)
 		{
 			if (diff)
