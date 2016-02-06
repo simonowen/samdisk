@@ -17,7 +17,7 @@ Once the missing functionality has been restored it will be released officially 
 
 ## System Requirements
 
-The current code should build and run under Windows, Linux and Mac OS, and be portable to other systems. Building requires a C++ compiler with good C++11 support, such as Visual Studio 2015, g++ 4.9+, or Clang 3.6+.
+The current code should build and run under Windows, Linux and Mac OS, and be portable to other systems. Building requires a C++ compiler with good C++11 support and some C++14, such as Visual Studio 2015, g++ 4.9+, or Clang 3.6+.
 
 The Windows version is usually built using Visual Studio 2015 (the free [Community edition](https://www.visualstudio.com/products/visual-studio-community-vs) works fine), and requires some 3rd-party libraries ([zlib](http://zlib.net/), [bzip2](http://www.bzip.org/), [CAPSimage](http://www.softpres.org/download), [FTDI](http://www.ftdichip.com/Drivers/D2XX.htm)) to be available at compile time. Those dependencies become optional at runtime.
 
