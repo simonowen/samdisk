@@ -36,12 +36,22 @@ public:
 public:
 	bool SelectDrive (int drive);
 	bool DeselectDrive (int drive);
-	bool SelectDensity (int density);
-	bool Seek (int cyl, int head);
+	bool EnableMotor (int drive);
+	bool DisableMotor (int drive);
+	bool Seek0 ();
+	bool StepTo (int cyl);
+	bool StepIn ();
+	bool StepOut ();
+	bool SelectDensity (bool high);
+	bool SelectSide (int head);
+	bool GetDriveStatus (int &status);
+	bool GetParameters (int &drive_select_delay, int &step_delay, int &motor_on_delay, int &seek_0_delay, int &motor_off_delay);
+	bool SetParameters (int drive_select_delay, int step_delay, int motor_on_delay, int seek_0_delay, int motor_off_delay);
+	bool RamTest ();
+	bool SetPin33 (bool high);
 	bool ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs);
 	bool WriteFlux (const void *p, int nr_bitcells);
-	bool GetInfo (uint8_t *hwversion, uint8_t *fwversion);
-	bool RamTest ();
+	bool GetInfo (int &hwversion, int &fwversion);
 
 	uint8_t GetErrorStatus () const { return m_error; }
 	std::string GetErrorStatusText () const;

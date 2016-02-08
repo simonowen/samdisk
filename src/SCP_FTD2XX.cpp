@@ -8,14 +8,20 @@
 /*static*/ std::unique_ptr<SuperCardPro> SuperCardProFTD2XX::Open ()
 {
 	FT_HANDLE hdev;
-	auto serial = static_cast<const void *>("SCP-JIM");
+	auto serial = static_cast<const void *>("SuperCard Pro");
 
 	if (!CheckLibrary("ftdi2", "FT_OpenEx"))
 		return nullptr;
 
-	FT_STATUS status = FT_OpenEx(const_cast<PVOID>(serial), FT_OPEN_BY_SERIAL_NUMBER, &hdev);
+	FT_STATUS status = FT_OpenEx(const_cast<PVOID>(serial), FT_OPEN_BY_DESCRIPTION, &hdev);
 	if (status != FT_OK)
 		return nullptr;
+
+	// Set some comms defaults for good measure
+	FT_SetLatencyTimer(hdev, 2);
+	FT_SetUSBParameters(hdev, 0x10000, 0x10000);
+	FT_Purge(hdev, FT_PURGE_RX | FT_PURGE_TX);
+	FT_SetTimeouts(hdev, 2000, 2000);
 
 	return std::unique_ptr<SuperCardPro>(new SuperCardProFTD2XX(hdev));
 }

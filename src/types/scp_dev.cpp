@@ -12,11 +12,22 @@ public:
 		: m_supercardpro(std::move(supercardpro))
 	{
 		m_supercardpro->SelectDrive(0);
-		m_supercardpro->Seek(0, 0);
+		m_supercardpro->EnableMotor(0);
+
+		// Default to a slower step rate to be compatible with older drive,
+		// unless the user says otherwise. Other parameters are defaults.
+		auto step_delay = opt.newdrive ? 5000 : 10000;
+		m_supercardpro->SetParameters(1000, step_delay, 1000, 15, 10000);
+
+		// Move the head out before restoring back to TRACK0, just in case
+		// something caused the physical head to have a negative position.
+		m_supercardpro->StepTo(10);
+		m_supercardpro->Seek0();
 	}
 
 	~SCPDevDisk ()
 	{
+		m_supercardpro->DisableMotor(0);
 		m_supercardpro->DeselectDrive(0);
 	}
 
@@ -25,8 +36,11 @@ protected:
 	{
 		m_supercardpro->SelectDrive(0);
 
-		if (!m_supercardpro->Seek(cylhead.cyl * opt.step, cylhead.head))
+		if (!m_supercardpro->StepTo(cylhead.cyl * opt.step) ||
+			!m_supercardpro->SelectSide(cylhead.head))
+		{
 			throw util::exception(m_supercardpro->GetErrorStatusText());
+		}
 
 		std::vector<std::vector<uint32_t>> flux_revs;
 		auto rev_limit = std::max(opt.retries, opt.rescans + 1);

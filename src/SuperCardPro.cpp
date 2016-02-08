@@ -108,35 +108,119 @@ bool SuperCardPro::SendCmd (uint8_t cmd, void *buf, int len, void *bulkbuf, int 
 	return true;
 }
 
+
 bool SuperCardPro::SelectDrive (int drive)
 {
-	auto drv_idx = static_cast<uint8_t>(drive);
-
-	return SendCmd(CMD_SELA + drv_idx) &&
-		SendCmd(CMD_MTRAON + drv_idx);
+	return SendCmd(CMD_SELA + (drive ? 1 : 0));
 }
 
 bool SuperCardPro::DeselectDrive (int drive)
 {
-	auto drv_idx = static_cast<uint8_t>(drive);
-
-	return SendCmd(CMD_MTRAOFF + drv_idx) &&
-		SendCmd(CMD_DSELA + drv_idx);
+	return SendCmd(CMD_DSELA + (drive ? 1 : 0));
 }
 
-bool SuperCardPro::SelectDensity (int /*density*/)
+bool SuperCardPro::EnableMotor (int drive)
 {
-	// ToDo
-	return false;
+	return SendCmd(CMD_MTRAON + (drive ? 1 : 0));
 }
 
-bool SuperCardPro::Seek (int cyl_, int head_)
+bool SuperCardPro::DisableMotor (int drive)
 {
-	auto cyl = static_cast<uint8_t>(cyl_);
-	auto head = static_cast<uint8_t>(head_);
+	return SendCmd(CMD_MTRAOFF + (drive ? 1 : 0));
+}
 
-	return SendCmd(CMD_SIDE, &head, sizeof(head)) &&
-		(cyl ? SendCmd(CMD_STEPTO, &cyl, sizeof(cyl)) : SendCmd(CMD_SEEK0));
+bool SuperCardPro::Seek0 ()
+{
+	return SendCmd(CMD_SEEK0);
+}
+
+bool SuperCardPro::StepTo (int cyl)
+{
+	auto track = static_cast<uint8_t>(cyl);
+
+	return track ? SendCmd(CMD_STEPTO, &track, sizeof(track)) : Seek0();
+}
+
+bool SuperCardPro::StepIn ()
+{
+	return SendCmd(CMD_STEPIN);
+}
+
+bool SuperCardPro::StepOut ()
+{
+	return SendCmd(CMD_STEPOUT);
+}
+
+bool SuperCardPro::SelectDensity (bool high)
+{
+	uint8_t density = high ? 1 : 0;
+
+	return SendCmd(CMD_SELDENS, &density, sizeof(density));
+}
+
+bool SuperCardPro::SelectSide (int head)
+{
+	uint8_t side = head ? 1 : 0;
+
+	return SendCmd(CMD_SIDE, &side, sizeof(side));
+}
+
+bool SuperCardPro::GetDriveStatus (int &status)
+{
+	uint16_t drv_status;
+
+	if (!SendCmd(CMD_STATUS))
+		return false;
+
+	if (!ReadExact(&drv_status, sizeof(drv_status)))
+		return false;
+
+	status = util::betoh(drv_status);
+
+	return true;
+}
+
+bool SuperCardPro::GetParameters (int &drive_select_delay, int &step_delay, int &motor_on_delay, int &seek_0_delay, int &motor_off_delay)
+{
+	if (!SendCmd(CMD_GETPARAMS))
+		return false;
+
+	uint16_t params[5] = {};
+	if (!ReadExact(params, sizeof(params)))
+		return false;
+
+	drive_select_delay = util::betoh(params[0]);
+	step_delay = util::betoh(params[1]);
+	motor_on_delay = util::betoh(params[2]);
+	seek_0_delay = util::betoh(params[3]);
+	motor_off_delay = util::betoh(params[4]);
+
+	return true;
+}
+
+bool SuperCardPro::SetParameters (int drive_select_delay, int step_delay, int motor_on_delay, int seek_0_delay, int motor_off_delay)
+{
+	uint16_t params[5] = {};
+
+	params[0] = util::betoh(static_cast<uint16_t>(drive_select_delay));
+	params[1] = util::betoh(static_cast<uint16_t>(step_delay));
+	params[2] = util::betoh(static_cast<uint16_t>(motor_on_delay));
+	params[3] = util::betoh(static_cast<uint16_t>(seek_0_delay));
+	params[4] = util::betoh(static_cast<uint16_t>(motor_off_delay));
+
+	return SendCmd(CMD_SETPARAMS, params, sizeof(params));
+}
+
+bool SuperCardPro::RamTest ()
+{
+	return SendCmd(CMD_RAMTEST);
+}
+
+bool SuperCardPro::SetPin33 (bool high)
+{
+	uint8_t value = high ? 1 : 0;
+
+	return SendCmd(CMD_SETPIN33, &value, sizeof(value));
 }
 
 bool SuperCardPro::ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs)
@@ -217,21 +301,19 @@ bool SuperCardPro::WriteFlux (const void *flux, int nr_bitcells)
 	return true;
 }
 
-bool SuperCardPro::GetInfo (uint8_t *hwversion, uint8_t *fwversion)
+bool SuperCardPro::GetInfo (int &hwversion, int &fwversion)
 {
 	uint8_t version[2] = {};
-	if (SendCmd(CMD_SCPINFO, &version, sizeof(version)))
-	{
-		*hwversion = version[0];
-		*fwversion = version[1];
-		return true;
-	}
-	return false;
-}
+	if (!SendCmd(CMD_SCPINFO))
+		return false;
 
-bool SuperCardPro::RamTest ()
-{
-	return SendCmd(CMD_RAMTEST);
+	if (!ReadExact(&version, sizeof(version)))
+		return false;
+
+	hwversion = version[0];
+	fwversion = version[1];
+
+	return true;
 }
 
 
