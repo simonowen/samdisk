@@ -54,7 +54,12 @@ bool ReadADF (MemFile &file, std::shared_ptr<Disk> &disk)
 	return true;
 }
 
-bool WriteADF (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
+bool WriteADF (FILE* f_, std::shared_ptr<Disk> &disk)
 {
-	throw std::logic_error("not implemented");
+	auto &sector0 = disk->get_sector(Header(0, 0, 0, 2));
+
+	Format fmt = (sector0.datarate != DataRate::_500K) ?
+		RegularFormat::AmigaDOS : RegularFormat::AmigaDOSHD;
+
+	return WriteRegularDisk(f_, *disk, fmt);
 }
