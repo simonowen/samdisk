@@ -166,6 +166,7 @@ void FreeMem (void* pv_);
 
 std::string FileExt (const std::string &path);
 bool IsFileExt (const std::string &path, const std::string &ext);
+int64_t FileSize (const std::string &path);
 int GetFileType (const char *pcsz_);
 bool GetInt (char *psz_, int &n_);
 bool GetLong (char *psz_, long &l_);

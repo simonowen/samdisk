@@ -138,16 +138,45 @@ bool GetMountedDevice (const char *pcsz_, char *pszDevice_, int cbDevice_)
 	return f;
 }
 
+
+int64_t FileSize (const std::string &path)
+{
+#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA wfad;
+	if (GetFileAttributesEx(path.c_str(), GetFileExInfoStandard, &wfad))
+		return (static_cast<int64_t>(wfad.nFileSizeHigh) << 32) | wfad.nFileSizeLow;
+#else
+	struct stat st = {};
+	if (stat(path.c_str(), &st) == 0)
+		return st.st_size;
+#endif
+
+	return -1;
+}
+
+
 bool IsFile (const std::string &path)
 {
+#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA wfad;
+	return GetFileAttributesEx(path.c_str(), GetFileExInfoStandard, &wfad) &&
+		!(wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+#else
 	struct stat st = {};
 	return stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+#endif
 }
 
 bool IsDir (const std::string &path)
 {
+#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA wfad;
+	return GetFileAttributesEx(path.c_str(), GetFileExInfoStandard, &wfad) &&
+		(wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+#else
 	struct stat st = {};
 	return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+#endif
 }
 
 bool IsFloppy (const std::string &path)
@@ -161,17 +190,17 @@ bool IsFloppy (const std::string &path)
 
 bool IsHddImage (const std::string &path)
 {
-	struct stat st = {};
+	auto size = FileSize(path);
 
 	// Does the file exist?
-	if (stat(path.c_str(), &st) == 0)
+	if (size >= 0)
 	{
 		// Accept existing files with a .hdf file extension
 		if (IsFileExt(path, "hdf"))
 			return true;
 
-		// Accept existing files at least 4MB in size, if they're an exact multiple of 512 bytes
-		if (stat(path.c_str(), &st) == 0 && st.st_size > 4 * 1024 * 1024 && !(st.st_size & (SECTOR_SIZE - 1)))
+		// Accept existing files larger than max image size if they're an exact multiple of 512 bytes
+		if (size > MAX_IMAGE_SIZE && !(size & (SECTOR_SIZE - 1)))
 			return true;
 	}
 	else

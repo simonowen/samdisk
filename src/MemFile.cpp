@@ -108,15 +108,13 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 		}
 		else
 		{
-			struct stat st {};
-
 			// Open as gzipped or uncompressed
 			gzFile gf = gzopen(path_.c_str(), "rb");
 			if (gf == Z_NULL)
 				throw posix_error(errno, path_.c_str());
 
 			uRead = gzread(gf, mem, static_cast<unsigned>(mem.size));
-			m_compress = (!stat(path_.c_str(), &st) && gztell(gf) != st.st_size) ? Compress::Gzip : Compress::None;
+			m_compress = (gztell(gf) != FileSize(path_)) ? Compress::Gzip : Compress::None;
 			gzclose(gf);
 		}
 	}

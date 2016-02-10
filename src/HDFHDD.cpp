@@ -54,23 +54,14 @@ bool HDFHDD::Open (const std::string &path)
 			// Sector size is fixed at 512 bytes
 			sector_size = SECTOR_SIZE;
 
-#ifdef _WIN32
-			struct _stat64 st;
-			if (!_stati64(path.c_str(), &st))
-#else
-			struct stat st;
-			if (!stat(path.c_str(), &st))
-#endif
-			{
-				// Byte and sector counts are taken from the file size (excluding the header)
-				total_bytes = st.st_size - data_offset;
-				total_sectors = static_cast<unsigned>(total_bytes / sector_size);
+			// Byte and sector counts are taken from the file size (excluding the header)
+			total_bytes = FileSize(path) - data_offset;
+			total_sectors = static_cast<unsigned>(total_bytes / sector_size);
 
-				// Update CHS from the identify data
-				SetIdentifyData(&sIdentify);
+			// Update CHS from the identify data
+			SetIdentifyData(&sIdentify);
 
-				return true;
-			}
+			return true;
 		}
 	}
 

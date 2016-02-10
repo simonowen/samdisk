@@ -169,20 +169,16 @@ bool DeviceHDD::Open (const std::string &path)
 #endif // WIN32
 	else
 	{
-#ifdef _WIN32
-		struct _stat64 st;
-		if (_stati64(path.c_str(), &st))
+		if (IsFile(path))
 		{
+#ifdef _WIN32
 			SetLastError(ERROR_ACCESS_DENIED);
+#endif
 			return false;
 		}
-#else
-		struct stat st;
-		if (stat(path.c_str(), &st))
-			return false;
-#endif
+
 		sector_size = SECTOR_SIZE;
-		total_bytes = st.st_size - data_offset;
+		total_bytes = FileSize(path) - data_offset;
 		total_sectors = static_cast<unsigned>(total_bytes / sector_size);
 	}
 
@@ -426,17 +422,11 @@ bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 
 /*static*/ bool DeviceHDD::IsFileHDD (const std::string &path)
 {
-#ifdef _WIN32
-	struct _stat64 st;
-	if (_stati64(path.c_str(), &st))
-#else
-	struct stat st;
-	if (stat(path.c_str(), &st))
-#endif
+	if (!IsFile(path))
 		return false;
 
 	// Reject files under 4MB, and those not an exact sector multiple
-	if (st.st_size < 4 * 1024 * 1024 || (st.st_size % SECTOR_SIZE) != 0)
+	if (FileSize(path) <= MAX_IMAGE_SIZE || (FileSize(path) & (SECTOR_SIZE - 1)))
 		return false;
 
 	// Appears valid
