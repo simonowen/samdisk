@@ -268,6 +268,7 @@ public:
 	std::vector<Sector>::const_iterator find (const Header &header) const;
 
 	int tracklen = 0;	// track length in MFM bits
+	int tracktime = 0;	// track time in us
 
 private:
 	std::vector<Sector> m_sectors {};

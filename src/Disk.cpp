@@ -513,8 +513,9 @@ void Track::clear ()
 
 void Track::add (Track &&track)
 {
-	// Use longest track length
+	// Use longest track length and time
 	tracklen = std::max(tracklen, track.tracklen);
+	tracktime = std::max(tracktime, track.tracktime);
 
 	// Merge supplied sectors into existing track
 	for (auto &s : track.sectors())

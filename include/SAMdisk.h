@@ -233,7 +233,9 @@ bool FormatHdd (const std::string &path);
 bool FormatBoot (const std::string &path);
 bool FormatRecord (const std::string &path);
 bool UnformatImage (const std::string &path, Range range);
-bool FloppyRpm (const std::string &path);
+
+// rpm
+bool DiskRpm (const std::string &path);
 
 // info
 bool HddInfo (const std::string &path, int nVerbose_);

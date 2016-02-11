@@ -2,36 +2,45 @@
 
 #include "SAMdisk.h"
 
-#if 0
-bool FloppyRpm (const std::string &path)
+bool DiskRpm (const std::string &path)
 {
-	FLOPPY floppy;
-
-	// Seek to cyl 0 for the measurement, unless given a specific cyl to use
-	BYTE seek_cyl = (opt.range.cylto <= 0) ? 0 : opt.range.cylto + 1;
-
-	if (!floppy.Open(path))
+	auto disk = std::make_shared<Disk>();
+	if (!ReadImage(path, disk))
 		return false;
-	else if (!floppy.SetEncRate(FD_OPTION_MFM))
-		return Error();
-	else if (!floppy.CmdSeek(seek_cyl))
-		return Error();
 
-	// Loop until aborted, or after 5 iterations in non-forced mode
-	for (int i = 0; !g_fAbort && (opt.force || i < 5); ++i)
+	// Default to using cyl 0 head 0, but allow the user to override it
+	CylHead cylhead(opt.range.empty() ? 0 :
+		opt.range.cyl_end + 1, opt.range.head_end);
+
+	auto forever = opt.force && util::is_stdout_a_tty();
+
+	// Display 5 revolutions, or run forever if forced
+	for (auto i = 0; !g_fAbort && (forever || i < 5); ++i)
 	{
-		DWORD dwTime = 0;
+		auto &track = disk->read_track(cylhead);
 
-		if (!floppy.FdGetTrackTime(&dwTime) || !dwTime)
-			return Error();
+		if (!track.tracktime)
+		{
+			if (i == 0)
+				throw util::exception("not available for this disk type");
 
-		DWORD dwRPMx100 = (DWORD)((60000000000ULL / dwTime) + 5) / 10;
-		WriteCon("Drive motor = %3u.%02urpm%s%c", dwRPMx100 / 100, dwRPMx100 % 100,
-				 (opt.force && is_a_tty()) ? "  (Ctrl-C to stop)" : "",
-				 is_a_tty() ? '\r' : '\n');
+			break;
+		}
+
+		auto time_us = track.tracktime;
+		auto rpm = 60'000'000.0f / track.tracktime;
+
+		if (!forever)
+			util::cout << util::fmt("%6d us = %3.2f rpm\n", time_us, rpm);
+		else
+		{
+			util::cout << util::fmt("\r%6d us = %3.2f rpm  (Ctrl-C to stop)", time_us, rpm);
+			util::cout.screen->flush();
+		}
+
+		// Discard source data for a fresh read
+		disk->unload();
 	}
 
-	floppy.Close();
 	return true;
 }
-#endif

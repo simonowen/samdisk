@@ -632,8 +632,10 @@ int main (int argc_, char *argv_[])
 				if (nSource == argNone || nTarget != argNone)
 					Usage();
 
-				// ToDo: restore for appropriate types
-				throw std::logic_error("not implemented");
+				if (nSource == argRecord || nSource == argUnknown)
+					f = DiskRpm(opt.szSource);
+				else
+					Usage();
 
 				break;
 			}
