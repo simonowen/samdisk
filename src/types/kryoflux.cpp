@@ -18,18 +18,25 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 	std::vector<uint32_t> flux_times;
 	flux_times.reserve(data.size());
 
-	uint32_t time = 0, flux_count = 0, index_time = 0;
+	uint32_t time = 0, flux_count = 0, last_flux = 0;
 	uint32_t ps_per_tick = PS_PER_TICK(SAMPLE_FREQ);
+	std::vector<uint32_t> index_times;
 
 	auto itBegin = data.begin(), it = itBegin, itEnd = data.end();
 	while (it != itEnd)
 	{
-		if (index_time && flux_count >= index_time)
+		if (index_times.size() && flux_count >= index_times[0])
 		{
-			auto reversals = flux_times.size() - (flux_count - index_time);
-			flux_revs.emplace_back(std::vector<uint32_t>(flux_times.begin(), flux_times.begin() + reversals));
-			flux_times.erase(flux_times.begin(), flux_times.begin() + reversals);
-			index_time = 0;
+			// Add flux revolution, ignoring the first partial track
+			if (last_flux != 0)
+			{
+				flux_revs.emplace_back(std::vector<uint32_t>(
+					flux_times.begin() + last_flux,
+					flux_times.begin() + index_times[0]));
+			}
+
+			last_flux = index_times[0];
+			index_times.erase(index_times.begin());
 		}
 
 		auto type = *it++;
@@ -82,10 +89,9 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 					case 0x02:	// Index
 					{
 						assert(size == 12);
-						assert(index_time == 0);
 
 						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
-						index_time = util::letoh(pdw[0]);
+						index_times.push_back(util::letoh(pdw[0]));
 						break;
 					}
 
@@ -149,12 +155,9 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 		}
 	}
 
-	if (flux_revs.size() > 1)
-	{
-		// Remove the first partial revolution
-		flux_revs.erase(flux_revs.begin());
-	}
-	else
+	assert(index_times.size() == 0);
+
+	if (flux_revs.size() == 0)
 	{
 		Message(msgWarning, "insufficient flux data on %s", CH(cylhead.cyl, cylhead.head));
 		flux_revs.clear();
