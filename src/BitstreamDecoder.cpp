@@ -20,7 +20,10 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 	// Jupiter Ace scanning must be explicitly requested, as the end of tracks
 	// aren't wiped and often contain MFM sectors from previous disk use.
 	if (opt.ace)
-		return scan_flux_ace(cylhead, flux_revs);
+	{
+		track.add(scan_flux_ace(cylhead, flux_revs));
+		return track;
+	}
 
 	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
 	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
@@ -39,7 +42,7 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 			{
 				static DataRate last_datarate = DataRate::_250K;
 
-				track = scan_flux_mfm_fm(cylhead, flux_revs, last_datarate);
+				track.add(scan_flux_mfm_fm(cylhead, flux_revs, last_datarate));
 
 				// If we found something, remember the successful data rate
 				if (!track.empty())
@@ -50,12 +53,12 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 
 			case Encoding::Amiga:
 			{
-				track = scan_flux_amiga(cylhead, flux_revs);
+				track.add(scan_flux_amiga(cylhead, flux_revs));
 				break;
 			}
 
 			case Encoding::GCR:
-				track = scan_flux_gcr(cylhead, flux_revs);
+				track.add(scan_flux_gcr(cylhead, flux_revs));
 				break;
 
 			case Encoding::Ace:

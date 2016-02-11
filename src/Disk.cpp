@@ -687,6 +687,53 @@ int Disk::heads () const
 }
 
 
+void Disk::unload (bool source_only)
+{
+	if (!source_only)
+		m_tracks.clear();
+
+	m_bitstreamdata.clear();
+	m_fluxdata.clear();
+}
+
+
+bool Disk::get_bitstream_source (const CylHead &cylhead, BitBuffer* &p)
+{
+	auto it = m_bitstreamdata.find(cylhead);
+	if (it != m_bitstreamdata.end())
+	{
+		p = &it->second;
+		return true;
+	}
+
+	return false;
+}
+
+bool Disk::get_flux_source (const CylHead &cylhead, const std::vector<std::vector<uint32_t>>* &p)
+{
+	auto it = m_fluxdata.find(cylhead);
+	if (it != m_fluxdata.end())
+	{
+		p = &it->second;
+		return true;
+	}
+
+	return false;
+}
+
+void Disk::set_source (const CylHead &cylhead, BitBuffer &&bitbuf)
+{
+	m_bitstreamdata.emplace(std::make_pair(cylhead, std::move(bitbuf)));
+	m_tracks[cylhead]; // extend
+}
+
+void Disk::set_source (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data)
+{
+	m_fluxdata[cylhead] = std::move(data);
+	m_tracks[cylhead]; // extend
+}
+
+
 const Track &Disk::read_track (const CylHead &cylhead)
 {
 	return m_tracks[cylhead];

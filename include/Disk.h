@@ -7,6 +7,8 @@ const int MAX_DISK_HEADS = 2;
 enum class DataRate : int { Unknown = 0, _250K = 250000, _300K = 300000, _500K = 500000, _1M = 1000000 };
 enum class Encoding { Unknown, MFM, FM, Amiga, GCR, Ace };
 
+#include "BitBuffer.h"
+
 std::string to_string (const DataRate &datarate);
 std::string to_string (const Encoding &encoding);
 
@@ -284,6 +286,13 @@ public:
 	explicit Disk (Format &format);
 
 	virtual void preload (const Range &/*range*/) {}
+	virtual void unload (bool source_only=false);
+
+	bool get_bitstream_source (const CylHead &cylhead, BitBuffer* &p);
+	bool get_flux_source (const CylHead &cylhead, const std::vector<std::vector<uint32_t>>* &p);
+	void set_source (const CylHead &cylhead, BitBuffer &&data);
+	void set_source (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data);
+
 	virtual const Track &read_track (const CylHead &cylhead);
 	virtual Track &write_track (const CylHead &cylhead, const Track &track);
 	virtual Track &write_track (const CylHead &cylhead, Track &&track);
@@ -308,6 +317,8 @@ public:
 
 protected:
 	std::map<CylHead, Track> m_tracks {};
+	std::map<CylHead, std::vector<std::vector<uint32_t>>> m_fluxdata {};
+	std::map<CylHead, BitBuffer> m_bitstreamdata {};
 };
 
 #endif // DISK_H

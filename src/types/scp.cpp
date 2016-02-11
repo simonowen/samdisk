@@ -3,7 +3,6 @@
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
 
 enum
 {
@@ -36,32 +35,6 @@ typedef struct
 } TRACK_DATA_HEADER;
 
 
-class SCPDisk final : public DemandDisk
-{
-public:
-	void add_track_data (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data)
-	{
-		m_trackdata[cylhead] = std::move(data);
-		extend(cylhead);
-	}
-
-protected:
-	Track load (const CylHead &cylhead) override
-	{
-		auto ch = CylHead(cylhead.cyl * opt.step, cylhead.head);
-		auto it = m_trackdata.find(ch);
-		if (it != m_trackdata.end())
-			return scan_flux(ch, it->second);
-
-		// No data to decode!
-		return Track();
-	}
-
-private:
-	std::map<CylHead, std::vector<std::vector<uint32_t>>> m_trackdata {};
-};
-
-
 bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	SCP_FILE_HEADER fh {};
@@ -82,7 +55,7 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (!file.read(tdh_offsets))
 		throw util::exception("short file reading track offset index");
 
-	auto scp_disk = std::make_shared<SCPDisk>();
+	auto scp_disk = std::make_shared<DemandDisk>();
 
 	for (auto tracknr = fh.start_track; tracknr <= fh.end_track; ++tracknr)
 	{
@@ -136,7 +109,7 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 			flux_revs.push_back(std::move(flux_times));
 		}
 
-		scp_disk->add_track_data(CylHead(cyl, head), std::move(flux_revs));
+		scp_disk->set_source(CylHead(cyl, head), std::move(flux_revs));
 	}
 
 	scp_disk->strType = "SCP";

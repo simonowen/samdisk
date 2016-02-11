@@ -3,7 +3,6 @@
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
 
 // Note: currently only format revision 00 is supported.
 
@@ -71,32 +70,6 @@ enum HfeTrackEncoding
 #endif
 
 
-class HFEDisk final : public DemandDisk
-{
-public:
-	void add_track_data (const CylHead &cylhead, BitBuffer &&bitbuf)
-	{
-		m_trackdata.emplace(std::make_pair(cylhead, std::move(bitbuf)));
-		extend(cylhead);
-	}
-
-protected:
-	Track load (const CylHead &cylhead) override
-	{
-		auto ch = CylHead(cylhead.cyl * opt.step, cylhead.head);
-		auto it = m_trackdata.find(ch);
-		if (it != m_trackdata.end())
-			return scan_bitstream(ch, it->second);
-
-		// No data to decode!
-		return Track();
-	}
-
-private:
-	std::map<CylHead, BitBuffer> m_trackdata {};
-};
-
-
 bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	HFE_HEADER hh;
@@ -130,7 +103,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 	MEMORY mem(0x10000);
 	auto pbTrack = mem.pb;
 
-	auto hfe_disk = std::make_shared<HFEDisk>();
+	auto hfe_disk = std::make_shared<DemandDisk>();
 
 	for (uint8_t cyl = 0; cyl < hh.number_of_track && !g_fAbort; cyl++)
 	{
@@ -160,7 +133,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 			}
 
 			BitBuffer bitbuf(datarate, pbTrack, uTrackDataLen);
-			hfe_disk->add_track_data(CylHead(cyl, head), std::move(bitbuf));
+			hfe_disk->set_source(CylHead(cyl, head), std::move(bitbuf));
 
 			// ToDo: save more track metadata?
 		}

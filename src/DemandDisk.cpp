@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
+#include "BitstreamDecoder.h"
 #include "ThreadPool.h"
 
 void DemandDisk::extend (const CylHead &cylhead)
@@ -14,7 +15,7 @@ const Track &DemandDisk::read_track (const CylHead &cylhead)
 {
 	if (!m_loaded[cylhead])
 	{
-		Track track = load(cylhead);
+		auto track = load(cylhead);
 		std::lock_guard<std::mutex> lock(m_mutex);
 		m_tracks[cylhead] = std::move(track);
 		m_loaded[cylhead] = true;
@@ -49,11 +50,28 @@ void DemandDisk::preload (const Range &range_)
 		ret.get();
 }
 
-void DemandDisk::unload (const CylHead &cylhead)
+Track DemandDisk::load (const CylHead &cylhead)
 {
-	auto it = m_tracks.find(cylhead);
-	if (it != m_tracks.end())
-		m_tracks.erase(it);
+	auto cylhead_step = CylHead(cylhead.cyl * opt.step, cylhead.head);
+	Track track;
 
-	m_loaded[cylhead] = false;
+	BitBuffer *bitstream;
+	if (get_bitstream_source(cylhead_step, bitstream))
+		track.add(scan_bitstream(cylhead, *bitstream));
+
+	const std::vector<std::vector<uint32_t>> *flux_revs;
+	if (get_flux_source(cylhead_step, flux_revs))
+		track.add(scan_flux(cylhead, *flux_revs));
+
+	return track;
+}
+
+void DemandDisk::unload (bool source_only)
+{
+	Disk::unload(source_only);
+
+	if (source_only)
+		m_loaded.set();
+	else
+		m_loaded.reset();
 }

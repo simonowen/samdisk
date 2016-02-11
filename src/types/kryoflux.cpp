@@ -3,7 +3,6 @@
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
 
 #define MASTER_CLOCK_FREQ	(((18432000 * 73) / 14) / 2)	// 48054857.14
 #define SAMPLE_FREQ			(MASTER_CLOCK_FREQ / 2)		 	// 24027428.57
@@ -11,32 +10,6 @@
 #define PS_PER_TICK(sck)	(1000000000 / (sck / 1000)) 	//    41619.10
 
 enum { OOB = 0x0d };
-
-
-class STREAMDisk final : public DemandDisk
-{
-public:
-	void add_track_data (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data)
-	{
-		m_trackdata[cylhead] = std::move(data);
-		extend(cylhead);
-	}
-
-protected:
-	Track load (const CylHead &cylhead) override
-	{
-		auto ch = CylHead(cylhead.cyl * opt.step, cylhead.head);
-		auto it = m_trackdata.find(ch);
-		if (it != m_trackdata.end())
-			return scan_flux(ch, it->second);
-
-		// No data to decode!
-		return Track();
-	}
-
-private:
-	std::map<CylHead, std::vector<std::vector<uint32_t>>> m_trackdata {};
-};
 
 
 static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead, const std::vector<uint8_t> &data, Disk &disk)
@@ -208,7 +181,7 @@ bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 	auto ext = path.substr(len - 3);
 	path = path.substr(0, len - 8);
 
-	auto stream_disk = std::make_shared<STREAMDisk>();
+	auto stream_disk = std::make_shared<DemandDisk>();
 
 	auto missing0 = 0, missing1 = 0, missing_total = 0;
 
@@ -236,7 +209,7 @@ bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 			}
 
 			auto flux_revs = decode_stream(cylhead, f.data(), *disk);
-			stream_disk->add_track_data(cylhead, std::move(flux_revs));
+			stream_disk->set_source(cylhead, std::move(flux_revs));
 		}
 	});
 
