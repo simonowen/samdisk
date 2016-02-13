@@ -15,62 +15,49 @@ enum { OOB = 0x0d };
 static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead, const std::vector<uint8_t> &data, Disk &disk)
 {
 	std::vector<std::vector<uint32_t>> flux_revs;
-	std::vector<uint32_t> flux_times;
+	std::vector<uint32_t> flux_times, flux_counts;
 	flux_times.reserve(data.size());
+	flux_counts.resize(data.size());
 
-	uint32_t time = 0, flux_count = 0, last_flux = 0;
+	uint32_t time = 0, stream_pos = 0;
 	uint32_t ps_per_tick = PS_PER_TICK(SAMPLE_FREQ);
-	std::vector<uint32_t> index_times;
+	std::vector<uint32_t> index_offsets;
 
 	auto itBegin = data.begin(), it = itBegin, itEnd = data.end();
 	while (it != itEnd)
 	{
-		if (index_times.size() && flux_count >= index_times[0])
-		{
-			// Add flux revolution, ignoring the first partial track
-			if (last_flux != 0)
-			{
-				flux_revs.emplace_back(std::vector<uint32_t>(
-					flux_times.begin() + last_flux,
-					flux_times.begin() + index_times[0]));
-			}
-
-			last_flux = index_times[0];
-			index_times.erase(index_times.begin());
-		}
+		// Store current flux count at each stream position
+		flux_counts[stream_pos] = flux_times.size();
 
 		auto type = *it++;
 		switch (type)
 		{
 			case 0x0c: // Flux3
 				type = *it++;
-				flux_count++;
+				stream_pos++;
 			case 0x00: case 0x01: case 0x02: case 0x03:	// Flux 2
 			case 0x04: case 0x05: case 0x06: case 0x07:
 				time += (static_cast<uint32_t>(type) << 8) | *it++;
 				flux_times.push_back(time * ps_per_tick / 1000);
-				flux_count += 2;
+				stream_pos += 2;
 				time = 0;
 				break;
 			case 0xa:	// Nop3
 				it++;
-				flux_count++;
+				stream_pos++;
 			case 0x9:	// Nop2
 				it++;
-				flux_count++;
+				stream_pos++;
 			case 0x8:	// Nop1
-				flux_count++;
+				stream_pos++;
 				break;
 			case 0xb:	// Ovl16
 				time += 0x10000;
-				flux_count++;
+				stream_pos++;
 				break;
 
 			case OOB:	// OOB
 			{
-				if (time)
-					Message(msgWarning, "OOB received during extended flux time (%lu)", time);
-
 				auto subtype = *it++;
 				uint16_t size = *it++;
 				size |= (*it++ << 8);
@@ -91,7 +78,7 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 						assert(size == 12);
 
 						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
-						index_times.push_back(util::letoh(pdw[0]));
+						index_offsets.push_back(util::letoh(pdw[0]));
 						break;
 					}
 
@@ -149,13 +136,28 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 			default:	// Flux1
 				time += type;
 				flux_times.push_back(time * ps_per_tick / 1000);
-				flux_count++;
+				stream_pos++;
 				time = 0;
 				break;
 		}
 	}
 
-	assert(index_times.size() == 0);
+	uint32_t last_pos = 0;
+	for (auto index_offset : index_offsets)
+	{
+		// Ignore first partial track
+		if (last_pos != 0)
+		{
+			assert(flux_counts[index_offset] != 0);
+
+			// Extract flux segment for current revolution
+			flux_revs.emplace_back(std::vector<uint32_t>(
+				flux_times.begin() + last_pos,
+				flux_times.begin() + flux_counts[index_offset]));
+		}
+
+		last_pos = flux_counts[index_offset];
+	}
 
 	if (flux_revs.size() == 0)
 	{
