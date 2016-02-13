@@ -495,6 +495,8 @@ Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
 		if (!amiga_read_dwords(bitbuf, reinterpret_cast<uint32_t*>(data.data()), data.size() / sizeof(uint32_t), calcsum))
 			continue;
 
+		if (opt.debug) util::cout << "* AmigaDOS (id=" << sector_nr << ") at offset " << sector_offset << " (" << bitbuf.track_offset(sector_offset) << ")\n";
+
 		bool bad_data = (calcsum & MFM_MASK) != 0;
 		sector.add(std::move(data), bad_data, 0x00);
 

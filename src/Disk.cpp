@@ -513,6 +513,10 @@ void Track::clear ()
 
 void Track::add (Track &&track)
 {
+	// Ignore if no sectors to add
+	if (!track.sectors().size())
+		return;
+
 	// Use longest track length and time
 	tracklen = std::max(tracklen, track.tracklen);
 	tracktime = std::max(tracktime, track.tracktime);
