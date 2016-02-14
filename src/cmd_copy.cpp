@@ -42,25 +42,26 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 		if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
 			return;
 
-		const Track &track = src_disk->read_track(cylhead);
+		auto src_track = src_disk->read_track(cylhead);
+		NormaliseTrack(cylhead, src_track);
 
 		if (opt.verbose)
-			ScanTrack(cylhead, track, context);
+			ScanTrack(cylhead, src_track, context);
 
 		// Repair or copy?
 		if (opt.repair)
 		{
-			Track target_track = dst_disk->read_track(cylhead);
+			auto dst_track = dst_disk->read_track(cylhead);
+			NormaliseTrack(cylhead, dst_track);
 
-			// Move a copy of each source sector
-			for (Sector sector : track.sectors())
-				target_track.add(std::move(sector));
+			// Merge the source into the destination to perform the repair
+			dst_track.add(std::move(src_track));
 
-			dst_disk->write_track(cylhead, std::move(target_track));
+			dst_disk->write_track(cylhead, std::move(dst_track));
 		}
 		else
 		{
-			dst_disk->write_track(cylhead, track);
+			dst_disk->write_track(cylhead, src_track);
 		}
 	}, opt.verbose != 0);
 

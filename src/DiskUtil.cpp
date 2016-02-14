@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "DiskUtil.h"
+#include "SpecialFormat.h"
 
 static const int MIN_DIFF_BLOCK = 16;
 
@@ -181,6 +182,202 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				}
 				util::cout << '\n';
 			}
+		}
+	}
+}
+
+
+// Normalise track contents, optionally applying load-time change filters
+void NormaliseTrack (const CylHead &cylhead, Track &track)
+{
+	int i;
+	auto sectors = track.size();
+
+	// Clear the track length if offsets are disabled
+	if (opt.offsets == 0)
+		track.tracklen = 0;
+
+	// Pass 1
+	for (i = 0; i < sectors; ++i)
+	{
+		auto &sector = track[i];
+
+		// Clear all data, for privacy during diagnostics?
+		if (opt.nodata)
+		{
+			sector.remove_data();
+			sector.add(Data());		// empty data rather than no data
+		}
+
+		// Track offsets disabled?
+		if (opt.offsets == 0)
+			sector.offset = 0;
+#if 0
+		// ToDo: move this to fdrawcmd disk type
+		// Build ASRock corruption check block
+		if (i < (int)arraysize(ah))
+		{
+			ah[i].cyl = sector.header.cyl;
+			ah[i].head = sector.header.head;
+			ah[i].sector = sector.header.sector;
+			ah[i].size = sector.header.size;
+		}
+#endif
+		// Remove gap data if disabled, or the gap mask doesn't allow it
+		if (sector.has_gapdata() && (opt.gaps == GAPS_NONE || !(opt.gapmask & (1 << i))))
+			sector.remove_gapdata();
+#if 0
+		// ToDo: move this to affected disk types
+		// Check for short sector wrapping the track end (includes logoprof.dmk and Les Justiciers 2 [1B].scp [CPC])
+		// Also check it doesn't trigger in cyl 18 sector 5 of Super Sprint (KryoFlux).
+		if (ps->uData > 0 && tracklen > 0 && ps->offset > 0 &&
+			ps->uData < uSize &&
+			GetDataExtent(i) > uSize &&
+			(ps->offset + GetSectorOverhead(encrate) + uSize) > tracklen)
+		{
+			Message(msgWarning, "%s truncated at end of track data", CHSR(cyl, head, i, ps->sector));
+		}
+#endif
+	}
+
+	// Pass 2
+	for (i = 0; i < sectors; ++i)
+	{
+		Sector &sector = track[i];
+#if 0
+		// Clean and remove gap data unless we're to keep it all
+		if (fLoadFilter_ && opt.gaps != GAPS_ALL)
+			CleanGap(i);
+#endif
+
+		// Remove only the final gap if --no-gap4b was used
+		if (i == sectors - 1 && opt.gap4b == 0 && sector.has_gapdata())
+			sector.remove_gapdata();
+
+		// Allow overrides for track gap3 and sector size
+		if (opt.gap3 != -1) sector.gap3 = static_cast<uint8_t>(opt.gap3);
+		// if (opt.size != -1) size = opt.size;	// ToDo: remove?
+
+#if 0
+		// ToDo: move this to fdrawcmd disk type
+		// Check for the ASRock FDC problem that corrupts sector data with format headers (unless comparison block is all one byte)
+		int nn = sizeof(ah) - sizeof(ah[0]) - 1;
+		if (sectors > 1 && ps->apbData[0] && memcmp(ps->apbData[0], ps->apbData[0] + 1, sizeof(ah) - 1))
+		{
+			// Ignore the first sector and size in case of a placeholder sector
+			if (!memcmp(&ah[1], ps->apbData[0] + sizeof(ah[0]), sizeof(ah) - sizeof(ah[0])))
+				Message(msgWarning, "possible FDC data corruption on %s", CHSR(cyl, head, i, ps->sector));
+		}
+#endif
+	}
+
+	auto weak_offset = 0;
+
+	// Check for Speedlock weak sector (either +3 or CPC)
+	if (opt.fix != 0 && cylhead.cyl == 0 && track.size() == 9)
+	{
+		auto &sector1 = track[1];
+		if (sector1.copies() == 1 && IsSpectrumSpeedlockTrack(track, weak_offset))
+		{
+			// Are we to add the missing weak sector?
+			if (opt.fix == 1)
+			{
+				// Add a copy with differences matching the typical weak sector
+				auto data = sector1.data_copy();
+				for (i = weak_offset; i < data.size(); ++i)
+					data[i] = ~data[i];
+				sector1.add(std::move(data), true);
+
+				Message(msgFix, "added suitable second copy of +3 Speedlock weak sector");
+			}
+			else
+				Message(msgWarning, "image is missing multiple copies of +3 Speedlock weak sector");
+		}
+
+		auto &sector7 = track[7];
+		if (sector7.copies() == 1 && IsCpcSpeedlockTrack(track, weak_offset))
+		{
+			// Are we to add the missing weak sector?
+			if (opt.fix == 1)
+			{
+				// Add a second data copy with differences matching the typical weak sector
+				auto data = sector7.data_copy();
+				for (i = weak_offset; i < data.size(); ++i)
+					data[i] = ~data[i];
+				sector7.add(std::move(data), true);
+
+				Message(msgFix, "added suitable second copy of CPC Speedlock weak sector");
+			}
+			else
+				Message(msgWarning, "image is missing multiple copies of CPC Speedlock weak sector");
+		}
+	}
+
+	// Check for Rainbow Arts weak sector missing copies
+	if (opt.fix != 0 && cylhead.cyl == 40 && track.size() == 9)
+	{
+		auto &sector1 = track[1];
+		if (sector1.copies() == 1 && IsRainbowArtsTrack(track, weak_offset))
+		{
+			// Are we to add the missing weak sector?
+			if (opt.fix == 1)
+			{
+				// Ensure the weak sector has a data CRC error, to fix broken CPCDiskXP images
+				if (!sector1.has_baddatacrc())
+				{
+					auto data = sector1.data_copy();
+					sector1.remove_data();
+					sector1.add(std::move(data), true);
+					if (opt.debug) util::cout << "added missing data CRC error to Rainbow Arts track\n";
+				}
+
+				// Add a second data copy with differences matching the typical weak sector
+				auto data = sector1.data_copy();
+				for (i = weak_offset; i < data.size(); ++i)
+					data[i] = ~data[i];
+				sector1.add(std::move(data), true);
+
+				Message(msgFix, "added suitable second copy of Rainbow Arts weak sector");
+			}
+			else
+				Message(msgWarning, "image is missing multiple copies of Rainbow Arts weak sector");
+		}
+	}
+
+	// Single copy of an 8K sector?
+	if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
+	{
+		static auto chk8k_disk = CHK8K_UNKNOWN;
+
+		Sector &sector = track[0];
+		Data &data = sector.data_copy(0);
+
+		// Attempt to determine the 8K checksum method, if any
+		auto chk8k = Get8KChecksumMethod(data.data(), data.size(), chk8k_disk);
+
+		// If we found a positive checksum match, and the disk doesn't already have one, set it
+		if (chk8k >= CHK8K_FOUND && chk8k_disk == CHK8K_UNKNOWN)
+			chk8k_disk = chk8k;
+
+		// Determine the checksum method name and the checksum length
+		int checksum_len = 0;
+		const char *pcszMethod = Get8KChecksumMethodName(chk8k_disk, &checksum_len);
+
+		// If what we've found doesn't match the disk checksum method, report it
+		if (chk8k_disk >= CHK8K_FOUND && chk8k != chk8k_disk && chk8k != CHK8K_VALID)
+		{
+			if (checksum_len == 2)
+				Message(msgWarning, "invalid %s checksum [%02X %02X] on %s", pcszMethod, data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
+			else
+				Message(msgWarning, "invalid %s checksum [%02X] on %s", pcszMethod, data[0x1800], CH(cylhead.cyl, cylhead.head));
+		}
+		// If we've yet to find a valid disk method, but didn't recognise this track, report that too
+		else if (chk8k == CHK8K_UNKNOWN)
+		{
+			if (data.size() >= 0x1802)
+				Message(msgWarning, "unrecognised or invalid 6K checksum [%02X %02X] on %s", data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
+			else
+				Message(msgWarning, "unrecognised or invalid 6K checksum [%02X] on %s", data[0x1800], CH(cylhead.cyl, cylhead.head));
 		}
 	}
 }

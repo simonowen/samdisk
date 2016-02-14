@@ -176,6 +176,7 @@
     <ClInclude Include="include\Image.h" />
     <ClInclude Include="include\ioapi.h" />
     <ClInclude Include="include\MemFile.h" />
+    <ClInclude Include="include\SpecialFormat.h" />
     <ClInclude Include="include\SpectrumPlus3.h" />
     <ClInclude Include="include\resource.h" />
     <ClInclude Include="include\SAMCoupe.h" />

@@ -143,10 +143,6 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	Merge ret = Merge::NewData;
 	assert(!copies() || dam == new_dam);
 
-	// Limit the number of data copies kept (default is 3)
-	if (copies() >= opt.maxcopies)
-		return Merge::Unchanged;
-
 	// If the sector has a bad header CRC, it can't have any data
 	if (has_badidcrc())
 		return Merge::Unchanged;
@@ -254,8 +250,9 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		}
 	}
 
-	// Insert the new data copy
-	m_data.emplace_back(std::move(data));
+	// Insert the new data copy, unless it the copy count (default is 3)
+	if (copies() < opt.maxcopies)
+		m_data.emplace_back(std::move(data));
 
 	// Update the data CRC state and DAM
 	m_bad_data_crc = bad_crc;

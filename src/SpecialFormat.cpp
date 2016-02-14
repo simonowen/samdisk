@@ -48,13 +48,13 @@ bool IsSystem24Track (const Track &track)
 }
 
 // Speedlock weak sector for Spectrum +3?
-bool IsSpectrumSpeedlockTrack (const Track &track, int *random_offset)
+bool IsSpectrumSpeedlockTrack (const Track &track, int &random_offset)
 {
 	if (track.size() != 9)
 		return false;
 
-	auto &sector0 = track.sectors()[0];
-	auto &sector1 = track.sectors()[1];
+	auto &sector0 = track[0];
+	auto &sector1 = track[1];
 
 	if (sector0.encoding != Encoding::MFM || sector1.encoding != Encoding::MFM ||
 		sector0.datarate != DataRate::_250K || sector1.datarate != DataRate::_250K ||
@@ -70,28 +70,25 @@ bool IsSpectrumSpeedlockTrack (const Track &track, int *random_offset)
 	if (memcmp(data0.data() + 304, "SPEEDLOCK", 9) && memcmp(data0.data() + 176, "SPEEDLOCK", 9))
 		return false;
 
-	if (random_offset)
-	{
-		// If there's no common block at the start, assume fully random
-		// Buggy Boy has only 255, so don't check the full first half!
-		if (memcmp(data1.data(), data1.data() + 1, (sector1.size() / 2) - 1))
-			*random_offset = 5;		// -512
-		else
-			*random_offset = 336;	// =256 -33 +47 -176
-	}
+	// If there's no common block at the start, assume fully random
+	// Buggy Boy has only 255, so don't check the full first half!
+	if (memcmp(data1.data(), data1.data() + 1, (sector1.size() / 2) - 1))
+		random_offset = 5;		// -512
+	else
+		random_offset = 336;	// =256 -33 +47 -176
 
 	if (opt.debug) util::cout << "detected Spectrum Speedlock track\n";
 	return true;
 }
 
 // Speedlock weak sector for Amstrad CPC?
-bool IsCpcSpeedlockTrack (const Track &track, int *random_offset)
+bool IsCpcSpeedlockTrack (const Track &track, int &random_offset)
 {
 	if (track.size() != 9)
 		return false;
 
-	auto &sector0 = track.sectors()[0];
-	auto &sector7 = track.sectors()[7];
+	auto &sector0 = track[0];
+	auto &sector7 = track[7];
 
 	if (sector0.encoding != Encoding::MFM || sector7.encoding != Encoding::MFM ||
 		sector0.datarate != DataRate::_250K || sector7.datarate != DataRate::_250K ||
@@ -112,30 +109,27 @@ bool IsCpcSpeedlockTrack (const Track &track, int *random_offset)
 			return false;
 	}
 
-	if (random_offset)
-	{
-		// If there's no common block at the start, assume fully random
-		// Buggy Boy has only 255, so don't check the full first half!
-		if (memcmp(data7.data(), data7.data() + 1, (sector7.size() / 2) - 1))
-			*random_offset = 5;	// -512
-		else if (data0[129] == 'S')
-			*random_offset = 256;
-		else
-			*random_offset = 336;	// =256 -33 +47 -176
-	}
+	// If there's no common block at the start, assume fully random
+	// Buggy Boy has only 255, so don't check the full first half!
+	if (memcmp(data7.data(), data7.data() + 1, (sector7.size() / 2) - 1))
+		random_offset = 5;	// -512
+	else if (data0[129] == 'S')
+		random_offset = 256;
+	else
+		random_offset = 336;	// =256 -33 +47 -176
 
 	if (opt.debug) util::cout << "detected CPC Speedlock track\n";
 	return true;
 }
 
 // Rainbow Arts weak sector for CPC?
-bool IsRainbowArtsTrack (const Track &track, int *random_offset)
+bool IsRainbowArtsTrack (const Track &track, int &random_offset)
 {
 	if (track.size() != 9)
 		return false;
 
-	auto &sector1 = track.sectors()[1];
-	auto &sector3 = track.sectors()[3];
+	auto &sector1 = track[1];
+	auto &sector3 = track[3];
 
 	if (sector1.encoding != Encoding::MFM || sector3.encoding != Encoding::MFM ||
 		sector1.datarate != DataRate::_250K || sector3.datarate != DataRate::_250K ||
@@ -151,7 +145,7 @@ bool IsRainbowArtsTrack (const Track &track, int *random_offset)
 		return false;
 
 	// The first 100 bytes are constant
-	*random_offset = 100;	// =100 -258 +151 -3
+	random_offset = 100;	// =100 -258 +151 -3
 
 	if (opt.debug) util::cout << "detected Rainbow Arts weak sector track\n";
 	return true;
@@ -163,8 +157,8 @@ bool IsKBI10Track (const Track &track)
 	if (track.size() != 10)
 		return false;
 
-	auto &sector0 = track.sectors()[0];
-	auto &sector9 = track.sectors()[9];
+	auto &sector0 = track[0];
+	auto &sector9 = track[9];
 
 	if (sector0.encoding != Encoding::MFM || sector9.encoding != Encoding::MFM ||
 		sector0.datarate != DataRate::_250K || sector9.datarate != DataRate::_250K ||
@@ -212,7 +206,7 @@ bool IsLogoProfTrack (const Track &track)
 		auto min_offset = Sector::SizeCodeToLength(1) + GetSectorOverhead(Encoding::MFM);
 
 		// Reject if first sector doesn't start late on the track
-		if (track.sectors()[0].offset < min_offset)
+		if (track[0].offset < min_offset)
 			return false;
 	}
 
