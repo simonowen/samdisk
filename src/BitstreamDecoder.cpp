@@ -522,6 +522,19 @@ bool test_remove_gap2 (Data data, int offset)
 
 	parser.GetGapRun(&len, &fill);
 
+	if (!len)
+	{
+		splice = 1;
+		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+
+		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+		if (splice > max_splice)
+		{
+			if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+			return false;
+		}
+	}
+
 	if (len > 0 && fill == 0x4e)
 	{
 		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
