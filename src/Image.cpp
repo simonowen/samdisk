@@ -145,17 +145,22 @@ bool WriteImage (const std::string &path, std::shared_ptr<Disk> &disk)
 		if (!file)
 			throw posix_error(errno, path.c_str());
 
-		// Write the image
-		// ToDo: catch exception here for output file deletion
-		f = p->pfnWrite(file, disk);
+		try
+		{
+			// Write the image
+			f = p->pfnWrite(file, disk);
+			if (!f)
+				throw util::exception("output type is unsuitable for source content");
+		}
+		catch (...)
+		{
+			fclose(file);
+			std::remove(path.c_str());
+			throw;
+		}
 
-		// Close the file, deleting if there was an error
 		fclose(file);
-		if (!f) unlink(path.c_str());
 	}
-
-	if (!f)
-		throw util::exception("output type is unsuitable for source content");
 
 	return true;
 }
