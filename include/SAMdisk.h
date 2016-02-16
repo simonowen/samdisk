@@ -198,7 +198,7 @@ typedef void * HANDLE;
 #include "Util.h"
 #include "SAMCoupe.h"
 
-static const int MAX_IMAGE_SIZE = 64 * 1024 * 1024;	// 64MiB
+static const int MAX_IMAGE_SIZE = 100 * 1024 * 1024;	// 100MiB
 
 enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_TRACK, GAPS_ALL };
 

@@ -40,10 +40,14 @@ public:
 			// Oddly, the clock frequency isn't stored in the image, so guess it.
 			for (auto mhz = 25; !m_tick_ns && mhz <= 100; mhz *= 2)
 			{
-				auto rpm = 60 * mhz * 1000000 / index_pos;
+				auto rpm = 60'000'000ULL * mhz / index_pos;
 				if (rpm >= 285 && rpm <= 380)
 					m_tick_ns = 1000 / mhz;
 			}
+
+			// Fail if we couldn't determine the clock rate
+			if (!m_tick_ns)
+				throw util::exception("failed to determine DFI clock frequency");
 		}
 
 		m_trackdata[cylhead] = std::move(data);
