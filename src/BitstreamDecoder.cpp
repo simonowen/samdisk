@@ -230,20 +230,8 @@ Track scan_flux_gcr (const CylHead &cylhead, const std::vector<std::vector<uint3
 	else
 		bitcell_ns = 4000;
 
-	BitBuffer bitbuf(DataRate::_250K);
 	FluxDecoder decoder(flux_revs, bitcell_ns);
-
-	for (;;)
-	{
-		int bit = decoder.next_bit();
-		if (bit < 0)
-			break;
-
-		bitbuf.add(bit ? 1 : 0);
-
-		if (decoder.index())
-			bitbuf.index();
-	}
+	BitBuffer bitbuf(DataRate::_250K, decoder);
 
 	return scan_bitstream_gcr(cylhead, bitbuf);
 }
@@ -378,20 +366,8 @@ Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf)
 
 Track scan_flux_ace (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs)
 {
-	BitBuffer bitbuf(DataRate::_250K);
 	FluxDecoder decoder(flux_revs, 4000);	// 125Kbps with 4us bitcell width
-
-	for (;;)
-	{
-		int bit = decoder.next_bit();
-		if (bit < 0)
-			break;
-
-		bitbuf.add(bit ? 1 : 0);
-
-		if (decoder.index())
-			bitbuf.index();
-	}
+	BitBuffer bitbuf(DataRate::_250K, decoder);
 
 	return scan_bitstream_ace (cylhead, bitbuf);
 }
@@ -513,20 +489,8 @@ Track scan_flux_amiga (const CylHead &cylhead, const std::vector<std::vector<uin
 	// Scale the flux values to simulate motor speed variation
 	for (auto flux_scale : { 100, 95, 105 })
 	{
-		BitBuffer bitbuf(DataRate::_250K);
-		FluxDecoder decoder(flux_revs, ::bitcell_ns(bitbuf.datarate), flux_scale);
-
-		for (;;)
-		{
-			int bit = decoder.next_bit();
-			if (bit < 0)
-				break;
-
-			bitbuf.add(bit ? 1 : 0);
-
-			if (decoder.index())
-				bitbuf.index();
-		}
+		FluxDecoder decoder(flux_revs, ::bitcell_ns(DataRate::_250K), flux_scale);
+		BitBuffer bitbuf(DataRate::_250K, decoder);
 
 		track.add(scan_bitstream_amiga(cylhead, bitbuf));
 
@@ -824,6 +788,8 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 		if (sector.has_badidcrc())
 			continue;
 
+		if (opt.debug) util::cout << "Finding " << cylhead << " sector " << sector.header.sector << ":\n";
+
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
 			const auto &dam_offset = itData->first;
@@ -977,20 +943,8 @@ Track scan_flux_mfm_fm (const CylHead &cylhead, const std::vector<std::vector<ui
 		// Scale the flux values to simulate motor speed variation
 		for (auto flux_scale : { 100, 95, 105 })
 		{
-			BitBuffer bitbuf(datarate);
 			FluxDecoder decoder(flux_revs, ::bitcell_ns(datarate), flux_scale);
-
-			for (;;)
-			{
-				int bit = decoder.next_bit();
-				if (bit < 0)
-					break;
-
-				bitbuf.add(bit ? 1 : 0);
-
-				if (decoder.index())
-					bitbuf.index();
-			}
+			BitBuffer bitbuf(datarate, decoder);
 
 			track.add(scan_bitstream_mfm_fm(cylhead, bitbuf));
 

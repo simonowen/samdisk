@@ -3,20 +3,40 @@
 #include "SAMdisk.h"
 #include "BitBuffer.h"
 
-// Initial size tuned for typical use, but will grow if needed
-#define INIT_BITSIZE   5000000
-
-BitBuffer::BitBuffer (DataRate datarate_)
-	: datarate(datarate_), m_data((INIT_BITSIZE + 31) / 32)
-{
-}
-
-BitBuffer::BitBuffer (DataRate datarate_, const uint8_t *pb, int len)
+BitBuffer::BitBuffer (DataRate datarate_, int revs)
 	: datarate(datarate_)
 {
-	m_data.resize((len + sizeof(m_data[0]) - 1) / sizeof(m_data[0]));
-	std::memcpy(m_data.data(), pb, len);
-	m_bitsize = len * 8;
+	// Estimate size from double the data bitrate @300rpm, plus 10%.
+	// This should be enough for most FM/MFM tracks.
+	auto bitlen = bits_per_second(datarate) * revs / 5 * 2 * 110 / 100;
+	m_data.resize((bitlen + 31) / 32);
+}
+
+BitBuffer::BitBuffer (DataRate datarate_, const uint8_t *pb, int bitlen)
+	: datarate(datarate_)
+{
+	m_data.resize((bitlen + 31) / 32);
+	std::memcpy(m_data.data(), pb, (bitlen + 7) / 8);
+	m_bitsize = bitlen;
+}
+
+BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
+	: datarate(datarate_), m_data(decoder.flux_count())
+{
+	auto bitlen = bits_per_second(datarate) * decoder.flux_revs() / 5 * 2 * 110 / 100;
+	m_data.resize((bitlen + 31) / 32);
+
+	for (;;)
+	{
+		int bit = decoder.next_bit();
+		if (bit < 0)
+			break;
+
+		add(bit ? 1 : 0);
+
+		if (decoder.index())
+			index();
+	}
 }
 
 bool BitBuffer::wrapped () const
@@ -58,7 +78,11 @@ void BitBuffer::add (uint8_t bit)
 
 	// Double the size if we run out of space
 	if (offset >= m_data.size())
+	{
+		assert(m_data.size() != 0);
 		m_data.resize(m_data.size() * 2);
+		if (opt.debug) util::cout << "BitBuffer size grown to " << m_data.size() << "\n";
+	}
 
 	if (bit)
 		m_data[offset] |= bit_value;

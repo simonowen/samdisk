@@ -127,7 +127,8 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 	{
 		for (auto head = cii.minhead; head <= cii.maxhead; ++head)
 		{
-			BitBuffer bitbuf(DataRate::Unknown);
+			// Start with space for 5 revolutions of 250Kbps
+			BitBuffer bitbuf(DataRate::_250K, 5);
 
 			// Default to 5 revolutions for CT Raw and 2 for IPF in case of weak sectors
 			auto max_revs = (image_type == citCTRaw) ? CAPS_MTRS : 2;

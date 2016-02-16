@@ -1,11 +1,14 @@
 #ifndef BITBUFFER_H
 #define BITBUFFER_H
 
+#include "FluxDecoder.h"
+
 class BitBuffer
 {
 public:
-	explicit BitBuffer (DataRate dr);
+	BitBuffer (DataRate dr, int revolutions);
 	BitBuffer (DataRate dr, const uint8_t *pb, int len);
+	BitBuffer (DataRate datarate_, FluxDecoder &decoder);
 
 	bool wrapped () const;
 	int size () const;

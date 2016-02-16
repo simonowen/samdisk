@@ -12,7 +12,9 @@ public:
 	FluxDecoder (const std::vector<std::vector<uint32_t>> &flux_revs, int bitcell_ns, int flux_scale_percent = 100);
 
 	bool index ();
-	size_t bitstream_size () const;
+	bool sync_lost ();
+	int flux_revs () const;
+	int flux_count () const;
 
 	int next_bit ();
 	int next_flux ();
@@ -26,7 +28,9 @@ protected:
 	int m_flux = 0;
 	int m_clocked_zeros = 0;
 	int m_flux_scale_percent = 100;
+	int m_goodbits = 0;
 	bool m_index = false;
+	bool m_sync_lost = false;
 };
 
 #endif // FLUXDECODER_H

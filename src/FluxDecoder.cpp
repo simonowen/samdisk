@@ -18,20 +18,32 @@ FluxDecoder::FluxDecoder (const std::vector<std::vector<uint32_t>> &flux_revs, i
 	m_flux_it = (*m_rev_it).cbegin();
 }
 
-size_t FluxDecoder::bitstream_size () const
+int FluxDecoder::flux_revs () const
 {
-	size_t total_size = 0;
+	return m_flux_revs.size();
+}
+
+int FluxDecoder::flux_count () const
+{
+	auto count = 0;
 
 	for (const auto &vec : m_flux_revs)
-		total_size += vec.size();
+		count += static_cast<int>(vec.size());
 
-	return total_size * 8;
+	return count;
 }
 
 bool FluxDecoder::index ()
 {
 	auto ret = m_index;
 	m_index = false;
+	return ret;
+}
+
+bool FluxDecoder::sync_lost ()
+{
+	auto ret = m_sync_lost;
+	m_sync_lost = false;
 	return ret;
 }
 
@@ -56,6 +68,7 @@ int FluxDecoder::next_bit ()
 	if (m_flux >= m_clock / 2)
 	{
 		++m_clocked_zeros;
+		++m_goodbits;
 		return 0;
 	}
 
@@ -70,6 +83,14 @@ int FluxDecoder::next_bit ()
 	{
 		// Out of sync: adjust base clock towards centre
 		m_clock += (m_clock_centre - m_clock) / CLOCK_MAX_ADJUST;
+
+		// Require 256 good bits before reporting another loss of sync
+		if (m_goodbits >= 256)
+		{
+			m_sync_lost = true;
+			if (opt.debug) util::cout << "sync lost at reversal " << std::distance((*m_rev_it).cbegin(), m_flux_it) << " rev " << std::distance(m_flux_revs.cbegin(), m_rev_it) << "\n";
+		}
+		m_goodbits = 0;
 	}
 
 	// Clamp the clock's adjustment range
@@ -79,6 +100,7 @@ int FluxDecoder::next_bit ()
 	new_flux = m_flux / 2;
 	m_flux = new_flux;
 
+	++m_goodbits;
 	return 1;
 }
 
