@@ -58,31 +58,33 @@ bool WriteRAW (FILE* f_, std::shared_ptr<Disk> &disk)
 	ValidateRange(range, disk->cyls(), disk->heads());
 
 	Format fmt;
-	fmt.cyls = range.cyl_end;
-	fmt.heads = range.head_end;
+	fmt.cyls = 0;
+	fmt.heads = 0;
 	fmt.base = 0xff;
 
-	Range(fmt.cyls, fmt.heads).each([&] (const CylHead &cylhead) {
-		auto &track = disk->read_track(cylhead);
+	disk->each([&] (const CylHead &cylhead, const Track &track) {
+		// Skip empty tracks
+		if (track.empty())
+			return;
+
+		// Track the used disk extent
+		fmt.cyls = std::max(fmt.cyls, cylhead.cyl + 1);
+		fmt.heads = std::max(fmt.heads, cylhead.head + 1);
 
 		// Keep track of the largest sector count
 		if (track.size() > fmt.sectors)
 			fmt.sectors = static_cast<uint8_t>(track.size());
 
 		// First track?
-		if (cylhead.cyl == 0 && cylhead.head == 0)
+		if (fmt.datarate == DataRate::Unknown)
 		{
-			// Must not be blank
-			if (track.empty())
-				throw util::exception("first source track cannot be blank");
-
 			// Find a typical sector to use as a template
 			ScanContext context;
 			Sector typical = GetTypicalSector(cylhead, track, context.sector);
 
-			fmt.datarate = context.sector.datarate;
-			fmt.encoding = context.sector.encoding;
-			fmt.size = context.sector.header.size;
+			fmt.datarate = typical.datarate;
+			fmt.encoding = typical.encoding;
+			fmt.size = typical.header.size;
 		}
 
 		for (auto &s : track.sectors())
@@ -104,7 +106,9 @@ bool WriteRAW (FILE* f_, std::shared_ptr<Disk> &disk)
 		}
 	});
 
-	if (fmt.base + fmt.sectors >= max_id)
+	if (fmt.datarate == DataRate::Unknown)
+		throw util::exception("source disk is blank");
+	else if (max_id < fmt.base || max_id >= fmt.base + fmt.sectors)
 		throw util::exception("non-sequential sector numbers are unsuitable for raw output");
 
 	// Allow user overrides for flexibility
