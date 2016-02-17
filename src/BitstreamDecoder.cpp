@@ -17,16 +17,17 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 	Track track;
 	static Encoding last_encoding = Encoding::MFM;
 
-	// Ensure we have at least 1 revolution to examine
-	if (flux_revs.size())
-	{
-		int64_t total_time = 0;
-		for (auto &time : flux_revs[0])
-			total_time += time;
+	// Return an empty track if we have no data
+	if (flux_revs.size() == 0)
+		return track;
 
-		// Convert from ns to us and save as track time
-		track.tracktime = static_cast<int>(total_time / 1000);
-	}
+	// Sum the flux times on the last revolution
+	int64_t total_time = 0;
+	for (const auto &time : flux_revs.back())
+		total_time += time;
+
+	// Convert from ns to us and save as track time
+	track.tracktime = static_cast<int>(total_time / 1000);
 
 	// Jupiter Ace scanning must be explicitly requested, as the end of tracks
 	// aren't wiped and often contain MFM sectors from previous disk use.

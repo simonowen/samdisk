@@ -89,8 +89,13 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
 //						auto eof_pos = util::letoh(pdw[0]);
 						auto eof_ret = util::letoh(pdw[1]);
-						if (eof_ret != 0)
-							Message(msgWarning, "unsuccessful stream end (%u) on %s", eof_ret, CH(cylhead.cyl, cylhead.head));
+
+						if (eof_ret == 1)
+							Message(msgWarning, "stream end (buffering problem) on %s", CH(cylhead.cyl, cylhead.head));
+						else if (eof_ret == 2)
+							Message(msgWarning, "stream end (no index detected) on %s", CH(cylhead.cyl, cylhead.head));
+						else if (eof_ret != 0)
+							Message(msgWarning, "stream end problem (%u) on %s", eof_ret, CH(cylhead.cyl, cylhead.head));
 						break;
 					}
 
@@ -160,10 +165,7 @@ static std::vector<std::vector<uint32_t>> decode_stream (const CylHead &cylhead,
 	}
 
 	if (flux_revs.size() == 0)
-	{
-		Message(msgWarning, "insufficient flux data on %s", CH(cylhead.cyl, cylhead.head));
-		flux_revs.clear();
-	}
+		Message(msgWarning, "no flux data on %s", CH(cylhead.cyl, cylhead.head));
 
 	return flux_revs;
 }
