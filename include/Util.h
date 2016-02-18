@@ -178,7 +178,6 @@ bool IsTrackUsed (int cyl_, int head_);
 
 void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &sectors);
 void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls = -1, int def_heads = -1);
-void ReportRange (const Range &range);
 
 void ValidateGeometry (const Format &fmt);
 void ValidateGeometry (int cyls, int heads, int uSectors_ = 1, int sector_size = SECTOR_SIZE, int max_size = 0);

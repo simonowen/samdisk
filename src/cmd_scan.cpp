@@ -113,7 +113,7 @@ bool ScanImage (const std::string &path, Range range)
 		else
 		{
 			ValidateRange(range, MAX_TRACKS, MAX_SIDES, disk->cyls(), disk->heads());
-			ReportRange(range);
+			util::cout << range << ":\n";
 
 			disk->preload(range);
 

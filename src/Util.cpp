@@ -559,28 +559,6 @@ void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls/*=0*
 		throw util::exception("end head (", range.head_end - 1, ") out of range (0-", max_heads - 1, ")");
 }
 
-void ReportRange (const Range &range)
-{
-	if (range.empty())
-		return;
-
-	if (range.cyls() == 1)
-		util::cout << "Cyl " << std::string(CylStr(range.cyl_begin));
-	else if (range.cyl_begin == 0)
-		util::cout << std::setw(2) << range.cyl_end << " Cyls";
-	else
-		util::cout << "Cyls " << std::string(CylStr(range.cyl_begin)) << '-' << std::string(CylStr(range.cyl_end - 1));
-
-	if (range.heads() == 1)
-		util::cout << " Head " << range.head_begin;
-	else if (range.head_begin == 0)
-		util::cout << ' ' << range.head_end << " Heads";
-	else
-		util::cout << " Heads " << range.head_begin << '-' << (range.head_end - 1);
-
-	util::cout << ":\n";
-}
-
 void ValidateGeometry (const Format &fmt)
 {
 	ValidateGeometry(fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());

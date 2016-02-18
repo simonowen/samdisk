@@ -110,6 +110,9 @@ public:
 	int head_begin = 0, head_end = 0;
 };
 
+std::string to_string (const Range &r);
+inline std::ostream & operator<<(std::ostream& os, const Range &r) { return os << to_string(r); }
+
 enum class FdcType { None, PC, WD, Amiga };
 enum class RegularFormat { MGT, ProDos, PC720, PC1440, PC2880, D80, OPD, MBD820, MBD1804, TRDOS, D2M, D4M, D81, _2D, AmigaDOS, AmigaDOSHD, LIF, AtariST };
 
