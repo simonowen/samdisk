@@ -78,6 +78,7 @@ check_function_exists(lseek64 HAVE_LSEEK64)
 check_function_exists(_lseeki64 HAVE__LSEEKI64)
 check_function_exists(_strcmpi HAVE__STRCMPI)
 check_function_exists(_snprintf HAVE__SNPRINTF)
+check_function_exists(sysconf HAVE_SYSCONF)
 
 add_definitions(-DHAVE_CONFIG_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)

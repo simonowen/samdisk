@@ -1,16 +1,16 @@
-#ifndef DEVICEHDD_H
-#define DEVICEHDD_H
+#ifndef BLOCKDEVICE_H
+#define BLOCKDEVICE_H
 
-class DeviceHDD final : public HDD
+class BlockDevice final : public HDD
 {
 public:
-	DeviceHDD ();
-	DeviceHDD (const DeviceHDD &) = delete;
-	DeviceHDD & operator= (const DeviceHDD &) = delete;
-	~DeviceHDD ();
+	BlockDevice ();
+	BlockDevice (const BlockDevice &) = delete;
+	BlockDevice & operator= (const BlockDevice &) = delete;
+	~BlockDevice ();
 
 public:
-	bool Open (const std::string &path) override;
+	bool Open (const std::string &path, bool uncached) override;
 
 // Overrides
 public:
@@ -22,13 +22,14 @@ public:
 
 public:
 	static bool IsRecognised (const std::string &path);
-	static bool IsDeviceHDD (const std::string &path);
+	static bool IsBlockDevice (const std::string &path);
 	static bool IsFileHDD (const std::string &path);
 
 	static std::vector<std::string> GetDeviceList ();
 
 // Helpers
 protected:
+	int ScsiCmd (int fd, const uint8_t *cmd, int cmd_len, void *data, int data_len, bool read);
 	bool ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &pIdentify_);
 	bool ReadMakeModelRevisionSerial (const std::string &path);
 
@@ -37,4 +38,4 @@ protected:
 	std::vector<std::pair<HANDLE, std::string>> lLockHandles {};
 };
 
-#endif // DEVICEHDD_H
+#endif // BLOCKDEVICE_H

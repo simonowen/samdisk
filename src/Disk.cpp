@@ -353,6 +353,14 @@ void Sector::set_badidcrc (bool bad)
 		remove_data();
 }
 
+void Sector::set_baddatacrc (bool bad)
+{
+	m_bad_data_crc = bad;
+
+	if (!bad && copies() > 1)
+		m_data.resize(1);
+}
+
 void Sector::remove_data ()
 {
 	m_data.clear();
@@ -926,7 +934,7 @@ void Range::each (const std::function<void (const CylHead &cylhead)> &func, bool
 //////////////////////////////////////////////////////////////////////////////
 
 Format::Format (RegularFormat reg_fmt)
-	: Format(Format::get(reg_fmt))
+	: Format(GetFormat(reg_fmt))
 {
 }
 
@@ -985,205 +993,4 @@ std::vector<int> Format::get_ids (const CylHead &cylhead) const
 	}
 
 	return ids;
-}
-
-/*static*/ Format Format::get (RegularFormat reg_fmt)
-{
-	Format fmt;
-
-	switch (reg_fmt)
-	{
-		case RegularFormat::MGT:	// 800K
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 10;
-			fmt.skew = 1;
-			fmt.gap3 = 24;
-			break;
-
-		case RegularFormat::ProDos:	// 720K
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 9;
-			fmt.interleave = 2;
-			fmt.skew = 2;
-			fmt.gap3 = 0x50;
-			fmt.fill = 0xe5;
-			break;
-
-		case RegularFormat::PC720:	 // 720K
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 9;
-			fmt.interleave = 1;
-			fmt.skew = 1;
-			fmt.gap3 = 0x50;
-			fmt.fill = 0xe5;
-			break;
-
-		case RegularFormat::PC1440:	// 1.44M
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 18;
-			fmt.interleave = 1;
-			fmt.skew = 1;
-			fmt.gap3 = 0x65;
-			fmt.fill = 0xe5;
-			break;
-
-		case RegularFormat::PC2880:	// 2.88M
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 36;
-			fmt.interleave = 1;
-			fmt.skew = 1;
-			fmt.gap3 = 0x53;
-			fmt.fill = 0xe5;
-			break;
-
-		case RegularFormat::D80:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 9;
-			fmt.skew = 5;
-			fmt.fill = 0xe5;
-			break;
-
-		case RegularFormat::OPD:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 18;
-			fmt.size = 1;
-			fmt.fill = 0xe5;
-			fmt.base = 0;
-			fmt.offset = 17;
-			fmt.interleave = 13;
-			fmt.skew = 13;
-			break;
-
-		case RegularFormat::MBD820:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 82;
-			fmt.sectors = 5;
-			fmt.size = 3;
-			fmt.skew = 1;
-			fmt.gap3 = 44;
-			break;
-
-		case RegularFormat::MBD1804:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_500K;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 82;
-			fmt.sectors = 11;
-			fmt.size = 3;
-			fmt.skew = 1;
-			break;
-
-		case RegularFormat::TRDOS:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 80;
-			fmt.heads = 2;
-			fmt.sectors = 16;
-			fmt.size = 1;
-			fmt.interleave = 2;
-			fmt.head1 = 0;
-			break;
-
-		case RegularFormat::D2M:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_500K;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 81;
-			fmt.sectors = 10;
-			fmt.size = 3;
-			fmt.fill = 0xe5;
-			fmt.gap3 = 0x64;
-			fmt.head0 = 1;
-			fmt.head1 = 0;
-			break;
-
-		case RegularFormat::D4M:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_1M;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 81;
-			fmt.sectors = 20;
-			fmt.size = 3;
-			fmt.fill = 0xe5;
-			fmt.gap3 = 0x64;
-			fmt.head0 = 1;
-			fmt.head1 = 0;
-			break;
-
-		case RegularFormat::D81:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 10;
-			fmt.gap3 = 0x26;
-			fmt.head0 = 1;
-			fmt.head1 = 0;
-			break;
-
-		case RegularFormat::_2D:
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.cyls = 40;
-			fmt.sectors = 16;
-			fmt.size = 1;
-			break;
-
-		case RegularFormat::AmigaDOS:
-			fmt.fdc = FdcType::Amiga;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::Amiga;
-			fmt.cyls = 80;
-			fmt.sectors = 11;
-			fmt.size = 2;
-			fmt.base = 0;
-			break;
-
-		case RegularFormat::AmigaDOSHD:
-			fmt.fdc = FdcType::Amiga;
-			fmt.datarate = DataRate::_500K;
-			fmt.encoding = Encoding::Amiga;
-			fmt.sectors = 22;
-			fmt.size = 2;
-			fmt.base = 0;
-			break;
-
-		case RegularFormat::LIF:
-			fmt.cyls = 77;
-			fmt.heads = 2;
-			fmt.fdc = FdcType::PC;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 16;
-			fmt.size = 1;
-			break;
-
-		case RegularFormat::AtariST:
-			fmt.fdc = FdcType::WD;
-			fmt.datarate = DataRate::_250K;
-			fmt.encoding = Encoding::MFM;
-			fmt.sectors = 9;
-			fmt.gap3 = 40;
-			fmt.fill = 0x00;
-			break;
-	}
-
-	return fmt;
 }

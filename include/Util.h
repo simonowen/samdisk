@@ -142,7 +142,10 @@ void CloseLog ();
 const char* LastError ();
 bool Error(const char *pcsz_ = nullptr);
 
-bool IsFloppyDevice (const char *pcszDrive_);
+int GetMemoryPageSize ();
+
+bool IsBlockDevice (const std::string &path);
+bool IsFloppyDevice (const std::string &path);
 bool GetMountedDevice (const char *pcszDrive_, char *pszDevice_, int cbDevice_);
 /*
 bool IsDriveRemoveable (HANDLE hDrive_);

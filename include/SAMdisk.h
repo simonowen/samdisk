@@ -40,7 +40,7 @@
 
 #ifndef _WIN32
 
-// ToDo: fix DeviceHDD so it doesn't need these
+// ToDo: fix BlockDevice so it doesn't need these
 typedef void * HANDLE;
 #define INVALID_HANDLE_VALUE reinterpret_cast<void *>(-1)
 
@@ -102,10 +102,12 @@ typedef void * HANDLE;
 #include <system_error>
 
 
-#ifdef HAVE_O_BINARY
-#include <fcntl.h>
-#else
-#define O_BINARY		0
+#ifndef HAVE_O_BINARY
+#define O_BINARY	0
+#endif
+
+#ifndef O_DIRECT
+#define O_DIRECT	0
 #endif
 
 #if !defined(HAVE_STRCASECMP) && defined(HAVE__STRCMPI)

@@ -98,10 +98,7 @@ bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 		throw util::exception("failed to open SuperCard Pro device");
 
 	auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
-
-	for (auto head = 0; head < 2; ++head)
-		for (auto cyl = 0; cyl < 83; ++cyl)
-			scp_dev_disk->extend(CylHead(cyl, head));
+	scp_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
 	scp_dev_disk->strType = "SuperCard Pro";
 	disk = scp_dev_disk;

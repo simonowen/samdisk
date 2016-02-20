@@ -30,5 +30,6 @@
 #cmakedefine HAVE__LSEEKI64 @HAVE__LSEEKI64@
 #cmakedefine HAVE__STRCMPI @HAVE__STRCMPI@
 #cmakedefine HAVE__SNPRINTF @HAVE_SNPRINTF@
+#cmakedefine HAVE_SYSCONF @HAVE_SYSCONF@
 
 #endif // CONFIG_H

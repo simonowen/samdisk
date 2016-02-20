@@ -92,6 +92,30 @@ bool Error (const char *pcsz_/*=nullptr*/)
 }
 
 
+int GetMemoryPageSize ()
+{
+#ifdef _WIN32
+	SYSTEM_INFO si;
+	GetNativeSystemInfo(&si);
+	return si.dwPageSize;
+#elif defined(HAVE_SYSCONF)
+	return sysconf(_SC_PAGESIZE);
+#else
+	return 0x1000;
+#endif
+}
+
+
+bool IsBlockDevice (const std::string &path)
+{
+#ifndef _WIN32
+	struct stat st;
+	if (!stat(path.c_str(), &st) && S_ISBLK(st.st_mode))
+		return true;
+#endif
+	(void)path;
+	return false;
+}
 bool IsFloppyDevice (const std::string &path)
 {
 	// Must be in "X:" format
@@ -318,10 +342,17 @@ bool CheckLibrary (const char *pcszLib_, const char *pcszFunc_)
 
 uint8_t *AllocMem (int len)
 {
+	static auto align = GetMemoryPageSize();
+
 #ifdef _WIN32
 	auto pb = reinterpret_cast<uint8_t *>(VirtualAlloc(nullptr, len, MEM_COMMIT, PAGE_READWRITE));
 #else
-	auto pb = reinterpret_cast<uint8_t *>(calloc(1, len));
+	auto size = len + align - 1 + sizeof(void *);
+	auto pv = calloc(1, size);
+	void **ppv = (void**)(((uintptr_t)pv + size - len) & ~(align - 1));
+	ppv[-1] = pv;
+	auto pb = reinterpret_cast<uint8_t *>(ppv);
+
 #endif // WIN32
 
 	if (!pb) throw std::bad_alloc();
@@ -334,7 +365,7 @@ void FreeMem (void* pv_)
 #ifdef _WIN32
 		VirtualFree(pv_, 0, MEM_RELEASE);
 #else
-		free(pv_);
+		free(reinterpret_cast<void **>(pv_)[-1]);
 #endif // WIN32
 }
 
@@ -500,6 +531,15 @@ int TPeek (const uint8_t *buf, int offset/*=0*/)
 // Calculate a suitable CHS geometry covering the supplied number of sectors
 void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &sectors)
 {
+	Format fmt;
+	if (SizeToFormat(total_sectors * SECTOR_SIZE, fmt))
+	{
+		cyls = fmt.cyls;
+		heads = fmt.heads;
+		sectors = fmt.sectors;
+		return;
+	}
+
 	// If the sector count is exactly divisible by 16*63, use them for heads and sectors
 	if ((total_sectors % (16 * 63)) == 0)
 	{

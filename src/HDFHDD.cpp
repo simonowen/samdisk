@@ -9,8 +9,8 @@
 	RS_IDE sHeader = {};
 
 	// Open as read-write, falling back on read-only
-	if ((h = open(path.c_str(), O_RDWR | O_SEQUENTIAL | O_BINARY)) == -1 &&
-		(h = open(path.c_str(), O_RDONLY | O_SEQUENTIAL | O_BINARY)) == -1)
+	if ((h = open(path.c_str(), O_RDWR | O_BINARY)) == -1 &&
+		(h = open(path.c_str(), O_RDONLY | O_BINARY)) == -1)
 		return false;
 
 	  // Read the file header and check the signature string
@@ -27,11 +27,11 @@
 }
 
 
-bool HDFHDD::Open (const std::string &path)
+bool HDFHDD::Open (const std::string &path, bool /*uncached*/)
 {
 	// Open as read-write, falling back on read-only
-	if ((h = open(path.c_str(), O_RDWR | O_SEQUENTIAL | O_BINARY)) == -1 &&
-		(h = open(path.c_str(), O_RDONLY | O_SEQUENTIAL | O_BINARY)) == -1)
+	if ((h = open(path.c_str(), O_RDWR | O_BINARY)) == -1 &&
+		(h = open(path.c_str(), O_RDONLY | O_BINARY)) == -1)
 		return false;
 
 	RS_IDE sHeader = {};

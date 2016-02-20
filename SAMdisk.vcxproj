@@ -28,7 +28,7 @@
     <ClCompile Include="src\CRC16.cpp" />
     <ClCompile Include="src\cmd_create.cpp" />
     <ClCompile Include="src\DemandDisk.cpp" />
-    <ClCompile Include="src\DeviceHDD.cpp" />
+    <ClCompile Include="src\BlockDevice.cpp" />
     <ClCompile Include="src\cmd_dir.cpp" />
     <ClCompile Include="src\Disk.cpp" />
     <ClCompile Include="src\DiskUtil.cpp" />
@@ -93,6 +93,7 @@
     <ClCompile Include="src\types\1dd.cpp" />
     <ClCompile Include="src\types\2d.cpp" />
     <ClCompile Include="src\types\adf.cpp" />
+    <ClCompile Include="src\types\blk_dev.cpp" />
     <ClCompile Include="src\types\bpb.cpp" />
     <ClCompile Include="src\types\builtin.cpp" />
     <ClCompile Include="src\types\cfi.cpp" />
@@ -164,7 +165,7 @@
     <ClInclude Include="include\BitstreamTrackBuffer.h" />
     <ClInclude Include="include\CRC16.h" />
     <ClInclude Include="include\DemandDisk.h" />
-    <ClInclude Include="include\DeviceHDD.h" />
+    <ClInclude Include="include\BlockDevice.h" />
     <ClInclude Include="include\Disk.h" />
     <ClInclude Include="include\DiskUtil.h" />
     <ClInclude Include="include\FluxTrackBuffer.h" />

@@ -45,7 +45,7 @@ public:
 	virtual std::string GetMakeModel () { return std::string(); }
 
 protected:
-	virtual bool Open (const std::string &path) = 0;
+	virtual bool Open (const std::string &path, bool uncached=false) = 0;
 	virtual bool Create (const std::string &/*path*/, uint64_t /*ullTotalBytes_*/, const IDENTIFYDEVICE* /*pIdentify_*/ = nullptr, bool /*fOverwrite_*/ = false) { return false; }
 
 	void Reset ();

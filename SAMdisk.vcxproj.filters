@@ -42,7 +42,7 @@
     <ClCompile Include="src\DemandDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\DeviceHDD.cpp">
+    <ClCompile Include="src\BlockDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Disk.cpp">
@@ -291,6 +291,9 @@
     <ClCompile Include="src\SCP_FTD2XX.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\blk_dev.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
@@ -311,7 +314,7 @@
     <ClInclude Include="include\DemandDisk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\DeviceHDD.h">
+    <ClInclude Include="include\BlockDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Disk.h">

@@ -1,7 +1,7 @@
 // List command
 
 #include "SAMdisk.h"
-#include "DeviceHDD.h"
+#include "BlockDevice.h"
 
 static const char *aszPartTypes[256] =
 {
@@ -364,7 +364,7 @@ bool ListDrives (int nVerbose_)
 {
 	int num_opened = 0;
 
-	std::vector<std::string> lDevices = DeviceHDD::GetDeviceList();
+	std::vector<std::string> lDevices = BlockDevice::GetDeviceList();
 
 	for (size_t u = 0; u < lDevices.size(); ++u)
 	{

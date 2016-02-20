@@ -2,7 +2,7 @@
 
 #include "SAMdisk.h"
 
-#include "DeviceHDD.h"
+#include "BlockDevice.h"
 #include "HDFHDD.h"
 
 #define SECTOR_BLOCK	2048	// access CF/HDD devices in 1MB chunks
@@ -10,7 +10,7 @@
 
 /*static*/ bool HDD::IsRecognised (const std::string &path)
 {
-	return  DeviceHDD::IsRecognised(path) ||
+	return  BlockDevice::IsRecognised(path) ||
 		HDFHDD::IsRecognised(path);
 }
 
@@ -21,16 +21,16 @@
 
 	std::string open_path = path;
 
-	if (DeviceHDD::IsDeviceHDD(path))
+	if (BlockDevice::IsBlockDevice(path))
 	{
 #ifdef _WIN32
 		auto ulDevice = std::strtoul(path.c_str(), nullptr, 0);
 		open_path = util::fmt(R"(\\.\PhysicalDrive%lu)", ulDevice);
 #endif
-		hdd.reset(new DeviceHDD());
+		hdd.reset(new BlockDevice());
 	}
-	else if (DeviceHDD::IsFileHDD(path))
-		hdd.reset(new DeviceHDD());
+	else if (BlockDevice::IsFileHDD(path))
+		hdd.reset(new BlockDevice());
 	else if (HDFHDD::IsRecognised(path))
 		hdd.reset(new HDFHDD());
 

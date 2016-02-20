@@ -26,7 +26,10 @@ const int DUMP_DIFF = 2;
 void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &context, int flags = 0);
 void NormaliseTrack (const CylHead &cylhead, Track &track);
 
+Format GetFormat (RegularFormat reg_fmt);
+bool SizeToFormat (int64_t size, Format &fmt);
 void OverrideFormat (Format &format, bool full_control = false);
+
 std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector);
 
 Sector GetTypicalSector (const CylHead &cylhead, const Track &track, Sector last_sector);

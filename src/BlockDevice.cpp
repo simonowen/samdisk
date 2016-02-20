@@ -1,7 +1,7 @@
 // Platform specific HDD device handling
 
 #include "SAMdisk.h"
-#include "DeviceHDD.h"
+#include "BlockDevice.h"
 
 #ifdef HAVE_SYS_DISK_H
 #include <sys/disk.h>
@@ -19,7 +19,7 @@
 #endif
 
 #ifdef HAVE_LINUX_FS_H
-#include <linux/fs.h>		// BLKGETSIZE etc.
+#include <linux/fs.h>		// BLKGETSIZE64 etc.
 #endif
 
 #ifdef HAVE_SCSI_SCSI_H
@@ -33,21 +33,22 @@
 
 // ToDo: split conditional code into separate classes
 
-DeviceHDD::DeviceHDD ()
+BlockDevice::BlockDevice ()
 	: hdev(INVALID_HANDLE_VALUE)
 {
 }
 
-DeviceHDD::~DeviceHDD ()
+BlockDevice::~BlockDevice ()
 {
 	Unlock();
 }
 
-bool DeviceHDD::Open (const std::string &path)
+bool BlockDevice::Open (const std::string &path, bool uncached)
 {
+	auto flags = O_BINARY | (uncached ? O_DIRECT : 0);
 	// Open as read-write, falling back on read-only
-	if ((h = open(path.c_str(), O_RDWR | O_SEQUENTIAL | O_BINARY)) == -1 &&
-		(h = open(path.c_str(), O_RDONLY | O_SEQUENTIAL | O_BINARY)) == -1)
+	if ((h = open(path.c_str(), O_RDWR | flags)) == -1 &&
+		(h = open(path.c_str(), O_RDONLY | flags)) == -1)
 	{
 // Win32 has a second attempt at opening, via SAMdiskHelper
 #ifdef _WIN32
@@ -130,15 +131,14 @@ bool DeviceHDD::Open (const std::string &path)
 			total_sectors = (1LL << 32) - 1;
 #endif
 	}
-#elif defined(BLKGETSIZE)
-	long lSize;
-	if (ioctl(h, BLKGETSIZE, &lSize) == 0)
-	{
+#elif defined(BLKSSZGET) && defined(BLKGETSIZE64)
+
+	if (ioctl(h, BLKSSZGET, &sector_size) < 0)
 		sector_size = SECTOR_SIZE;
-		total_bytes = lSize * SECTOR_SIZE; // always 512-byte units
-		total_sectors = lSize;
-		total_bytes = total_sectors * SECTOR_SIZE; // always 512-byte units
-	}
+
+	if (ioctl(h, BLKGETSIZE64, &total_bytes) == 0)
+		total_sectors = total_bytes / sector_size;
+
 #elif defined(HAVE_DISKARBITRATION_DISKARBITRATION_H)
 	DASessionRef session = DASessionCreate(kCFAllocatorDefault);
 	DADiskRef disk = DADiskCreateFromBSDName(kCFAllocatorDefault, session, path.c_str());
@@ -201,7 +201,7 @@ bool DeviceHDD::Open (const std::string &path)
 }
 
 
-bool DeviceHDD::Lock ()
+bool BlockDevice::Lock ()
 {
 #ifdef _WIN32
 	DWORD dwRet;
@@ -234,7 +234,7 @@ bool DeviceHDD::Lock ()
 	return true;
 }
 
-void DeviceHDD::Unlock ()
+void BlockDevice::Unlock ()
 {
 #ifdef _WIN32
 	DWORD dwRet;
@@ -256,7 +256,7 @@ void DeviceHDD::Unlock ()
 #endif
 }
 
-bool DeviceHDD::SafetyCheck ()
+bool BlockDevice::SafetyCheck ()
 {
 #ifdef _WIN32
 	// Safety check can be skipped with the force option
@@ -295,7 +295,7 @@ bool DeviceHDD::SafetyCheck ()
 }
 
 
-std::vector<std::string> DeviceHDD::GetVolumeList () const
+std::vector<std::string> BlockDevice::GetVolumeList () const
 {
 	std::vector<std::string> lVolumes;
 
@@ -342,7 +342,7 @@ std::vector<std::string> DeviceHDD::GetVolumeList () const
 	return lVolumes;
 }
 
-bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
+bool BlockDevice::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 {
 #ifdef _WIN32
 	DWORD dwRet = 0;
@@ -389,12 +389,12 @@ bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 	return false;
 }
 
-/*static*/ bool DeviceHDD::IsRecognised (const std::string &path)
+/*static*/ bool BlockDevice::IsRecognised (const std::string &path)
 {
-	return IsDeviceHDD(path) || IsFileHDD(path);
+	return IsBlockDevice(path) || IsFileHDD(path);
 }
 
-/*static*/ bool DeviceHDD::IsDeviceHDD (const std::string &path)
+/*static*/ bool BlockDevice::IsBlockDevice (const std::string &path)
 {
 #ifdef _WIN32
 	// Reject if the first byte isn't a digit
@@ -420,12 +420,12 @@ bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 	return true;
 }
 
-/*static*/ bool DeviceHDD::IsFileHDD (const std::string &path)
+/*static*/ bool BlockDevice::IsFileHDD (const std::string &path)
 {
 	if (!IsFile(path))
 		return false;
 
-	// Reject files under 4MB, and those not an exact sector multiple
+	// Reject files under max image size, and those not an exact sector multiple
 	if (FileSize(path) <= MAX_IMAGE_SIZE || (FileSize(path) & (SECTOR_SIZE - 1)))
 		return false;
 
@@ -433,7 +433,7 @@ bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 	return true;
 }
 
-/*static*/ std::vector<std::string> DeviceHDD::GetDeviceList ()
+/*static*/ std::vector<std::string> BlockDevice::GetDeviceList ()
 {
 	std::vector<std::string> vDevices;
 
@@ -495,7 +495,37 @@ bool DeviceHDD::ReadIdentifyData (HANDLE h_, IDENTIFYDEVICE &identify_)
 }
 
 
-bool DeviceHDD::ReadMakeModelRevisionSerial (const std::string &path)
+int BlockDevice::ScsiCmd (int fd, const uint8_t *cmd, int cmd_len, void *data, int data_len, bool read)
+{
+#if defined(HAVE_SCSI_SCSI_H) && defined(HAVE_SCSI_SG_H)
+	uint8_t sense[32];
+
+	struct sg_io_hdr io_hdr = {};
+	io_hdr.interface_id = 'S';
+	io_hdr.cmdp = const_cast<uint8_t *>(cmd);
+	io_hdr.cmd_len = cmd_len;
+	io_hdr.dxferp = data;
+	io_hdr.dxfer_len = data_len;
+	io_hdr.dxfer_direction = read ? SG_DXFER_FROM_DEV : SG_DXFER_TO_DEV;
+	io_hdr.sbp = sense;
+	io_hdr.mx_sb_len = sizeof(sense);
+	io_hdr.timeout = 5000;
+
+	auto ret = ioctl(fd, SG_IO, &io_hdr);
+	if (ret < 0)
+		return ret;
+
+	if (read && (io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK)
+		return -ENOSYS;
+
+	return 0;
+#else
+	(void)fd;(void)cmd;(void)cmd_len;(void)data;(void)data_len;(void)read;
+	return -ENOTSUP;
+#endif // HAVE_SCSI_SCSI_H && HAVE_SCSI_SG_H
+}
+
+bool BlockDevice::ReadMakeModelRevisionSerial (const std::string &path)
 {
 #ifdef _WIN32
 	(void)path; // unused
@@ -566,26 +596,16 @@ bool DeviceHDD::ReadMakeModelRevisionSerial (const std::string &path)
 	// SCSI query
 	{
 		uint8_t buf[96];
-		uint8_t cmd[] = { INQUIRY, 0, 0, 0, sizeof(buf), 0 };
-		uint8_t sense[32];
 
-		struct sg_io_hdr io_hdr = {};
-		io_hdr.interface_id = 'S';
-		io_hdr.cmdp = cmd;
-		io_hdr.cmd_len = sizeof(cmd);
-		io_hdr.dxferp = buf;
-		io_hdr.dxfer_len = sizeof(buf);
-		io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
-		io_hdr.sbp = sense;
-		io_hdr.mx_sb_len = sizeof(sense);
-		io_hdr.timeout = 5000;
-
-		cmd[1] = 0x00;	// EVPD = 0
-		cmd[2] = 0x00;	// Page 00h = Supported vital product data
+		static const uint8_t cmdInquiry[] = {
+			INQUIRY, 0, 0, 0, sizeof(buf), 0
+		};
+		static const uint8_t cmdSerial[] = {
+			INQUIRY, 0x01, 0x80, 0, sizeof(buf), 0
+		};
 
 		// Read the device details
-		if (ioctl(h, SG_IO, &io_hdr) == 0 &&
-			(io_hdr.info & SG_INFO_OK_MASK) == SG_INFO_OK)
+		if (ScsiCmd(h, cmdInquiry, sizeof(cmdInquiry), buf, sizeof(buf), true) == 0)
 		{
 /*
 			// Vendor identification (8-15)
@@ -600,16 +620,14 @@ bool DeviceHDD::ReadMakeModelRevisionSerial (const std::string &path)
 			s = std::string(reinterpret_cast<char*>(buf + 32), 4);
 			strFirmwareRevision = util::trim(s);
 
-			cmd[1] = 0x01;	// EVPD = 1
-			cmd[2] = 0x80;	// Page 80h = Unit serial number
-
 			// Read the device serial number
-			if (ioctl(h, SG_IO, &io_hdr) == 0 &&
-				(io_hdr.info & SG_INFO_OK_MASK) == SG_INFO_OK &&
-				buf[1] == 0x80) // Page 80h = Unit serial number
+			if (ScsiCmd(h, cmdSerial, sizeof(cmdSerial), buf, sizeof(buf), true) == 0)
 			{
-				s = std::string(reinterpret_cast<char*>(buf + 4), buf[3]);
-				strSerialNumber = util::trim(s);
+				if (buf[1] == 0x80) // Page 80h = Unit serial number
+				{
+					s = std::string(reinterpret_cast<char*>(buf + 4), buf[3]);
+					strSerialNumber = util::trim(s);
+				}
 			}
 
 			return true;
