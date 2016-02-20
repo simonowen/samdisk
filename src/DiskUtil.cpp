@@ -348,9 +348,18 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 	if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
 	{
 		static auto chk8k_disk = CHK8K_UNKNOWN;
+		static int chk8k_id = -1;
 
 		Sector &sector = track[0];
 		Data &data = sector.data_copy(0);
+
+		// If the sector ID has changed, so might the checksum method, so start over.
+		// This is used by Fun Radio [2B] (CPC).
+		if (sector.header.sector != chk8k_id)
+		{
+			chk8k_disk = CHK8K_UNKNOWN;
+			chk8k_id = sector.header.sector;
+		}
 
 		// Attempt to determine the 8K checksum method, if any
 		auto chk8k = Get8KChecksumMethod(data.data(), data.size(), chk8k_disk);
@@ -361,7 +370,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 
 		// Determine the checksum method name and the checksum length
 		int checksum_len = 0;
-		const char *pcszMethod = Get8KChecksumMethodName(chk8k_disk, &checksum_len);
+		const char *pcszMethod = Get8KChecksumMethodName(chk8k_disk, checksum_len);
 
 		// If what we've found doesn't match the disk checksum method, report it
 		if (chk8k_disk >= CHK8K_FOUND && chk8k != chk8k_disk && chk8k != CHK8K_VALID)

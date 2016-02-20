@@ -735,10 +735,10 @@ CHK8K_METHOD Get8KChecksumMethod (uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_m
 	return CHK8K_UNKNOWN;
 }
 
-const char* Get8KChecksumMethodName (CHK8K_METHOD method, int *checksum_len)
+const char* Get8KChecksumMethodName (CHK8K_METHOD method, int &checksum_len)
 {
 	// Most checksums are a single byte
-	*checksum_len = 1;
+	checksum_len = 1;
 
 	switch (method)
 	{
@@ -748,8 +748,8 @@ const char* Get8KChecksumMethodName (CHK8K_METHOD method, int *checksum_len)
 		case CHK8K_SUM_1800:		return "SUM_1800";
 		case CHK8K_XOR_1800:		return "XOR_1800";
 		case CHK8K_XOR_18A0:		return "XOR_18A0";
-		case CHK8K_CRC_D2F6_1800:	*checksum_len = 2; return "CRC_D2F6_1800";
-		case CHK8K_CRC_D2F6_1802:	*checksum_len = 2; return "CRC_D2F6_1802";
+		case CHK8K_CRC_D2F6_1800:	checksum_len = 2; return "CRC_D2F6_1800";
+		case CHK8K_CRC_D2F6_1802:	checksum_len = 2; return "CRC_D2F6_1802";
 		default:					return "INVALID";
 	}
 }

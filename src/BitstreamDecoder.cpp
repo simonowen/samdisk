@@ -929,7 +929,7 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 				chk8k_method = Get8KChecksumMethod(data.data(), data.size());
 
 				int chk_len = 0;
-				if (opt.debug) util::cout << "chk8k_method = " << Get8KChecksumMethodName(chk8k_method, &chk_len) << '\n';
+				if (opt.debug) util::cout << "chk8k_method = " << Get8KChecksumMethodName(chk8k_method, chk_len) << '\n';
 			}
 
 			sector.add(std::move(data), bad_crc, dam);

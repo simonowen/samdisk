@@ -204,7 +204,7 @@ typedef enum
 } CHK8K_METHOD;
 
 CHK8K_METHOD Get8KChecksumMethod (uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_ = CHK8K_UNKNOWN);
-const char* Get8KChecksumMethodName (CHK8K_METHOD method, int *checksum_len);
+const char* Get8KChecksumMethodName (CHK8K_METHOD method, int &checksum_len);
 
 
 #ifndef S_ISDIR
