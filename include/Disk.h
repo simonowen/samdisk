@@ -4,7 +4,7 @@
 const int MAX_DISK_CYLS = 128;
 const int MAX_DISK_HEADS = 2;
 
-enum class DataRate : int { Unknown = 0, _250K = 250000, _300K = 300000, _500K = 500000, _1M = 1000000 };
+enum class DataRate : int { Unknown = 0, _250K = 250'000, _300K = 300'000, _500K = 500'000, _1M = 1'000'000 };
 enum class Encoding { Unknown, MFM, FM, Amiga, GCR, Ace };
 
 #include "BitBuffer.h"

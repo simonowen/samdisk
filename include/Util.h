@@ -183,7 +183,7 @@ void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &secto
 void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls = -1, int def_heads = -1);
 
 void ValidateGeometry (const Format &fmt);
-void ValidateGeometry (int cyls, int heads, int uSectors_ = 1, int sector_size = SECTOR_SIZE, int max_size = 0);
+void ValidateGeometry (int cyls, int heads, int sectors = 1, int sector_size = SECTOR_SIZE, int max_size = 0);
 int SizeToCode (int sector_size);
 bool ReadSector (const HDD &hdd, int sector, MEMORY &pm_);
 bool CheckSig (const HDD &hdd, int sector, int offset, const char *sig, int len = 0);

@@ -83,7 +83,7 @@ extern "C" {
 #include "getopt_long.h"
 }
 
-enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF };
+enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER };
 
 struct option long_options[] =
 {
@@ -177,6 +177,7 @@ struct option long_options[] =
 	{ "rpm",		required_argument, nullptr, OPT_RPM },
 	{ "bytes",		required_argument, nullptr, OPT_BYTES },
 	{ "hdf",		required_argument, nullptr, OPT_HDF },
+	{ "order",		required_argument, nullptr, OPT_ORDER },
 	{ "version",		  no_argument, nullptr, OPT_VERSION },
 
 	{ 0, 0, 0, 0 }
@@ -273,14 +274,34 @@ bool ParseCommandLine (int argc_, char *argv_[])
 				util::cout.file = &util::log;
 				break;
 
+			case OPT_ORDER:
+			{
+				auto str = util::lowercase(optarg);
+				if (str == std::string("cylinders").substr(0, str.length()))
+					opt.cylsfirst = 1;
+				else if (str == std::string("heads").substr(0, str.length()))
+					opt.cylsfirst = 0;
+				else
+					return BadValue("order");
+				break;
+			}
+
+			case OPT_RATE:
+				if (!GetInt(optarg, opt.rate) ||
+					(opt.rate != 250 && opt.rate != 300 && opt.rate != 500 && opt.rate != 1000))
+				{
+					return BadValue("rate");
+				}
+				break;
+
 			case OPT_GAPMASK: if (!GetInt(optarg, opt.gapmask)) return BadValue("gap-mask"); break;
 			case OPT_MAXCOPIES: if (!GetInt(optarg, opt.maxcopies) || opt.maxcopies < 1) return BadValue("max-copies"); break;
 			case OPT_MAXSPLICE: if (!GetInt(optarg, opt.maxsplice)) return BadValue("max-splice-bits"); break;
 			case OPT_CHECK8K: if (!optarg) opt.check8k = 1; else if (!GetInt(optarg, opt.check8k)) return BadValue("check8k"); break;
 			case OPT_RPM:	if (!GetInt(optarg, opt.rpm) || (opt.rpm != 300 && opt.rpm != 360)) return BadValue("rpm"); break;
-			case OPT_RATE:	if (!GetInt(optarg, opt.rate) || opt.rate > 2) return BadValue("rate"); break;
 			case OPT_BYTES: if (!GetInt(optarg, opt.bytes) || !opt.bytes) return BadValue("bytes"); break;
 			case OPT_HDF:	if (!GetInt(optarg, opt.hdf) || (opt.hdf != 10 && opt.hdf != 11)) return BadValue("hdf"); break;
+
 			case OPT_VERSION:
 				Version();
 				ReportTypes();
@@ -547,7 +568,7 @@ int main (int argc_, char *argv_[])
 					OverrideFormat(&fmt, true);
 
 					// Check sector count and size
-					ValidateGeometry(1, 1, fmt.sectors, fmt.size, 7);
+					ValidateGeometry(fmt);
 
 					bool fFormat = opt.command == cmdFormat;
 					bool fVerify = (opt.command == cmdVerify) || opt.verify;
@@ -579,10 +600,8 @@ int main (int argc_, char *argv_[])
 
 				if (nSource == argHDD && IsHddImage(opt.szSource) && (nTarget != argNone || opt.sectors != -1))
 					f = CreateHddImage(opt.szSource, strtoul(opt.szTarget, nullptr, 0));
-#if 0
 				else if (nSource == argUnknown && nTarget == argNone)
 					f = CreateImage(opt.szSource, opt.range);
-#endif
 				else
 					Usage();
 

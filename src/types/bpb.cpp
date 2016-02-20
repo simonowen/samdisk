@@ -77,13 +77,13 @@ bool ReadBPB (MemFile &file, std::shared_ptr<Disk> &disk)
 	auto heads = bpb.abHeads[0] | (bpb.abHeads[1] << 8);
 	auto cyls = (sectors && heads) ? (total_sectors / (sectors * heads)) : 0;
 
-	ValidateGeometry(cyls, heads, sectors, sector_size, 16384);
-
 	Format fmt { RegularFormat::PC720 };
 	fmt.cyls = static_cast<uint8_t>(cyls);
 	fmt.heads = static_cast<uint8_t>(heads);
 	fmt.sectors = static_cast<uint8_t>(sectors);
 	fmt.size = SizeToCode(sector_size);
+
+	ValidateGeometry(fmt);
 
 	if (fmt.track_size() < 6000)
 		fmt.datarate = DataRate::_250K;

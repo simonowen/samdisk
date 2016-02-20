@@ -49,6 +49,7 @@ bool WriteOPD (FILE* f_, std::shared_ptr<Disk> &disk)
 	fmt.sectors = pob->sectors;
 	fmt.size = pob->flags >> 6;
 
+	OverrideFormat(fmt, true);
 	ValidateGeometry(fmt);
 
 	return WriteRegularDisk(f_, *disk, fmt);

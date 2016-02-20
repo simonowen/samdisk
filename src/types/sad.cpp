@@ -57,6 +57,7 @@ bool WriteSAD (FILE* f_, std::shared_ptr<Disk> &disk)
 	fmt.size = size;
 	fmt.cyls_first = true;
 
+	OverrideFormat(fmt, true);
 	ValidateGeometry(fmt);
 
 	SAD_HEADER sh;

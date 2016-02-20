@@ -6,52 +6,42 @@ bool CreateImage (const std::string &path, Range range)
 {
 	auto disk = std::make_shared<Disk>();
 
-	ValidateRange(range, NORMAL_TRACKS, NORMAL_SIDES);
+	// Start with legacy default formats, with automatic gap 3
+	Format fmt = IsFileExt(path, "cpm") ? RegularFormat::ProDos : RegularFormat::MGT;
+	fmt.gap3 = 0;
 
-	Format fmt;
-	fmt.cyls = range.cyls();
-	fmt.heads = range.heads();
+	// Allow everything about the format to be overridden, but check it
+	OverrideFormat(fmt, true);
+	ValidateGeometry(fmt);
+	ValidateRange(range, MAX_TRACKS, MAX_SIDES);
 
-	// Are we allowed to format?
-	if (!opt.noformat)
-	{
-		// Set up the format for ProDos or MGT, with automatic gap3 size
-		fmt = opt.cpm ? RegularFormat::ProDos : RegularFormat::MGT;
-		fmt.gap3 = 0;
+	// Set the disk label, if supplied
+	if (!opt.label.empty())
+		disk->metadata["label"] = opt.label;
 
-		// Prevent CP/M wrapping during image write
-		opt.cpm = 0;
-
-		// Set the disk label, if supplied
-//		if (opt.label)
-//			disk->strDiskLabel = opt.label;
-
-		// To ensure it fits by default, halve the sector count in FM mode
-		if (opt.fm == 1) fmt.sectors >>= 1;
-
-		// Allow everything about the format to be overridden
-		OverrideFormat(fmt, true);
-
-		// Check sector count and size
-		ValidateGeometry(1, 1, fmt.sectors, fmt.size, 7);
-
+	// Extend or format the disk
+	if (opt.noformat)
+		disk->write_track(CylHead(range.cyl_end - 1, range.head_end - 1), Track());
+	else
 		disk->format(fmt);
-	}
 
 	// Write to the output disk image
 	WriteImage(path, disk);
 
-	auto cyls = disk->cyls();
-	auto heads = disk->heads();
-
-	// Report the new disk parameters
-	if (opt.noformat)
-		util::cout << util::fmt("Created %2u cyl%s, %u head%s, unformatted.\n", cyls, (cyls == 1) ? "" : "s", heads, (heads == 1) ? "" : "s");
-	else
+	// Report the new disk parameters, unless it's already been displayed (raw)
+	if (!IsFileExt(path, "raw"))
 	{
-		util::cout << util::fmt("Created %2u cyl%s, %u head%s, %2u sector%s/track, %4u bytes/sector\n",
-								cyls, (cyls == 1) ? "" : "s", heads, (heads == 1) ? "" : "s",
-								fmt.sectors, (fmt.sectors == 1) ? "" : "s", fmt.sector_size());
+		auto cyls = disk->cyls();
+		auto heads = disk->heads();
+
+		if (opt.noformat)
+			util::cout << util::fmt("Created %2u cyl%s, %u head%s, unformatted.\n", cyls, (cyls == 1) ? "" : "s", heads, (heads == 1) ? "" : "s");
+		else
+		{
+			util::cout << util::fmt("Created %2u cyl%s, %u head%s, %2u sector%s/track, %4u bytes/sector\n",
+									cyls, (cyls == 1) ? "" : "s", heads, (heads == 1) ? "" : "s",
+									fmt.sectors, (fmt.sectors == 1) ? "" : "s", fmt.sector_size());
+		}
 	}
 
 	return true;

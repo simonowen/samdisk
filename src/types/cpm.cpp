@@ -5,5 +5,5 @@
 
 bool WriteCPM (FILE *f_, std::shared_ptr<Disk> &disk)
 {
-	return WriteRAW(f_, disk);
+	return WriteRegularDisk(f_, *disk, RegularFormat::ProDos);
 }

@@ -5,9 +5,17 @@
 bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	Format fmt;
+	fmt.encoding = Encoding::MFM;
 
-	if (!SizeToFormat(file.size(), fmt))
-		return false;
+	// Allow user overrides of the format
+	OverrideFormat(fmt, true);
+
+	// Does the format now match the input file?
+	if (fmt.disk_size() != file.size())
+	{
+		if (!SizeToFormat(file.size(), fmt))
+			return false;
+	}
 
 	assert(fmt.disk_size() == file.size());
 

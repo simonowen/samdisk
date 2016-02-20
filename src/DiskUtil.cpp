@@ -748,12 +748,21 @@ bool SizeToFormat (int64_t size, Format &fmt)
 
 void OverrideFormat (Format &fmt, bool full_control/*=false*/)
 {
-	static const DataRate rates[] = { DataRate::_500K, DataRate::_300K, DataRate::_250K, DataRate::_1M };
-
 	if (full_control)
 	{
+		if (opt.range.cyls()) fmt.cyls = opt.range.cyls();
+		if (opt.range.heads()) fmt.heads = opt.range.heads();
 		if (opt.sectors != -1) fmt.sectors = opt.sectors;
 		if (opt.size >= 0 && opt.size <= 7) fmt.size = opt.size;
+
+		fmt.encoding = Encoding::MFM;
+
+		if (fmt.track_size() < 6000)
+			fmt.datarate = DataRate::_250K;
+		else if (fmt.track_size() < 12000)
+			fmt.datarate = DataRate::_500K;
+		else
+			fmt.datarate = DataRate::_1M;
 	}
 
 	// Merge any overrides from the command-line
@@ -765,25 +774,8 @@ void OverrideFormat (Format &fmt, bool full_control/*=false*/)
 	if (opt.skew >= 0) fmt.skew = opt.skew;
 	if (opt.head0 != -1) fmt.head0 = opt.head0;
 	if (opt.head1 != -1) fmt.head1 = opt.head1;
-	if (opt.rate != -1) fmt.datarate = rates[opt.rate & 3];	// ToDo: remove this?
-
-/*
-	// ToDo: auto-adjust density to match sector content?
-	// Check the gap size required for the current settings
-	uint8_t gap3 = GetFormatGap(RPM_TIME_300, fmt.datarate, fmt.encoding, fmt.sectors, fmt.size);
-
-	// Does it fit?
-	if (!gap3)
-	{
-	// If not, try again with high density
-	pf_->encrate = (pf_->encrate & ~FD_RATE_MASK) | FD_RATE_500K;
-	gap3 = GetFormatGap(RPM_TIME_300, pf_->encrate, pf_->sectors, pf_->size);
-
-	// If that still doesn't fit, assume extra density (we'll check properly later)
-	if (!gap3)
-	pf_->encrate = (pf_->encrate & ~FD_RATE_MASK) | FD_RATE_1M;
-	}
-*/
+	if (opt.cylsfirst != -1) fmt.cyls_first = (opt.cylsfirst != 0);
+	if (opt.rate != -1) fmt.datarate = static_cast<DataRate>(opt.rate * 1000);
 }
 
 
