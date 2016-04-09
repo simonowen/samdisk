@@ -278,8 +278,10 @@ private:
 	std::vector<Sector> m_sectors {};
 
 	// Max bitstream position difference for sectors to be considerd the same.
-	// 32 MFM bytes is needed to cope with sync differences after weak sectors.
-	static const int COMPARE_TOLERANCE_BITS = 32 * 16;
+	// Used to match sectors between revolutions, and needs to cope with the
+	// larger sync differences after weak sectors. We still require the header
+	// to match, so only close repeated headers should be a problem.
+	static const int COMPARE_TOLERANCE_BITS = 64 * 16;
 };
 
 class Disk
