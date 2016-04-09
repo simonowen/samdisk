@@ -781,6 +781,12 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 				if (opt.debug) util::cout << "* IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				break;
 
+			// This isn't a valid AM type, but Skate or Die [+3] and Les Dieux
+			// du Ciel [CPC] use this on unused 8K sectors (script bug?), so
+			// we now silently ignore it.
+			case 0xe5:
+				break;
+
 			default:
 				Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(cylhead.cyl, cylhead.head));
 				break;
