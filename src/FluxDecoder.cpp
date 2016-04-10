@@ -86,10 +86,8 @@ int FluxDecoder::next_bit ()
 
 		// Require 256 good bits before reporting another loss of sync
 		if (m_goodbits >= 256)
-		{
 			m_sync_lost = true;
-			if (opt.debug) util::cout << "sync lost at reversal " << std::distance((*m_rev_it).cbegin(), m_flux_it) << " rev " << std::distance(m_flux_revs.cbegin(), m_rev_it) << "\n";
-		}
+
 		m_goodbits = 0;
 	}
 

@@ -700,7 +700,7 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 
 		if (dword == 0x44894489)
 		{
-			if (bitbuf.read16() != 0x4489) continue;	// ToDo: check for Amiga instead of continue here?
+			if (bitbuf.read16() != 0x4489) continue;
 
 			bitbuf.encoding = Encoding::MFM;
 			crc.init(CRC16::A1A1A1);
@@ -828,6 +828,11 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 			if (distance < min_distance || distance > max_distance)
 				continue;
 
+			// If there's a splice between IDAM and DAM the track was probably modified
+#if 0 // disabled until header/data matching enhancements are complete
+			if (bitbuf.sync_lost(sector.offset, dam_offset))
+				track.modified = true;
+#endif
 			bitbuf.seek(dam_offset);
 			bitbuf.encoding = data_encoding;
 

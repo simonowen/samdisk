@@ -32,6 +32,12 @@ BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
 		if (bit < 0)
 			break;
 
+		if (decoder.sync_lost())
+		{
+			if (opt.debug) util::cout << "sync lost at offset " << tell() << " (" << track_offset(tell()) << ")\n";
+			sync_lost();
+		}
+
 		add(bit ? 1 : 0);
 
 		if (decoder.index())
@@ -69,6 +75,11 @@ bool BitBuffer::seek (int offset)
 void BitBuffer::index ()
 {
 	m_indexes.push_back(m_bitpos);
+}
+
+void BitBuffer::sync_lost ()
+{
+	m_sync_losses.push_back(m_bitpos);
 }
 
 void BitBuffer::add (uint8_t bit)
@@ -165,4 +176,13 @@ int BitBuffer::track_offset (int bitpos) const
 	}
 
 	return bitpos;
+}
+
+bool BitBuffer::sync_lost (int begin, int end) const
+{
+	for (auto pos : m_sync_losses)
+		if (begin < pos && end >= pos)
+			return true;
+
+	return false;
 }
