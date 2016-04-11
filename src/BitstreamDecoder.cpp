@@ -787,6 +787,11 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 			case 0xe5:
 				break;
 
+			// Another invalid AM type to ignore, as found on cyls 40+41 of
+			// International 3D Tennis [+3].
+			case 0x80:
+				break;
+
 			default:
 				Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(cylhead.cyl, cylhead.head));
 				break;
