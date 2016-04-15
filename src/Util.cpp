@@ -327,6 +327,7 @@ bool CheckLibrary (const char *pcszLib_, const char *pcszFunc_)
 	else if (!strcasecmp(pcszLib_, "capsimg")) pcszLib_ = "CAPSImg.dll";
 	else if (!strcasecmp(pcszLib_, "winsock2")) pcszLib_ = "ws2_32.dll";
 	else if (!strcasecmp(pcszLib_, "ftdi2")) pcszLib_ = "ftd2xx.dll";
+	else if (!strcasecmp(pcszLib_, "winusb")) pcszLib_ = "winusb.dll";
 
 	// Load the library and check for the named function
 	// Leave the library loaded as it's about to be loaded anyway

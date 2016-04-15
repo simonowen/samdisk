@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(SAMdisk)
+project(samdisk)
 
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
@@ -51,6 +51,9 @@ endif ()
 include_directories(include src)
 file(GLOB SRC src/*.cpp src/*.c src/types/*.cpp)
 
+set(RESOURCE_DIR ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME})
+add_definitions(-DRESOURCE_DIR="${RESOURCE_DIR}/")
+
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
 check_type_size(ssize_t SSIZE_T)
@@ -99,6 +102,24 @@ if (BZIP2_FOUND)
   add_definitions(-DHAVE_BZIP2)
   include_directories(${BZIP2_INCLUDE_DIR})
   link_libraries(${BZIP2_LIBRARIES})
+endif ()
+
+find_library(WINUSB_LIBRARY NAMES winusb ENV LD_LIBRARY_PATH)
+find_path(WINUSB_INCLUDE_DIR NAMES winusb.h)
+if (WINUSB_LIBRARY AND WINUSB_INCLUDE_DIR)
+  message(STATUS "Found WinUSB: ${LIBUSB1_LIBRARY}")
+  add_definitions(-DHAVE_WINUSB)
+  include_directories(${WINUSB_INCLUDE_DIR})
+  link_libraries(${WINUSB_LIBRARY})
+endif ()
+
+find_library(LIBUSB1_LIBRARY NAMES usb-1.0 ENV LD_LIBRARY_PATH)
+find_path(LIBUSB1_INCLUDE_DIR NAMES libusb.h PATH_SUFFIXES libusb-1.0)
+if (LIBUSB1_LIBRARY AND LIBUSB1_INCLUDE_DIR)
+  message(STATUS "Found libusb-1.0: ${LIBUSB1_LIBRARY}")
+  add_definitions(-DHAVE_LIBUSB1)
+  include_directories(${LIBUSB1_INCLUDE_DIR})
+  link_libraries(${LIBUSB1_LIBRARY})
 endif ()
 
 find_library(FTD2XX_LIBRARY NAMES ftd2xx ENV LD_LIBRARY_PATH)

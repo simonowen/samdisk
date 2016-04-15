@@ -49,6 +49,24 @@ std::string trim (const std::string &str)
 	return s;
 }
 
+std::string resource_dir ()
+{
+#ifdef RESOURCE_DIR
+	return RESOURCE_DIR;
+#elif defined(_WIN32)
+	char sz[MAX_PATH];
+	if (GetModuleFileName(NULL, sz, arraysize(sz)))
+	{
+		auto s = std::string(sz);
+		s.erase(s.find_last_of('\\') + 1);
+		return s;
+
+	}
+#endif
+
+	return "";
+}
+
 bool is_stdout_a_tty ()
 {
 #ifdef _WIN32

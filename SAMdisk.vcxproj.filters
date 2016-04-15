@@ -276,9 +276,6 @@
     <ClCompile Include="src\types\builtin.cpp">
       <Filter>types</Filter>
     </ClCompile>
-    <ClCompile Include="src\types\kryoflux.cpp">
-      <Filter>types</Filter>
-    </ClCompile>
     <ClCompile Include="src\types\record.cpp">
       <Filter>types</Filter>
     </ClCompile>
@@ -293,6 +290,21 @@
     </ClCompile>
     <ClCompile Include="src\types\blk_dev.cpp">
       <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\KF_libusb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\KryoFlux.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\kf_stream.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\kf_dev.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\KF_WinUsb.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -411,6 +423,15 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="include\SpecialFormat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KF_libusb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KryoFlux.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KF_WinUsb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

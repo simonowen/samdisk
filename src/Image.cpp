@@ -11,6 +11,7 @@ bool UnwrapSDF (std::shared_ptr<Disk> &src_disk, std::shared_ptr<Disk> &disk);
 bool ReadUnsupp (MemFile &file, std::shared_ptr<Disk> &disk);
 bool WriteRecord (FILE* f_, std::shared_ptr<Disk> &disk);
 bool ReadSCPDev (const std::string &path, std::shared_ptr<Disk> &disk);
+bool ReadKFDev (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk);
 
@@ -33,6 +34,8 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 		f = ReadRecord(path, disk);
 	else if (util::lowercase(path) == "scp:")
 		f = ReadSCPDev(path, disk);
+	else if (util::lowercase(path) == "kf:")
+		f = ReadKFDev(path, disk);
 	else if (IsBlockDevice(path))
 		f = ReadBlkDev(path, disk);
 

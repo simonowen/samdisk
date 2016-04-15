@@ -11,6 +11,7 @@
 
 #define HAVE_CAPSIMAGE 1
 #define HAVE_FTD2XX 1
+#define HAVE_WINUSB 1
 
 #define HAVE_O_BINARY
 
@@ -84,6 +85,7 @@ typedef void * HANDLE;
 #include <functional>
 #include <numeric>
 #include <bitset>
+#include <codecvt>
 
 #include <cstdio>
 #include <cstddef>
@@ -98,6 +100,8 @@ typedef void * HANDLE;
 #include <climits>
 #include <csignal>
 #include <fcntl.h>
+#include <chrono>
+#include <thread>
 #include <cassert>
 #include <system_error>
 

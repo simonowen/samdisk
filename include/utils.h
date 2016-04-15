@@ -147,6 +147,7 @@ public:
 std::string fmt (const char *fmt, ...);
 std::vector<std::string> split (const std::string &str, char delim = ' ', bool skip_empty = false);
 std::string trim (const std::string &str);
+std::string resource_dir ();
 bool is_stdout_a_tty ();
 std::string lowercase (const std::string &str);
 
