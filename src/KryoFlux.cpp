@@ -61,11 +61,11 @@ void KryoFlux::UploadFirmware ()
 
 	auto fwdata = std::vector<uint8_t>(std::istreambuf_iterator<char>(fwfile),
 									   std::istreambuf_iterator<char>());
-	auto fwsize = fwdata.size();
+	auto fwsize = static_cast<int>(fwdata.size());
 
 	SamBaCommand(util::fmt("S%08lx,%08lx#", KF_FW_LOAD_ADDR, fwsize));
 
-	auto offset = 0U;
+	auto offset = 0;
 	while (offset < fwsize)
 		offset += Write(fwdata.data() + offset, fwsize - offset);
 
@@ -88,7 +88,7 @@ void KryoFlux::SamBaCommand (const std::string &cmd, const std::string &end)
 
 	try
 	{
-		Write(cmd.c_str(), cmd.length());
+		Write(cmd.c_str(), static_cast<int>(cmd.length()));
 
 		if (!end.empty())
 		{
@@ -212,7 +212,7 @@ void KryoFlux::ReadFlux (int revs,
 	while (it != itEnd)
 	{
 		// Store current flux count at each stream position
-		flux_counts[stream_pos] = flux_times.size();
+		flux_counts[stream_pos] = static_cast<int>(flux_times.size());
 
 		auto type = *it++;
 		switch (type)

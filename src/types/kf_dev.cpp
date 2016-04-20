@@ -63,7 +63,7 @@ protected:
 				Message(msgWarning, "%s on %s", w.c_str(), CH(cylhead.cyl, cylhead.head));
 
 			track.add(scan_flux(cylhead, flux_revs));
-			total_revs += flux_revs.size() - 1;
+			total_revs += static_cast<int>(flux_revs.size()) - 1;
 
 			// Have we read at least the minimum number of track scans?
 			if (total_revs >= opt.rescans)

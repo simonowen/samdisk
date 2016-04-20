@@ -20,7 +20,7 @@ FluxDecoder::FluxDecoder (const std::vector<std::vector<uint32_t>> &flux_revs, i
 
 int FluxDecoder::flux_revs () const
 {
-	return m_flux_revs.size();
+	return static_cast<int>(m_flux_revs.size());
 }
 
 int FluxDecoder::flux_count () const
