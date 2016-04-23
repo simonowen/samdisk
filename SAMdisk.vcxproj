@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Format.cpp" />
+    <ClCompile Include="src\Header.cpp" />
     <ClCompile Include="src\JupiterAce.cpp" />
     <ClCompile Include="src\BitBuffer.cpp" />
     <ClCompile Include="src\BitstreamDecoder.cpp" />
@@ -63,6 +65,7 @@
     <ClCompile Include="src\KryoFlux.cpp" />
     <ClCompile Include="src\MemFile.cpp" />
     <ClCompile Include="src\SCP_FTD2XX.cpp" />
+    <ClCompile Include="src\Sector.cpp" />
     <ClCompile Include="src\SpectrumPlus3.cpp" />
     <ClCompile Include="src\precompile.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -84,6 +87,7 @@
     <ClCompile Include="src\SCP_Win32.cpp" />
     <ClCompile Include="src\SpecialFormat.cpp" />
     <ClCompile Include="src\SuperCardPro.cpp" />
+    <ClCompile Include="src\Track.cpp" />
     <ClCompile Include="src\TrackBuffer.cpp" />
     <ClCompile Include="src\TrackDataParser.cpp" />
     <ClCompile Include="src\Trinity.cpp" />
@@ -163,6 +167,8 @@
     <ClCompile Include="src\win32_error.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Format.h" />
+    <ClInclude Include="include\Header.h" />
     <ClInclude Include="include\JupiterAce.h" />
     <ClInclude Include="include\BitBuffer.h" />
     <ClInclude Include="include\BitstreamDecoder.h" />
@@ -184,6 +190,7 @@
     <ClInclude Include="include\KF_WinUsb.h" />
     <ClInclude Include="include\KryoFlux.h" />
     <ClInclude Include="include\MemFile.h" />
+    <ClInclude Include="include\Sector.h" />
     <ClInclude Include="include\SpecialFormat.h" />
     <ClInclude Include="include\SpectrumPlus3.h" />
     <ClInclude Include="include\resource.h" />
@@ -194,6 +201,7 @@
     <ClInclude Include="include\SCP_Win32.h" />
     <ClInclude Include="include\SuperCardPro.h" />
     <ClInclude Include="include\ThreadPool.h" />
+    <ClInclude Include="include\Track.h" />
     <ClInclude Include="include\TrackBuffer.h" />
     <ClInclude Include="include\TrackDataParser.h" />
     <ClInclude Include="include\Trinity.h" />
