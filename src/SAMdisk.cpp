@@ -16,7 +16,7 @@ volatile bool g_fAbort;
 
 void Version ()
 {
-	util::cout << colour::WHITE << "SAMdisk 4.0 alpha (" __DATE__ ")" << colour::none << ", (c) 2015 Simon Owen\n";
+	util::cout << colour::WHITE << "SAMdisk 4.0 alpha (" __DATE__ ")" << colour::none << ", (c) 2016 Simon Owen\n";
 }
 
 int Usage ()
@@ -257,7 +257,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case '1':	if (!GetInt(optarg, opt.head1) || opt.head1 > 0xff) return BadValue("head1"); break;
 			case 'D':	if (!GetInt(optarg, opt.datacopy)) return BadValue("data-copy"); break;
 
-			case 'd':	opt.step *= 2; break;
+			case 'd':	opt.step = 2; break;
 			case 'f':	++opt.force; break;
 			case 'v':	++opt.verbose; break;
 			case 'x':	opt.hex = 1; break;
