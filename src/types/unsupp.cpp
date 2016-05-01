@@ -4,9 +4,6 @@
 
 bool ReadUnsupp (MemFile &file, std::shared_ptr<Disk> &/*disk*/)
 {
-	if (file.size() == 0)
-		throw util::exception("image file is zero bytes");
-
 	std::array<char, SECTOR_SIZE> buf;
 	if (!file.rewind() || !file.read(buf))
 		return false;

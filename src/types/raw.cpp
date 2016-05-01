@@ -7,6 +7,10 @@ bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 	Format fmt;
 	fmt.encoding = Encoding::MFM;
 
+	// An empty format should not match an empty file!
+	if (file.size() == 0)
+		throw util::exception("image file is zero bytes");
+
 	// Allow user overrides of the format
 	OverrideFormat(fmt, true);
 
