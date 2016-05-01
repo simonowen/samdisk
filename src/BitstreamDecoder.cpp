@@ -572,8 +572,13 @@ bool test_remove_gap2 (Data data, int offset)
 
 	if (len > 0)
 	{
-		if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
-		return false;
+		if (fill != 0x00)
+		{
+			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+			return false;
+		}
+
+		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
 	}
 
 	if (opt.debug) util::cout << "gap2 can be removed\n";
