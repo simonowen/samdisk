@@ -12,29 +12,30 @@
 // Amiga, then GCR. On subsequent calls the last successful encoding is
 // checked first, as it's the most likely.
 
-Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs)
+void scan_flux (TrackData &trackdata)
 {
-	Track track;
 	static Encoding last_encoding = Encoding::MFM;
 
 	// Return an empty track if we have no data
-	if (flux_revs.size() == 0)
-		return track;
+	if (trackdata.flux().empty())
+		return;
 
 	// Sum the flux times on the last revolution
 	int64_t total_time = 0;
-	for (const auto &time : flux_revs.back())
+	for (const auto &time : trackdata.flux().back())
 		total_time += time;
 
 	// Convert from ns to us and save as track time
+	Track track;
 	track.tracktime = static_cast<int>(total_time / 1000);
+	trackdata.add(std::move(track));
 
 	// Jupiter Ace scanning must be explicitly requested, as the end of tracks
 	// aren't wiped and often contain MFM sectors from previous disk use.
 	if (opt.ace)
 	{
-		track.add(scan_flux_ace(cylhead, flux_revs));
-		return track;
+		scan_flux_ace(trackdata);
+		return;
 	}
 
 	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
@@ -54,27 +55,23 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 			{
 				static DataRate last_datarate = DataRate::_250K;
 
-				track.add(scan_flux_mfm_fm(cylhead, flux_revs, last_datarate));
+				scan_flux_mfm_fm(trackdata, last_datarate);
 
 				// If we found something, remember the successful data rate
-				if (!track.empty())
-					last_datarate = track[0].datarate;
+				if (!trackdata.track().empty())
+					last_datarate = trackdata.bitstream().datarate;
 
 				break;
 			}
 
 			case Encoding::Amiga:
 			{
-				track.add(scan_flux_amiga(cylhead, flux_revs));
+				scan_flux_amiga(trackdata);
 				break;
 			}
 
 			case Encoding::GCR:
-				track.add(scan_flux_gcr(cylhead, flux_revs));
-				break;
-
-			case Encoding::Ace:
-				// Processed above iff opt.ace is set
+				scan_flux_gcr(trackdata);
 				break;
 
 			default:
@@ -83,28 +80,28 @@ Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>
 		}
 
 		// Something found?
-		if (!track.empty())
+		if (!trackdata.track().empty())
 		{
 			// Remember the encoding so we try it first next time
 			last_encoding = encoding;
-			return track;
+			break;
 		}
 	}
-
-	return track;
 }
 
 
 // Scan a track bitstream for sectors
-Track scan_bitstream (const CylHead &cylhead, BitBuffer &bitbuf)
+void scan_bitstream (TrackData &trackdata)
 {
-	Track track;
 	static Encoding last_encoding = Encoding::MFM;
 
 	// Jupiter Ace scanning must be explicitly requested, as the end of tracks aren't wiped
 	// and often contain MFM sectors from the previous disk use.
 	if (opt.ace)
-		return scan_bitstream_ace(cylhead, bitbuf);
+	{
+		scan_bitstream_ace(trackdata);
+		return;
+	}
 
 	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
 	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
@@ -121,22 +118,18 @@ Track scan_bitstream (const CylHead &cylhead, BitBuffer &bitbuf)
 			case Encoding::MFM:
 			case Encoding::FM:
 			{
-				track = scan_bitstream_mfm_fm(cylhead, bitbuf);
+				scan_bitstream_mfm_fm(trackdata);
 				break;
 			}
 
 			case Encoding::Amiga:
 			{
-				track = scan_bitstream_amiga(cylhead, bitbuf);
+				scan_bitstream_amiga(trackdata);
 				break;
 			}
 
 			case Encoding::GCR:
-				track = scan_bitstream_gcr(cylhead, bitbuf);
-				break;
-
-			case Encoding::Ace:
-				// Processed above iff opt.ace is set
+				scan_bitstream_gcr(trackdata);
 				break;
 
 			default:
@@ -145,15 +138,13 @@ Track scan_bitstream (const CylHead &cylhead, BitBuffer &bitbuf)
 		}
 
 		// Something found?
-		if (!track.empty())
+		if (!trackdata.track().empty())
 		{
 			// Remember the encoding so we try it first next time
 			last_encoding = encoding;
-			return track;
+			break;
 		}
 	}
-
-	return track;
 }
 
 
@@ -181,14 +172,17 @@ Physical to Apple DOS 3.3 logical sector mapping:
 http://www.scribd.com/doc/200679/Beneath-Apple-DOS-By-Don-Worth-and-Pieter-Lechner
 */
 
-Track scan_bitstream_gcr (const CylHead &/*cylhead*/, BitBuffer &bitbuf)
+void scan_bitstream_gcr (TrackData &trackdata)
 {
-	Track track;
+	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
+
+	Track track;
 	track.tracklen = bitbuf.track_bitsize();
+	trackdata.add(std::move(track));
+
 	uint32_t dword = 0;
 	size_t marks = 0;
-
 
 	// ToDo: finish GCR - for now we just count known marks
 	while (!bitbuf.wrapped())
@@ -209,40 +203,41 @@ Track scan_bitstream_gcr (const CylHead &/*cylhead*/, BitBuffer &bitbuf)
 	// Fail if we found enough marks to suggest GCR content
 	if (marks > 10)
 		throw std::logic_error("GCR format is not currently supported");
-
-	return track;
 }
 
 
 // ToDo: finish GCR support
-Track scan_flux_gcr (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs)
+void scan_flux_gcr (TrackData &trackdata)
 {
-	Track track;
 	int bitcell_ns;
 
 	// C64 GCR disks are zoned, with variable rate depending on cylinder
 	// ToDo: make this optional, or passed in if needed
-	if (cylhead.cyl < 17)
+	if (trackdata.cylhead.cyl < 17)
 		bitcell_ns = 3200;
-	else if (cylhead.cyl < 24)
+	else if (trackdata.cylhead.cyl < 24)
 		bitcell_ns = 3500;
-	else if (cylhead.cyl < 30)
+	else if (trackdata.cylhead.cyl < 30)
 		bitcell_ns = 3750;
 	else
 		bitcell_ns = 4000;
 
-	FluxDecoder decoder(flux_revs, bitcell_ns);
+	FluxDecoder decoder(trackdata.flux(), bitcell_ns);
 	BitBuffer bitbuf(DataRate::_250K, decoder);
 
-	return scan_bitstream_gcr(cylhead, bitbuf);
+	trackdata.add(std::move(bitbuf));
+	scan_bitstream_gcr(trackdata);
 }
 
 
-Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf)
+void scan_bitstream_ace (TrackData &trackdata)
 {
-	Track track;
+	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
+
+	Track track;
 	track.tracklen = bitbuf.track_bitsize();
+
 	uint32_t word = 0;
 
 	enum State { stateWant255, stateWant42, stateData };
@@ -311,9 +306,9 @@ Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf)
 				dataerror = true;
 
 				if (!clock || !bit)
-					Message(msgWarning, "framing error at offset %u on on %s", block.size(), CH(cylhead.cyl, cylhead.head));
+					Message(msgWarning, "framing error at offset %u on on %s", block.size(), CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				else if (!parity) // inverted due to inclusion of stop bit above
-					Message(msgWarning, "parity error at offset %u on on %s", block.size(), CH(cylhead.cyl, cylhead.head));
+					Message(msgWarning, "parity error at offset %u on on %s", block.size(), CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 			}
 		}
 		else
@@ -349,12 +344,12 @@ Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf)
 	// If we found a block on the track, save it in a 4K sector with id=0.
 	if (state == stateData)
 	{
-		Sector sector(DataRate::_250K, Encoding::Ace, Header(cylhead, 0, SizeToCode(4096)));
+		Sector sector(DataRate::_250K, Encoding::Ace, Header(trackdata.cylhead, 0, SizeToCode(4096)));
 
 		// Skip header bytes
 		if (!IsValidDeepThoughtData(block))
 		{
-			Message(msgWarning, "block checksum error on %s", CH(cylhead.cyl, cylhead.head));
+			Message(msgWarning, "block checksum error on %s", CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 			dataerror = true;
 		}
 
@@ -362,15 +357,16 @@ Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf)
 		track.add(std::move(sector));
 	}
 
-	return track;
+	trackdata.add(std::move(track));
 }
 
-Track scan_flux_ace (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs)
+void scan_flux_ace (TrackData &trackdata)
 {
-	FluxDecoder decoder(flux_revs, 4000);	// 125Kbps with 4us bitcell width
+	FluxDecoder decoder(trackdata.flux(), 4000);	// 125Kbps with 4us bitcell width
 	BitBuffer bitbuf(DataRate::_250K, decoder);
 
-	return scan_bitstream_ace (cylhead, bitbuf);
+	trackdata.add(std::move(bitbuf));
+	scan_bitstream_ace(trackdata);
 }
 
 
@@ -404,10 +400,12 @@ static bool amiga_read_dwords (BitBuffer &bitbuf, uint32_t *pdw, size_t dwords, 
 	return !bitbuf.wrapped();
 }
 
-Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
+void scan_bitstream_amiga (TrackData &trackdata)
 {
-	Track track;
+	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
+
+	Track track;
 	track.tracklen = bitbuf.track_bitsize();
 
 	CRC16 crc;
@@ -439,7 +437,7 @@ Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
 
 		// Check for AmigaDOS (0xff), sector / sector end within normal range, and track number matching physical location
 		if (type != 0xff || sector_nr >= 11 || !eot || eot > 11 ||
-			track_nr != static_cast<uint8_t>((cylhead.cyl << 1) + cylhead.head))
+			track_nr != static_cast<uint8_t>((trackdata.cylhead.cyl << 1) + trackdata.cylhead.head))
 			continue;
 
 		std::vector<uint32_t> label(4);
@@ -448,7 +446,7 @@ Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
 
 		// Warn if the label field isn't empty
 		if (*std::max_element(label.begin(), label.end()) != 0)
-			Message(msgWarning, "%s label field is not empty", CHS(cylhead.cyl, cylhead.head, (info >> 8) & 0xff));
+			Message(msgWarning, "%s label field is not empty", CHS(trackdata.cylhead.cyl, trackdata.cylhead.head, (info >> 8) & 0xff));
 
 		// Read the header checksum, and combine with checksum so far
 		uint32_t disksum;
@@ -460,7 +458,7 @@ Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
 		if (calcsum != 0 && !opt.idcrc)
 			continue;
 
-		Sector sector(DataRate::_250K, Encoding::Amiga, Header(cylhead, sector_nr, 2));
+		Sector sector(DataRate::_250K, Encoding::Amiga, Header(trackdata.cylhead, sector_nr, 2));
 		sector.offset = bitbuf.track_offset(sector_offset);
 
 		// Read the data checksum
@@ -480,32 +478,25 @@ Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf)
 		track.add(std::move(sector));
 	}
 
-	return track;
+	trackdata.add(std::move(track));
 }
 
-Track scan_flux_amiga (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs)
+void scan_flux_amiga (TrackData &trackdata)
 {
-	Track track;
-
 	// Scale the flux values to simulate motor speed variation
 	for (auto flux_scale : { 100, 95, 105 })
 	{
-		FluxDecoder decoder(flux_revs, ::bitcell_ns(DataRate::_250K), flux_scale);
+		FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), flux_scale);
 		BitBuffer bitbuf(DataRate::_250K, decoder);
 
-		track.add(scan_bitstream_amiga(cylhead, bitbuf));
-
-		// Check for missing data fields or data CRC errors
-		auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {
-			return !sector.has_data() || sector.has_baddatacrc();
-		});
+		trackdata.add(std::move(bitbuf));
+		scan_bitstream_amiga(trackdata);
+		auto &track = trackdata.track();
 
 		// Stop if there's nothing to fix or motor wobble is disabled
-		if (it == track.end() || opt.nowobble)
+		if (!track.has_data_error() || opt.nowobble)
 			break;
 	}
-
-	return track;
 }
 
 
@@ -683,9 +674,11 @@ bool test_remove_gap4b (Data data, int offset)
 }
 
 
-Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
+void scan_bitstream_mfm_fm (TrackData &trackdata)
 {
 	Track track;
+
+	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
 	track.tracklen = bitbuf.track_bitsize();
 
@@ -798,7 +791,7 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 				break;
 
 			default:
-				Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(cylhead.cyl, cylhead.head));
+				Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				break;
 		}
 	}
@@ -818,7 +811,7 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 		if (sector.has_badidcrc())
 			continue;
 
-		if (opt.debug) util::cout << "Finding " << cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -961,13 +954,11 @@ Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf)
 		}
 	}
 
-	return track;
+	trackdata.add(std::move(track));
 }
 
-Track scan_flux_mfm_fm (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs, DataRate last_datarate)
+void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate)
 {
-	Track track;
-
 	// Set the datarate scanning order, with the last successful rate first (and its duplicate removed)
 	std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
 	datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
@@ -978,25 +969,20 @@ Track scan_flux_mfm_fm (const CylHead &cylhead, const std::vector<std::vector<ui
 		// Scale the flux values to simulate motor speed variation
 		for (auto flux_scale : { 100, 95, 105 })
 		{
-			FluxDecoder decoder(flux_revs, ::bitcell_ns(datarate), flux_scale);
+			FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), flux_scale);
 			BitBuffer bitbuf(datarate, decoder);
 
-			track.add(scan_bitstream_mfm_fm(cylhead, bitbuf));
-
-			// Check for missing data fields or data CRC errors (potential weak sectors)
-			auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {
-				return !sector.has_data() || sector.has_baddatacrc();
-			});
+			trackdata.add(std::move(bitbuf));
+			scan_bitstream_mfm_fm(trackdata);
+			auto &track = trackdata.track();
 
 			// Stop if there's nothing to fix or motor wobble is disabled
-			if (it == track.end() || opt.nowobble)
+			if (!track.has_data_error() || opt.nowobble)
 				break;
 		}
 
 		// If we found something there's no need to check other densities
-		if (track.size())
+		if (!trackdata.track().empty())
 			break;
 	}
-
-	return track;
 }

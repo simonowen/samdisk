@@ -36,8 +36,8 @@ struct CylHead
 	CylHead () = default;
 	CylHead(int cyl_, int head_) : cyl(cyl_), head(head_)
 	{
-		assert(cyl >= 0 && cyl <= MAX_DISK_CYLS);
-		assert(head >= 0 && head <= MAX_DISK_HEADS);
+		assert(cyl >= 0 && cyl < MAX_DISK_CYLS);
+		assert(head >= 0 && head < MAX_DISK_HEADS);
 	}
 
 	operator int() const { return (cyl * MAX_DISK_HEADS) + head; }

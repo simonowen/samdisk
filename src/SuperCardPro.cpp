@@ -223,7 +223,7 @@ bool SuperCardPro::SetPin33 (bool high)
 	return SendCmd(CMD_SETPIN33, &value, sizeof(value));
 }
 
-bool SuperCardPro::ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs)
+bool SuperCardPro::ReadFlux (int revs, FluxData &flux_revs)
 {
 	// Read at least 2 revolutions, as a sector data may span index position
 	revs = std::max(2, std::min(revs, MAX_FLUX_REVS));

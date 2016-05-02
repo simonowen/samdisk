@@ -2,7 +2,6 @@
 //  http://hxc2001.com/download/floppy_drive_emulator/SDCard_HxC_Floppy_Emulator_HFE_file_format.pdf
 
 #include "SAMdisk.h"
-#include "DemandDisk.h"
 
 // Note: currently only format revision 00 is supported.
 
@@ -103,8 +102,6 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 	MEMORY mem(0x10000);
 	auto pbTrack = mem.pb;
 
-	auto hfe_disk = std::make_shared<DemandDisk>();
-
 	for (uint8_t cyl = 0; cyl < hh.number_of_track && !g_fAbort; cyl++)
 	{
 		// Offset is in 512-byte blocks, data length covers both heads
@@ -133,14 +130,13 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 			}
 
 			BitBuffer bitbuf(datarate, pbTrack, uTrackDataLen * 8);
-			hfe_disk->set_source(CylHead(cyl, head), std::move(bitbuf));
+			disk->add(TrackData(CylHead(cyl, head), std::move(bitbuf)));
 
 			// ToDo: save more track metadata?
 		}
 	}
 
-	hfe_disk->strType = "HFE";
-	disk = hfe_disk;
+	disk->strType = "HFE";
 
 	return true;
 }

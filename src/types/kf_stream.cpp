@@ -2,8 +2,8 @@
 //  http://www.softpres.org/kryoflux:stream
 
 #include "SAMdisk.h"
-#include "DemandDisk.h"
 #include "KryoFlux.h"
+
 
 bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 {
@@ -22,8 +22,6 @@ bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	auto ext = path.substr(len - 3);
 	path = path.substr(0, len - 8);
-
-	auto stream_disk = std::make_shared<DemandDisk>();
 
 	auto missing0 = 0, missing1 = 0, missing_total = 0;
 
@@ -55,15 +53,14 @@ bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 			for (auto &w : warnings)
 				Message(msgWarning, "%s on %s", w.c_str(), CH(cylhead.cyl, cylhead.head));
 
-			stream_disk->set_source(cylhead, std::move(flux_revs));
+			disk->add(TrackData(cylhead, std::move(flux_revs)));
 		}
 	});
 
 	if (missing_total)
 		Message(msgWarning, "%d missing or invalid stream track%s", missing_total, (missing_total == 1) ? "" : "s");
 
-	stream_disk->strType = "STREAM";
-	disk = stream_disk;
+	disk->strType = "STREAM";
 
 	return true;
 }

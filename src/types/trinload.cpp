@@ -17,19 +17,19 @@ public:
 	}
 
 protected:
-	Track load (const CylHead &cylhead) override
+	TrackData load (const CylHead &cylhead, bool /*first_read*/) override
 	{
 		auto data = m_trinity->read_track(cylhead.cyl, cylhead.head);
 
 		Track track;
 		track.format(cylhead, RegularFormat::MGT);
 		track.populate(data.begin(), data.end());
-		return track;
+		return TrackData(cylhead, std::move(track));
 	}
 
-	void preload (const Range &/*range*/) override
+	bool preload (const Range &/*range*/) override
 	{
-		// Pre-loading not supported
+		return false;
 	}
 
 private:
@@ -48,12 +48,12 @@ bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
 	if (record != 0)
 		trinity->select_record(record);
 
+	auto ip_addr_str = trinity->devices()[0];
 	auto trinload_disk = std::make_shared<TrinLoadDisk>(std::move(trinity));
 
-	Format(RegularFormat::MGT).range().each([&] (const CylHead &cylhead) {
-		trinload_disk->extend(cylhead);
-	});
-
+	trinload_disk->fmt = Format(RegularFormat::MGT);
+	trinload_disk->extend(CylHead(trinload_disk->fmt.cyls - 1, trinload_disk->fmt.heads - 1));
+	trinload_disk->metadata["address"] = ip_addr_str;
 	trinload_disk->strType = "TrinLoad";
 	disk = trinload_disk;
 

@@ -13,7 +13,7 @@ public:
 	}
 
 protected:
-	Track load (const CylHead &cylhead) override
+	TrackData load (const CylHead &cylhead, bool /*first_read*/) override
 	{
 		auto lba = (cylhead.cyl * fmt.heads + cylhead.head) * fmt.sectors;
 		std::vector<int> error_ids;
@@ -51,12 +51,12 @@ protected:
 					s.set_baddatacrc();
 		}
 
-		return track;
+		return TrackData(cylhead, std::move(track));
 	}
 
-	void preload (const Range &/*range*/) override
+	bool preload (const Range &/*range*/) override
 	{
-		// Pre-loading is not supported on real devices
+		return false;
 	}
 
 private:

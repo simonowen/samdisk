@@ -8,8 +8,8 @@ enum class RegularFormat { MGT, ProDos, PC320, PC360, PC640, PC720, PC1200, PC12
 
 struct Format
 {
-	static const int DefaultTracks = 80;
-	static const int DefaultSides = 2;
+	constexpr static int DefaultTracks = 80;
+	constexpr static int DefaultSides = 2;
 
 	Format () = default;
 	Format (RegularFormat reg_fmt);

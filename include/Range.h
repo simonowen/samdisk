@@ -11,8 +11,6 @@ public:
 	bool empty () const;
 	int cyls () const;
 	int heads () const;
-	const CylHead &begin () const;
-	const CylHead &end () const;
 	bool contains (const CylHead &cylhead);
 	void each (const std::function<void (const CylHead &cylhead)> &func, bool cyls_first = false) const;
 

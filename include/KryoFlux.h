@@ -29,8 +29,8 @@ public:
 	int SetMinTrack (int cyl);
 	int SetMaxTrack (int cyl);
 
-	void ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs, std::vector<std::string> &warnings);
-	static std::vector<std::vector<uint32_t>> DecodeStream (const std::vector<uint8_t> &data, std::vector<std::string> &warnings);
+	void ReadFlux (int indexes, FluxData &flux_revs, std::vector<std::string> &warnings);
+	static FluxData DecodeStream (const Data &data, std::vector<std::string> &warnings);
 
 private:
 	static const int REQ_STATUS = 0x00;					// status

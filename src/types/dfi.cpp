@@ -23,7 +23,7 @@ typedef struct
 class DFIDisk final : public DemandDisk
 {
 public:
-	void add_track_data (const CylHead &cylhead, std::vector<uint8_t> &&data)
+	void add_track_data (const CylHead &cylhead, Data &&data)
 	{
 		// Determine image clock rate if not yet known. It seems reasonable
 		// to assume this will not vary between tracks.
@@ -50,30 +50,29 @@ public:
 				throw util::exception("failed to determine DFI clock frequency");
 		}
 
-		m_trackdata[cylhead] = std::move(data);
+		m_data[cylhead] = std::move(data);
 		extend(cylhead);
 	}
 
 protected:
-	Track load (const CylHead &cylhead) override
+	TrackData load (const CylHead &cylhead, bool /*first_read*/) override
 	{
-		auto ch = CylHead(cylhead.cyl * opt.step, cylhead.head);
-		auto it = m_trackdata.find(ch);
-		if (it == m_trackdata.end())
-			return Track();
+		const auto &data = m_data[cylhead];
+		if (data.empty())
+			return TrackData(cylhead);
 
-		std::vector<std::vector<uint32_t>> flux_revs;
+		FluxData flux_revs;
 		std::vector<uint32_t> flux_times;
-		flux_times.reserve(it->second.size());
+		flux_times.reserve(data.size());
 
 		uint32_t total_time = 0;
-		for (auto byte : it->second)
+		for (auto byte : data)
 		{
 			if (byte & 0x80)
 			{
 				flux_revs.push_back(std::move(flux_times));
 				flux_times.clear();
-				flux_times.reserve(it->second.size());
+				flux_times.reserve(data.size());
 			}
 			else
 			{
@@ -90,11 +89,12 @@ protected:
 		if (!flux_times.empty())
 			flux_revs.push_back(std::move(flux_times));
 
-		return scan_flux(ch, flux_revs);
+		m_data.erase(cylhead);
+		return TrackData(cylhead, std::move(flux_revs));
 	}
 
 private:
-	std::map<CylHead, std::vector<uint8_t>> m_trackdata {};
+	std::map<CylHead, Data> m_data {};
 	uint32_t m_tick_ns = 0;
 };
 
@@ -125,7 +125,7 @@ bool ReadDFI (MemFile &file, std::shared_ptr<Disk> &disk)
 		CylHead cylhead(util::betoh(th.cyl), util::betoh(th.head));
 		auto data_length = (static_cast<uint32_t>(th.datalen[0]) << 24) | (th.datalen[1] << 16) | (th.datalen[2] << 8) | th.datalen[3];
 
-		std::vector<uint8_t> track_data(data_length);
+		Data track_data(data_length);
 		if (!file.read(track_data))
 			throw util::exception("short file reading ", cylhead, " data");
 

@@ -6,6 +6,7 @@
 class BitBuffer
 {
 public:
+	BitBuffer () = default;
 	BitBuffer (DataRate dr, int revolutions);
 	BitBuffer (DataRate dr, const uint8_t *pb, int len);
 	BitBuffer (DataRate datarate_, FluxDecoder &decoder);

@@ -49,7 +49,7 @@ public:
 	bool SetParameters (int drive_select_delay, int step_delay, int motor_on_delay, int seek_0_delay, int motor_off_delay);
 	bool RamTest ();
 	bool SetPin33 (bool high);
-	bool ReadFlux (int revs, std::vector<std::vector<uint32_t>> &flux_revs);
+	bool ReadFlux (int revs, FluxData &flux_revs);
 	bool WriteFlux (const void *p, int nr_bitcells);
 	bool GetInfo (int &hwversion, int &fwversion);
 

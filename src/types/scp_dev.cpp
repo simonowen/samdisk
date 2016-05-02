@@ -19,9 +19,6 @@ public:
 		auto step_delay = opt.newdrive ? 5000 : 10000;
 		m_supercardpro->SetParameters(1000, step_delay, 1000, 15, 10000);
 
-		// Move the head out before restoring back to TRACK0, just in case
-		// something caused the physical head to have a negative position.
-		m_supercardpro->StepTo(10);
 		m_supercardpro->Seek0();
 	}
 
@@ -32,56 +29,26 @@ public:
 	}
 
 protected:
-	Track load (const CylHead &cylhead) override
+	TrackData load (const CylHead &cylhead, bool first_read) override
 	{
-		m_supercardpro->SelectDrive(0);
+		FluxData flux_revs;
+		auto revs = first_read ? FIRST_READ_REVS :
+			std::min(REMAIN_READ_REVS, SuperCardPro::MAX_FLUX_REVS);
 
-		if (!m_supercardpro->StepTo(cylhead.cyl * opt.step) ||
-			!m_supercardpro->SelectSide(cylhead.head))
+		if (!m_supercardpro->SelectDrive(0) ||
+			!m_supercardpro->StepTo(cylhead.cyl) ||
+			!m_supercardpro->SelectSide(cylhead.head) ||
+			!m_supercardpro->ReadFlux(revs, flux_revs))
 		{
 			throw util::exception(m_supercardpro->GetErrorStatusText());
 		}
 
-		std::vector<std::vector<uint32_t>> flux_revs;
-		auto rev_limit = std::max(opt.retries, opt.rescans + 1);
-		auto first = true;
-		Track track;
-
-		for (auto total_revs = 0; total_revs < rev_limit; )
-		{
-			auto revs = std::min(rev_limit - total_revs, SuperCardPro::MAX_FLUX_REVS);
-
-			// Start with 2 revolutions by default, as it's faster if the track is error free.
-			// This only applies if there isn't a custom rescan count requiring more.
-			if (first && opt.rescans < 2)
-				revs = 2;
-			first = false;
-
-			if (!m_supercardpro->ReadFlux(revs, flux_revs))
-				throw util::exception(m_supercardpro->GetErrorStatusText());
-
-			track.add(scan_flux(cylhead, flux_revs));
-			total_revs += revs;
-
-			// Have we read at least the minimum number of track scans?
-			if (total_revs >= opt.rescans)
-			{
-				auto it = std::find_if(track.begin(), track.end(), [] (const Sector &sector) {
-					return !sector.has_data() || sector.has_baddatacrc();
-				});
-
-				// Stop if there are no errors left to fix
-				if (it == track.end())
-					break;
-			}
-		}
-
-		return track;
+		return TrackData(cylhead, std::move(flux_revs));
 	}
 
-	void preload (const Range &/*range*/) override
+	bool preload (const Range &/*range*/) override
 	{
-		// Pre-loading is not supported on real devices
+		return false;
 	}
 
 private:

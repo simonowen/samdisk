@@ -483,7 +483,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 11; ++i)
 			{
 				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
-				if (i == 0) sector.set(Sector::Flag::NoHeader);
+				if (i == 0) sector.add(Sector::Flag::NoHeader);
 				track.add(std::move(sector));
 			}
 

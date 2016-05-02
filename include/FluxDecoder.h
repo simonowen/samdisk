@@ -9,7 +9,7 @@ class FluxDecoder
 	static const int CLOCK_MAX_ADJUST = 50;	// +/- % PLL adjustment
 
 public:
-	FluxDecoder (const std::vector<std::vector<uint32_t>> &flux_revs, int bitcell_ns, int flux_scale_percent = 100);
+	FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent = 100);
 
 	bool index ();
 	bool sync_lost ();
@@ -20,8 +20,8 @@ public:
 	int next_flux ();
 
 protected:
-	const std::vector<std::vector<uint32_t>> &m_flux_revs;
-	std::vector<std::vector<uint32_t>>::const_iterator m_rev_it {};
+	const FluxData &m_flux_revs;
+	FluxData::const_iterator m_rev_it {};
 	std::vector<uint32_t>::const_iterator m_flux_it {};
 
 	int m_clock = 0, m_clock_centre, m_clock_min, m_clock_max;

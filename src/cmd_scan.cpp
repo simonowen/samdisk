@@ -34,7 +34,7 @@ void ScanTrack (const CylHead &cylhead, const Track &track, ScanContext &context
 			// gap is large enough to hide a 256-byte sector, warn the user
 			if (first_sector.offset > min_offset_bits && (data_end_bits + min_offset_bits) < wrap_start_bits)
 			{
-				Message(msgWarning, "late track start (@%lu) may indicate missing first sector", first_sector.offset / 16);
+				Message(msgWarning, "late track start (@%lu) on %s may indicate missing first sector", first_sector.offset / 16, cylhead.to_string().c_str());
 				context.warned = true;
 			}
 		}

@@ -5,16 +5,16 @@
 
 const int DEFAULT_MAX_SPLICE = 72;	// limit of bits treated as splice noise between recognised gap patterns
 
-Track scan_flux (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs);
-Track scan_flux_mfm_fm (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs, DataRate last_datarate);
-Track scan_flux_amiga (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs);
-Track scan_flux_gcr (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs);
-Track scan_flux_ace (const CylHead &cylhead, const std::vector<std::vector<uint32_t>> &flux_revs);
+void scan_flux (TrackData &trackdata);
+void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate);
+void scan_flux_amiga (TrackData &trackdata);
+void scan_flux_gcr (TrackData &trackdata);
+void scan_flux_ace (TrackData &trackdata);
 
-Track scan_bitstream (const CylHead &cylhead, BitBuffer &bitbuf);
-Track scan_bitstream_mfm_fm (const CylHead &cylhead, BitBuffer &bitbuf);
-Track scan_bitstream_amiga (const CylHead &cylhead, BitBuffer &bitbuf);
-Track scan_bitstream_ace (const CylHead &cylhead, BitBuffer &bitbuf);
-Track scan_bitstream_gcr (const CylHead &cylhead, BitBuffer &bitbuf);
+void scan_bitstream (TrackData &trackdata);
+void scan_bitstream_mfm_fm (TrackData &trackdata);
+void scan_bitstream_amiga (TrackData &trackdata);
+void scan_bitstream_ace (TrackData &trackdata);
+void scan_bitstream_gcr (TrackData &trackdata);
 
 #endif // BITSTREAM_DECODER_H

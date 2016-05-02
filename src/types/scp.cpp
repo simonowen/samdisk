@@ -35,6 +35,52 @@ typedef struct
 } TRACK_DATA_HEADER;
 
 
+class SCPDisk final : public DemandDisk
+{
+public:
+	void add_track_data (const CylHead &cylhead, std::vector<std::vector<uint16_t>> &&trackdata)
+	{
+		m_data[cylhead] = std::move(trackdata);
+		extend(cylhead);
+	}
+
+protected:
+	TrackData load (const CylHead &cylhead, bool /*first_read*/) override
+	{
+		FluxData flux_revs;
+
+		auto it = m_data.find(cylhead);
+		if (it == m_data.end())
+			return TrackData(cylhead);
+
+		for (auto &rev_times : it->second)
+		{
+			std::vector<uint32_t> flux_times;
+			flux_times.reserve(rev_times.size());
+
+			uint32_t total_time = 0;
+			for (auto time : rev_times)	// note: big endian times!
+			{
+				if (!time)
+					total_time += 0x10000;
+				else
+				{
+					total_time += util::betoh(time);
+					flux_times.push_back(total_time * 25);	// 25ns sampling time
+					total_time = 0;
+				}
+			}
+
+			flux_revs.push_back(std::move(flux_times));
+		}
+
+		return TrackData(cylhead, std::move(flux_revs));
+	}
+
+private:
+	std::map<CylHead, std::vector<std::vector<uint16_t>>> m_data {};
+};
+
 bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	SCP_FILE_HEADER fh {};
@@ -55,7 +101,7 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (!file.read(tdh_offsets))
 		throw util::exception("short file reading track offset index");
 
-	auto scp_disk = std::make_shared<DemandDisk>();
+	auto scp_disk = std::make_shared<SCPDisk>();
 
 	for (auto tracknr = fh.start_track; tracknr <= fh.end_track; ++tracknr)
 	{
@@ -74,11 +120,12 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 		else if (tdh.tracknr != tracknr)
 			throw util::exception("track number mismatch (", tdh.tracknr, " != ", tracknr, ") in ", cylhead, " header");
 
-		std::vector<std::vector<uint32_t>> flux_revs;
 		std::vector<uint32_t> rev_index(fh.revolutions * 3);
-
 		if (!file.read(rev_index))
 			throw util::exception("short file reading ", cylhead, " track index");
+
+		std::vector<std::vector<uint16_t>> revs_data;
+		revs_data.reserve(fh.revolutions);
 
 		for (uint8_t rev = 0; rev < fh.revolutions; ++rev)
 		{
@@ -86,30 +133,14 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 			auto flux_count = util::letoh<uint32_t>(rev_index[rev * 3 + 1]);
 			auto data_offset = util::letoh<uint32_t>(rev_index[rev * 3 + 2]);
 
-			std::vector<uint16_t> flux_data(flux_count);	// NB: time values are big-endian
-			std::vector<uint32_t> flux_times;
-			flux_times.reserve(flux_count);
-
+			std::vector<uint16_t> flux_data(flux_count);
 			if (!file.seek(tdh_offsets[tracknr] + data_offset) || !file.read(flux_data))
 				throw util::exception("short error reading ", cylhead, " data");
 
-			uint32_t total_time = 0;
-			for (auto time : flux_data)
-			{
-				if (!time)
-					total_time += 0x10000;
-				else
-				{
-					total_time += util::betoh<uint16_t>(time);
-					flux_times.push_back(total_time * 25);	// 25ns sampling time
-					total_time = 0;
-				}
-			}
-
-			flux_revs.push_back(std::move(flux_times));
+			revs_data.push_back(std::move(flux_data));
 		}
 
-		scp_disk->set_source(CylHead(cyl, head), std::move(flux_revs));
+		scp_disk->add_track_data(cylhead, std::move(revs_data));
 	}
 
 	scp_disk->strType = "SCP";

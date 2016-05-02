@@ -24,6 +24,7 @@ public:
 	bool is_mixed_encoding () const;
 	bool is_8k_sector () const;
 	bool is_repeated (const Sector &sector) const;
+	bool has_data_error () const;
 
 	void clear ();
 	void add (Track &&track);

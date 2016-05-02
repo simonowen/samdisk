@@ -3,6 +3,7 @@
 #include "SAMdisk.h"
 #include "Disk.h"
 #include "IBMPC.h"
+#include "ThreadPool.h"
 
 // ToDo: split classes into separate files
 
@@ -48,92 +49,89 @@ Range Disk::range () const
 
 int Disk::cyls () const
 {
-	return m_tracks.empty() ? 0 : (m_tracks.rbegin()->first.cyl + 1);
+	return m_trackdata.empty() ? 0 : (m_trackdata.rbegin()->first.cyl + 1);
 }
 
 int Disk::heads () const
 {
-	if (m_tracks.empty())
+	if (m_trackdata.empty())
 		return 0;
 
-	auto it = std::find_if(m_tracks.begin(), m_tracks.end(), [] (const std::pair<const CylHead, const Track> &p) {
+	auto it = std::find_if(m_trackdata.begin(), m_trackdata.end(), [] (const std::pair<const CylHead, const TrackData> &p) {
 		return p.first.head != 0;
 	});
 
-	return (it != m_tracks.end()) ? 2 : 1;
+	return (it != m_trackdata.end()) ? 2 : 1;
 }
 
 
-void Disk::unload (bool source_only)
+bool Disk::preload (const Range &range_)
 {
-	if (!source_only)
-		m_tracks.clear();
+	// No pre-loading if multi-threading disabled, or only a single core
+	if (!opt.mt || ThreadPool::get_thread_count() <= 1)
+		return false;
 
-	m_bitstreamdata.clear();
-	m_fluxdata.clear();
+	ThreadPool pool;
+	std::vector<std::future<void>> rets;
+
+	range_.each([&] (const CylHead cylhead) {
+		if (!g_fAbort)
+		{
+			rets.push_back(pool.enqueue([this, cylhead] () {
+				read_track(cylhead);
+			}));
+		}
+	});
+
+	for (auto &ret : rets)
+		ret.get();
+
+	return true;
 }
 
-
-bool Disk::get_bitstream_source (const CylHead &cylhead, BitBuffer* &p)
+void Disk::unload ()
 {
-	auto it = m_bitstreamdata.find(cylhead);
-	if (it != m_bitstreamdata.end())
-	{
-		p = &it->second;
-		return true;
-	}
-
-	return false;
+	m_trackdata.clear();
 }
 
-bool Disk::get_flux_source (const CylHead &cylhead, const std::vector<std::vector<uint32_t>>* &p)
+
+void Disk::add (TrackData &&trackdata)
 {
-	auto it = m_fluxdata.find(cylhead);
-	if (it != m_fluxdata.end())
-	{
-		p = &it->second;
-		return true;
-	}
-
-	return false;
+	m_trackdata[trackdata.cylhead] = std::move(trackdata);
 }
-
-void Disk::set_source (const CylHead &cylhead, BitBuffer &&bitbuf)
-{
-	m_bitstreamdata.emplace(std::make_pair(cylhead, std::move(bitbuf)));
-	m_tracks[cylhead]; // extend
-}
-
-void Disk::set_source (const CylHead &cylhead, std::vector<std::vector<uint32_t>> &&data)
-{
-	m_fluxdata[cylhead] = std::move(data);
-	m_tracks[cylhead]; // extend
-}
-
 
 const Track &Disk::read_track (const CylHead &cylhead)
 {
-	return m_tracks[cylhead];
+	auto cylhead_step = CylHead(cylhead.cyl * opt.step, cylhead.head);
+
+	// Safe look-up requires mutex ownership, in case of call from preload()
+	m_trackdata_mutex.lock();
+	auto &trackdata = m_trackdata[cylhead_step];
+	m_trackdata_mutex.unlock();
+
+	// Fetch the track outside the lock in case conversion is needed
+	return trackdata.track();
 }
 
-Track &Disk::write_track (const CylHead &cylhead, const Track &track)
+const Track &Disk::write_track (const CylHead &cylhead, const Track &track)
 {
 	// Move a temporary copy of the const source track
 	return write_track(cylhead, Track(track));
 }
 
-Track &Disk::write_track (const CylHead &cylhead, Track &&track)
+const Track &Disk::write_track (const CylHead &cylhead, Track &&track)
 {
 	// Invalidate stored format, since we can no longer guarantee a match
 	fmt.sectors = 0;
 
 	// Move supplied track into disk
-	return m_tracks[cylhead] = std::move(track);
+	m_trackdata[cylhead] = TrackData(cylhead, std::move(track));
+	return m_trackdata[cylhead].track();
 }
 
 void Disk::each (const std::function<void (const CylHead &cylhead, const Track &track)> &func, bool cyls_first)
 {
-	if (!m_tracks.empty())
+	if (!m_trackdata.empty())
 	{
 		range().each([&] (const CylHead &cylhead) {
 			func(cylhead, read_track(cylhead));
@@ -163,41 +161,41 @@ void Disk::format (const Format &new_fmt, const Data &data, bool cyls_first)
 
 void Disk::flip_sides ()
 {
-	decltype(m_tracks) tracks;
+	decltype(m_trackdata) trackdata;
 
-	for (auto pair : m_tracks)
+	for (auto pair : m_trackdata)
 	{
 		CylHead cylhead = pair.first;
 		cylhead.head ^= 1;
 
 		// Move tracks to the new head position
-		tracks[cylhead] = std::move(pair.second);
+		trackdata[cylhead] = std::move(pair.second);
 	}
 
 	// Finally, swap the gutted container with the new one
-	std::swap(tracks, m_tracks);
+	std::swap(trackdata, m_trackdata);
 }
 
 void Disk::resize (int new_cyls, int new_heads)
 {
 	if (!new_cyls && !new_heads)
 	{
-		m_tracks.clear();
+		m_trackdata.clear();
 		return;
 	}
 
 	// Remove tracks beyond the new extent
-	for (auto it = m_tracks.begin(); it != m_tracks.end(); )
+	for (auto it = m_trackdata.begin(); it != m_trackdata.end(); )
 	{
 		if (it->first.cyl >= new_cyls || it->first.head >= new_heads)
-			it = m_tracks.erase(it);
+			it = m_trackdata.erase(it);
 		else
 			++it;
 	}
 
 	// If the disk is too small, insert a blank track to extend it
 	if (cyls() < new_cyls || heads() < new_heads)
-		m_tracks[CylHead(new_cyls - 1, new_heads - 1)];
+		m_trackdata[CylHead(new_cyls - 1, new_heads - 1)];
 }
 
 const Sector &Disk::get_sector (const Header &header)
@@ -216,84 +214,4 @@ bool Disk::find (const Header &header, const Sector *&found_sector)
 	}
 
 	return false;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-std::string to_string (const Range &range)
-{
-	std::ostringstream ss;
-	auto separator = ", ";
-
-	if (range.empty())
-		return "All Tracks";
-
-	if (range.cyls() == 1)
-		ss << "Cyl " << CylStr(range.cyl_begin);
-	else if (range.cyl_begin == 0)
-	{
-		ss << std::setw(2) << range.cyl_end << " Cyls";
-		separator = " ";
-	}
-	else
-		ss << "Cyls " << CylStr(range.cyl_begin) << '-' << CylStr(range.cyl_end - 1);
-
-	if (range.heads() == 1)
-		ss << " Head " << range.head_begin;
-	else if (range.head_begin == 0)
-		ss << separator << range.head_end << " Heads";
-	else
-		ss << " Heads " << range.head_begin << '-' << (range.head_end - 1);
-
-	return ss.str();
-}
-
-
-Range::Range (int num_cyls, int num_heads)
-	: Range(0, num_cyls, 0, num_heads)
-{
-}
-
-Range::Range (int cyl_begin_, int cyl_end_, int head_begin_, int head_end_)
-	: cyl_begin(cyl_begin_), cyl_end(cyl_end_), head_begin(head_begin_), head_end(head_end_)
-{
-	assert(cyl_begin >= 0 && cyl_begin <= cyl_end);
-	assert(head_begin >= 0 && head_begin <= head_end);
-}
-
-bool Range::empty () const
-{
-	return cyls() <= 0 || heads() <= 0;
-}
-
-int Range::cyls () const
-{
-	return cyl_end - cyl_begin;
-}
-
-int Range::heads () const
-{
-	return head_end - head_begin;
-}
-
-bool Range::contains (const CylHead &cylhead)
-{
-	return cylhead.cyl >= cyl_begin  && cylhead.cyl < cyl_end &&
-		cylhead.head >= head_begin && cylhead.head < head_end;
-}
-
-void Range::each (const std::function<void (const CylHead &cylhead)> &func, bool cyls_first/*=false*/) const
-{
-	if (cyls_first && heads() > 1)
-	{
-		for (auto head = head_begin; head < head_end; ++head)
-			for (auto cyl = cyl_begin; cyl < cyl_end; ++cyl)
-				func(CylHead(cyl, head));
-	}
-	else
-	{
-		for (auto cyl = cyl_begin; cyl < cyl_end; ++cyl)
-			for (auto head = head_begin; head < head_end; ++head)
-				func(CylHead(cyl, head));
-	}
 }

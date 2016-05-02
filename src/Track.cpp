@@ -121,6 +121,15 @@ bool Track::is_repeated (const Sector &sector) const
 	return false;
 }
 
+bool Track::has_data_error () const
+{
+	auto it = std::find_if(begin(), end(), [] (const Sector &sector) {
+		return !sector.has_data() || sector.has_baddatacrc();
+	});
+
+	return it != end();
+}
+
 void Track::clear ()
 {
 	m_sectors.clear();

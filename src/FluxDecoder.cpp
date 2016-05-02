@@ -5,7 +5,7 @@
 #include "SAMdisk.h"
 #include "FluxDecoder.h"
 
-FluxDecoder::FluxDecoder (const std::vector<std::vector<uint32_t>> &flux_revs, int bitcell_ns, int flux_scale_percent)
+FluxDecoder::FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent)
 	: m_flux_revs(flux_revs), m_clock(bitcell_ns), m_clock_centre(bitcell_ns),
 	m_clock_min(bitcell_ns * (100 - CLOCK_MAX_ADJUST) / 100),
 	m_clock_max(bitcell_ns * (100 + CLOCK_MAX_ADJUST) / 100),

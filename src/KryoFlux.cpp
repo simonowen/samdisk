@@ -164,13 +164,11 @@ int KryoFlux::SetMaxTrack (int cyl)
 }
 
 
-void KryoFlux::ReadFlux (int revs,
-	std::vector<std::vector<uint32_t>> &flux_revs,
-	std::vector<std::string> &warnings)
+void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string> &warnings)
 {
 	revs = std::max(1, std::min(revs, 20));
 
-	std::vector<uint8_t> track_data;
+	Data track_data;
 	track_data.reserve(1'000'000);
 
 	// Start stream, for 1 more index hole than we require revolutions
@@ -197,9 +195,9 @@ void KryoFlux::ReadFlux (int revs,
 }
 
 
-/*static*/ std::vector<std::vector<uint32_t>> KryoFlux::DecodeStream (const std::vector<uint8_t> &data, std::vector<std::string> &warnings)
+/*static*/ FluxData KryoFlux::DecodeStream (const Data &data, std::vector<std::string> &warnings)
 {
-	std::vector<std::vector<uint32_t>> flux_revs;
+	FluxData flux_revs;
 	std::vector<uint32_t> flux_times, flux_counts;
 	flux_times.reserve(data.size());
 	flux_counts.resize(data.size());
