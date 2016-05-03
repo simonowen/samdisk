@@ -28,6 +28,7 @@ public:
 	int SelectSide (int head);
 	int SetMinTrack (int cyl);
 	int SetMaxTrack (int cyl);
+	int GetInfo (int index, std::string &info);
 
 	void ReadFlux (int indexes, FluxData &flux_revs, std::vector<std::string> &warnings);
 	static FluxData DecodeStream (const Data &data, std::vector<std::string> &warnings);
@@ -63,6 +64,8 @@ private:
 	static const int REQ_T_WRITE_GATE_ON = 0x21;		// (default=8)
 	static const int REQ_T_BYPASS_OFF = 0x22;			// (default=8)
 	static const int REQ_T_BYPASS_ON = 0x23;			// (default=8)
+
+	constexpr static int REQ_GET = 0x80;				// read modifier for requests above
 
 
 	void SamBaCommand (const std::string &cmd, const std::string &end="");

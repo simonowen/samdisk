@@ -26,6 +26,7 @@ public:
 
 	~KFDevDisk ()
 	{
+		m_kryoflux->Seek(0);
 		m_kryoflux->EnableMotor(0);
 	}
 
@@ -66,10 +67,16 @@ bool ReadKFDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 	if (!kryoflux)
 		throw util::exception("failed to open KryoFlux device");
 
+	std::string info1, info2;
+	kryoflux->GetInfo(1, info1);
+	kryoflux->GetInfo(2, info2);
+
 	auto kf_dev_disk = std::make_shared<KFDevDisk>(std::move(kryoflux));
 	kf_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
 	kf_dev_disk->strType = "KryoFlux";
+	kf_dev_disk->metadata["info1"] = info1;
+	kf_dev_disk->metadata["info2"] = info2;
 	disk = kf_dev_disk;
 
 	return true;

@@ -163,6 +163,15 @@ int KryoFlux::SetMaxTrack (int cyl)
 	return ResponseCode(Control(REQ_MAX_TRACK, cyl));
 }
 
+int KryoFlux::GetInfo (int index, std::string &info)
+{
+	info = Control(REQ_INFO | REQ_GET, index);
+	auto ret = ResponseCode(info);
+	info.erase(0, info.find(' ') + 1);	// remove time code
+	info.erase(0, info.find(' ') + 1);	// remove info response
+	return ret;
+}
+
 
 void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string> &warnings)
 {
