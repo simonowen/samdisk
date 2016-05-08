@@ -59,7 +59,7 @@ bool ReadUDI (MemFile &/*file*/, std::shared_ptr<Disk> &/*disk*/)
 	int cyls = uh.bMaxCyl + 1;
 	int heads = uh.bMaxHead + 1;
 
-	ValidateGeometry(cyls, heads, 1);
+	Format::Validate(cyls, heads);
 
 	MEMORY mem(MAX_UDI_TRACK_SIZE), memClock((MAX_UDI_TRACK_SIZE + 7) >> 3);
 

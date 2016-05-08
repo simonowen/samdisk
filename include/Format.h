@@ -4,7 +4,7 @@
 #include "Range.h"
 
 enum class FdcType { None, PC, WD, Amiga };
-enum class RegularFormat { MGT, ProDos, PC320, PC360, PC640, PC720, PC1200, PC1232, PC1440, PC2880, D80, OPD, MBD820, MBD1804, TRDOS, D2M, D4M, D81, _2D, AmigaDOS, AmigaDOSHD, LIF, AtariST };
+enum class RegularFormat { MGT, ProDos, PC320, PC360, PC640, PC720, PC1200, PC1232, PC1440, PC2880, D80, OPD, MBD820, MBD1804, TRDOS, QDOS, D2M, D4M, D81, _2D, AmigaDOS, AmigaDOSHD, LIF, AtariST };
 
 struct Format
 {
@@ -22,6 +22,12 @@ struct Format
 	Range range () const;
 
 	std::vector<int> get_ids (const CylHead &cylhead) const;
+	void Validate () const;
+	void Override (bool full_control = false);
+
+	static Format GetFormat (RegularFormat reg_fmt);
+	static bool FromSize (int64_t size, Format &fmt);
+	static void Validate (int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
 
 	int cyls = DefaultTracks;
 	int heads = DefaultSides;

@@ -71,7 +71,7 @@ bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk)
 		return false;
 
 	Format fmt;
-	if (!SizeToFormat(blockdev->total_bytes, fmt))
+	if (!Format::FromSize(blockdev->total_bytes, fmt))
 		throw util::exception("not a floppy device");
 
 	// Allow subsets of the track format

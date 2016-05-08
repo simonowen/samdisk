@@ -82,8 +82,7 @@ bool ReadBPB (MemFile &file, std::shared_ptr<Disk> &disk)
 	fmt.heads = static_cast<uint8_t>(heads);
 	fmt.sectors = static_cast<uint8_t>(sectors);
 	fmt.size = SizeToCode(sector_size);
-
-	ValidateGeometry(fmt);
+	fmt.Validate();
 
 	if (fmt.track_size() < 6000)
 		fmt.datarate = DataRate::_250K;

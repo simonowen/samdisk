@@ -34,7 +34,7 @@ bool ReadDTI (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (!file.read(&dh, sizeof(dh)) || memcmp(dh.abSignature, DTI_SIGNATURE, sizeof(dh.abSignature)))
 		return false;
 
-	ValidateGeometry(dh.bTracks, dh.bSides);
+	Format::Validate(dh.bTracks, dh.bSides);
 
 	auto uBlock = (dh.bBlockHigh << 8) | dh.bBlockLow;
 	if (uBlock != DTI_BLOCK_SIZE)

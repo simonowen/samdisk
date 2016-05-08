@@ -96,7 +96,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 	else
 		throw util::exception("unsupported data rate (", data_bitrate, "Kbps)");
 
-	ValidateGeometry(hh.number_of_track, hh.number_of_side);
+	Format::Validate(hh.number_of_track, hh.number_of_side);
 
 	// 64K should be enough for maximum MFM track size, and we'll check later anyway
 	MEMORY mem(0x10000);

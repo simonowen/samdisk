@@ -566,10 +566,10 @@ int main (int argc_, char *argv_[])
 					if (opt.fm == 1) fmt.sectors >>= 1;
 
 					// Allow everything about the format to be overridden
-					OverrideFormat(&fmt, true);
+					Format::Override(&fmt, true);
 
 					// Check sector count and size
-					ValidateGeometry(fmt);
+					fmt.Validate();
 
 					bool fFormat = opt.command == cmdFormat;
 					bool fVerify = (opt.command == cmdVerify) || opt.verify;

@@ -48,7 +48,7 @@ bool ReadFDI (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	int cyls = fh.bTracks[0];
 	int heads = fh.bSides[0];
-	ValidateGeometry(cyls, heads);
+	Format::Validate(cyls, heads);
 
 	auto data_pos = (fh.bDataOffset[1] << 8) | fh.bDataOffset[0];
 	auto header_pos = static_cast<int>(sizeof(FDI_HEADER)) + ((fh.bExtraSize[1] << 8) | fh.bExtraSize[0]);

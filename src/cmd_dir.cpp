@@ -338,7 +338,7 @@ bool DirOpus (Disk &disk)
 			heads = (ob.flags & 0x10) ? 2 : 1;
 			sectors = ob.sectors;
 
-			ValidateGeometry(cyls, heads, sectors);
+			Format::Validate(cyls, heads, sectors);
 			continue;
 		}
 

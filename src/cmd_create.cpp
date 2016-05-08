@@ -11,8 +11,8 @@ bool CreateImage (const std::string &path, Range range)
 	fmt.gap3 = 0;
 
 	// Allow everything about the format to be overridden, but check it
-	OverrideFormat(fmt, true);
-	ValidateGeometry(fmt);
+	fmt.Override(true);
+	fmt.Validate();
 	ValidateRange(range, MAX_TRACKS, MAX_SIDES);
 
 	// Set the disk label, if supplied

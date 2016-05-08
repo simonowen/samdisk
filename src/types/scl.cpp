@@ -78,7 +78,7 @@ bool ReadSCL (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	Format fmt { RegularFormat::TRDOS };
 	fmt.cyls = static_cast<uint8_t>(SizeToCylsTRD(lDiskSize));
-	OverrideFormat(fmt);
+	fmt.Override();
 
 	// Determine the cylinder count for the image, and the corresponding block count
 	auto free_blocks = fmt.total_sectors() - uDataLba;

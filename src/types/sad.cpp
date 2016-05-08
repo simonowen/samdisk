@@ -25,8 +25,7 @@ bool ReadSAD (MemFile &file, std::shared_ptr<Disk> &disk)
 	fmt.heads = sh.heads;
 	fmt.sectors = sh.sectors;
 	fmt.size = SizeToCode(sh.size_div_64 << 6);
-
-	ValidateGeometry(fmt);
+	fmt.Validate();
 
 	// If it doesn't appear to be SAM format, clear the MGT skew+gap3
 	if (fmt.sectors != MGT_SECTORS || fmt.sector_size() != SECTOR_SIZE)
@@ -57,8 +56,8 @@ bool WriteSAD (FILE* f_, std::shared_ptr<Disk> &disk)
 	fmt.size = size;
 	fmt.cyls_first = true;
 
-	OverrideFormat(fmt, true);
-	ValidateGeometry(fmt);
+	fmt.Override(true);
+	fmt.Validate();
 
 	SAD_HEADER sh;
 	std::memcpy(sh.abSignature, SAD_SIGNATURE, sizeof(sh.abSignature));

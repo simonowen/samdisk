@@ -25,7 +25,7 @@ bool ReadOPD (MemFile &file, std::shared_ptr<Disk> &disk)
 		(ob.jr_boot[0] != OP_JR || file.size() != fmt.disk_size()))
 		return false;
 
-	ValidateGeometry(fmt);
+	fmt.Validate();
 
 	file.rewind();
 	disk->format(fmt, file.data(), true);
@@ -49,8 +49,8 @@ bool WriteOPD (FILE* f_, std::shared_ptr<Disk> &disk)
 	fmt.sectors = pob->sectors;
 	fmt.size = pob->flags >> 6;
 
-	OverrideFormat(fmt, true);
-	ValidateGeometry(fmt);
+	fmt.Override(true);
+	fmt.Validate();
 
 	return WriteRegularDisk(f_, *disk, fmt);
 }

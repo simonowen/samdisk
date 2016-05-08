@@ -52,7 +52,7 @@ bool ReadMSA (MemFile &file, std::shared_ptr<Disk> &disk)
 	fmt.datarate = (fmt.track_size() < 6000) ? DataRate::_250K : DataRate::_500K;
 
 	// ToDo: do we still need this? or is it applied by ReadImage()?
-	OverrideFormat(fmt);
+	fmt.Override();
 
 	auto track_size = fmt.track_size();
 	Data mem(track_size);

@@ -533,7 +533,7 @@ int TPeek (const uint8_t *buf, int offset/*=0*/)
 void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &sectors)
 {
 	Format fmt;
-	if (SizeToFormat(total_sectors * SECTOR_SIZE, fmt))
+	if (Format::FromSize(total_sectors * SECTOR_SIZE, fmt))
 	{
 		cyls = fmt.cyls;
 		heads = fmt.heads;
@@ -602,22 +602,6 @@ void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls/*=0*
 
 	if (range.head_end > max_heads)
 		throw util::exception("end head (", range.head_end - 1, ") out of range (0-", max_heads - 1, ")");
-}
-
-void ValidateGeometry (const Format &fmt)
-{
-	ValidateGeometry(fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
-}
-
-void ValidateGeometry (int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
-{
-	if (!cyls_ || cyls_ > MAX_TRACKS ||
-		!heads_ || heads_ > MAX_SIDES ||
-		!sectors_ || sectors_ > MAX_SECTORS ||
-		(max_sector_size && sector_size > max_sector_size))
-	{
-		throw util::exception("bad geometry");
-	}
 }
 
 int SizeToCode (int sector_size)

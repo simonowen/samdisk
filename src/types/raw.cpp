@@ -12,12 +12,12 @@ bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 		throw util::exception("image file is zero bytes");
 
 	// Allow user overrides of the format
-	OverrideFormat(fmt, true);
+	fmt.Override(true);
 
 	// Does the format now match the input file?
 	if (fmt.disk_size() != file.size())
 	{
-		if (!SizeToFormat(file.size(), fmt))
+		if (!Format::FromSize(file.size(), fmt))
 			return false;
 	}
 
@@ -104,7 +104,7 @@ bool WriteRAW (FILE* f_, std::shared_ptr<Disk> &disk)
 		throw util::exception("non-sequential sector numbers are unsuitable for raw output");
 
 	// Allow user overrides for flexibility
-	OverrideFormat(fmt, true);
+	fmt.Override(true);
 
 	// Write the image, as read using the supplied format
 	WriteRegularDisk(f_, *disk, fmt);

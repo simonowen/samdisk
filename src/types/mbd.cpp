@@ -57,7 +57,7 @@ bool ReadMBD (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (file.size() != fmt.disk_size())
 		return false;
 
-	ValidateGeometry(cyls, heads, sectors, fmt.sector_size());
+	fmt.Validate();
 
 	file.rewind();
 	disk->format(fmt, file.data());
@@ -88,8 +88,7 @@ bool WriteMBD (FILE* f_, std::shared_ptr<Disk> &disk)
 	fmt.cyls = static_cast<uint8_t>(cyls);
 	fmt.heads = static_cast<uint8_t>(heads);
 	fmt.sectors = static_cast<uint8_t>(sectors);
-
-	ValidateGeometry(fmt);
+	fmt.Validate();
 
 	return WriteRegularDisk(f_, *disk, fmt);
 }

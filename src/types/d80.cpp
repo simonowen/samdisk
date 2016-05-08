@@ -24,8 +24,7 @@ bool ReadD80 (MemFile &file, std::shared_ptr<Disk> &disk)
 	fmt.cyls = cyls;
 	fmt.heads = heads;
 	fmt.sectors = sectors;
-
-	ValidateGeometry(fmt);
+	fmt.Validate();
 
 	// Allow cylinder count correction if the image size is a multiple of the track size
 	if (opt.fix != 0 && file.size() != fmt.disk_size() && !(file.size() % (heads * fmt.track_size())))
