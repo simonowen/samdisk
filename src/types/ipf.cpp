@@ -103,6 +103,10 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 			// Start with space for 5 revolutions of 250Kbps
 			BitBuffer bitbuf(DataRate::_250K, 5);
 
+			// If timing data is available we'll generate flux data instead
+			FluxData flux_revs;
+			uint32_t total_time = 0;
+
 			// Default to 5 revolutions for CT Raw and 2 for IPF in case of weak sectors
 			auto max_revs = (image_type == citCTRaw) ? CAPS_MTRS : 2;
 
@@ -136,17 +140,49 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 					if (head == 1) unformatted1++;
 					break;
 				}
-				else if (cti.timelen > 0)
-					Message(msgWarning, "variable bitrate timings on %s", CH(cyl, head));
 
-				// Add the new revolution to the bit buffer, taking care of the reversed bit order
 				size_t tracklen_bits = (lock_flags & DI_LOCK_TRKBIT) ? cti.tracklen : cti.tracklen * 8;
-				for (size_t i = 0; i < tracklen_bits; ++i)
-					bitbuf.add((cti.trackbuf[i / 8] >> (7 - (i & 7))) & 1);
-
-				// Mark the index hole, and guess the data rate from the bit count
-				bitbuf.index();
 				bitbuf.datarate = (tracklen_bits / 16 >= 0x2000) ? DataRate::_500K : DataRate::_250K;
+				auto ns_per_bitcell = bitcell_ns(bitbuf.datarate);
+
+				// Do we have timing data that we're allowed to use?
+				if (cti.timelen > 0 && !opt.noflux)
+				{
+					std::vector<uint32_t> flux_times;
+					flux_times.reserve(tracklen_bits);
+
+					// Generate a revolution of flux data
+					for (size_t i = 0; i < tracklen_bits; ++i)
+					{
+						uint8_t bit = (cti.trackbuf[i / 8] >> (7 - (i & 7))) & 1;
+
+						if ((i >> 3) < cti.timelen)
+							total_time += ns_per_bitcell * cti.timebuf[i >> 3] / 1000;
+						else
+							total_time += ns_per_bitcell;
+
+						if (bit)
+						{
+							flux_times.push_back(total_time);
+							total_time = 0;
+						}
+					}
+
+					// Add the new revolution, keeping any left over time for the next one
+					flux_revs.push_back(std::move(flux_times));
+				}
+				else
+				{
+					// Generate a revolution of bitstream data
+					for (size_t i = 0; i < tracklen_bits; ++i)
+					{
+						uint8_t bit = (cti.trackbuf[i / 8] >> (7 - (i & 7))) & 1;
+						bitbuf.add(bit);
+					}
+
+					// Mark the index hole
+					bitbuf.index();
+				}
 
 				// A single revolution is enough for IPF tracks without weak areas
 				if (image_type == citIPF && !(cti.type & CTIT_FLAG_FLAKEY))
@@ -155,7 +191,11 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 
 			CAPSUnlockTrack(id, cyl, head);
 
-			disk->add(TrackData(CylHead(cyl, head), std::move(bitbuf)));
+			// Add flux or bitstream data, depending on which we generated
+			if (!flux_revs.empty())
+				disk->add(TrackData(CylHead(cyl, head), std::move(flux_revs)));
+			else
+				disk->add(TrackData(CylHead(cyl, head), std::move(bitbuf)));
 		}
 	}
 

@@ -137,6 +137,7 @@ struct option long_options[] =
 	{ "no-dups",	      no_argument, &opt.nodups, 1 },
 	{ "no-check8k",       no_argument, &opt.check8k, 0 },
 	{ "no-data",          no_argument, &opt.nodata, 1 },
+	{ "no-flux",		  no_argument, &opt.noflux, 1 },
 	{ "no-wobble",		  no_argument, &opt.nowobble, 1 },
 	{ "no-mt",			  no_argument, &opt.mt, 0 },
 	{ "new-drive",		  no_argument, &opt.newdrive, 1 },

@@ -270,7 +270,7 @@ typedef struct
 	int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1, fm = -1, head0 = -1, head1 = -1;
 	int maxcopies = 3, fmoverlap = 0, cylsfirst = -1;
 	int bdos = 0, atom = 0, hdf = 0, cpm = 0, resize = 0, nocfa = 0, noidentify = 0, ace = 0;
-	int force = 0, nosig = 0, check8k = -1, tty = 0, nodata = 0, nowobble = 0;
+	int force = 0, nosig = 0, check8k = -1, tty = 0, nodata = 0, noflux = 0, nowobble = 0;
 	int time = 0, rate = -1, mt = -1;
 	long sectors = -1;
 	std::string label {}, boot {};
