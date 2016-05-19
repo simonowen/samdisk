@@ -127,6 +127,7 @@
     <ClCompile Include="src\types\builtin.cpp" />
     <ClCompile Include="src\types\cfi.cpp" />
     <ClCompile Include="src\types\cpm.cpp" />
+    <ClCompile Include="src\types\cwtool.cpp" />
     <ClCompile Include="src\types\d2m.cpp" />
     <ClCompile Include="src\types\d4m.cpp" />
     <ClCompile Include="src\types\d80.cpp" />
