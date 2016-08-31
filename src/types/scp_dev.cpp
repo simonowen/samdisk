@@ -32,8 +32,8 @@ protected:
 	TrackData load (const CylHead &cylhead, bool first_read) override
 	{
 		FluxData flux_revs;
-		auto revs = first_read ? FIRST_READ_REVS :
-			std::min(REMAIN_READ_REVS, SuperCardPro::MAX_FLUX_REVS);
+		constexpr auto rev_limit = std::min(REMAIN_READ_REVS, SuperCardPro::MAX_FLUX_REVS);
+		auto revs = first_read ? FIRST_READ_REVS : rev_limit;
 
 		if (!m_supercardpro->SelectDrive(0) ||
 			!m_supercardpro->StepTo(cylhead.cyl) ||

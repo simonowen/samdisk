@@ -200,7 +200,7 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 	}
 
 	// Decode the track data to multiple flux revolutions, plus any warnings
-	flux_revs = std::move(DecodeStream(track_data, warnings));
+	flux_revs = DecodeStream(track_data, warnings);
 }
 
 

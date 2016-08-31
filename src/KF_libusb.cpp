@@ -26,7 +26,7 @@
 			}
 
 			if (ret == LIBUSB_SUCCESS)
-				return std::move(std::make_unique<KF_libusb>(ctx, hdev));
+				return std::make_unique<KF_libusb>(ctx, hdev);
 
 			if (claimed)
 				libusb_release_interface(hdev, KF_INTERFACE);

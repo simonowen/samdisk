@@ -37,6 +37,11 @@ elseif (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake)")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 endif ()
 
+# Force Clang to use libstdc++ as libc++ is currently broken on Ubuntu 16.04
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif ()
+
 CHECK_CXX_COMPILER_FLAG("-Wsuggest-override" COMPILER_SUPPORTS_WSUGGEST)
 if (COMPILER_SUPPORTS_WSUGGEST)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsuggest-override")

@@ -870,7 +870,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 	}
 
 	// Append a blank track
-	disk->write_track(cylhead, std::move(Track()));
+	disk->write_track(cylhead, Track());
 
 	disk->strType = "<builtin>";
 	return true;
