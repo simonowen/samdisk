@@ -214,7 +214,7 @@ bool MemFile::open (const void *buf, int len, const std::string &path_)
 	auto pb = reinterpret_cast<const uint8_t *>(buf);
 
 	m_data.clear();
-	m_data.insert(m_it = m_data.begin(), pb, pb + len);
+	m_it = m_data.insert(m_data.begin(), pb, pb + len);
 	m_path = path_;
 	return true;
 }
