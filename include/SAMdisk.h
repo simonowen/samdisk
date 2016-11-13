@@ -85,7 +85,6 @@ typedef void * HANDLE;
 #include <functional>
 #include <numeric>
 #include <bitset>
-#include <codecvt>
 
 #include <cstdio>
 #include <cstddef>
