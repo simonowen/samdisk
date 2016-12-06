@@ -29,9 +29,8 @@ bool ReadADF (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (!file.seek(0) || !file.read(&bootblock, sizeof(bootblock)))
 		return false;
 
-	// Check for DOS signature and rootblock location
-	if ((util::betoh(pbb->disk_type) & 0xffffff00) != 0x444f5300 ||
-		util::betoh(pbb->rootblock) != static_cast<unsigned>(fmtDD.total_sectors() / 2))
+	// Check for AmigaDOS signature
+	if ((util::betoh(pbb->disk_type) & 0xffffff00) != 0x444f5300)
 		return false;
 
 	uint32_t checksum = 0;
