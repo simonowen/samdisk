@@ -5,35 +5,6 @@
 #include "IBMPC.h"
 #include "ThreadPool.h"
 
-// ToDo: split classes into separate files
-
-std::string to_string (const DataRate &datarate)
-{
-	switch (datarate)
-	{
-		case DataRate::_250K:	return "250Kbps";		break;
-		case DataRate::_300K:	return "300Kbps";		break;
-		case DataRate::_500K:	return "500Kbps";		break;
-		case DataRate::_1M:		return "1Mbps";			break;
-		case DataRate::Unknown:	break;
-	}
-	return "Unknown";
-}
-
-std::string to_string (const Encoding &encoding)
-{
-	switch (encoding)
-	{
-		case Encoding::MFM:		return "MFM";			break;
-		case Encoding::FM:		return "FM";			break;
-		case Encoding::GCR:		return "GCR";			break;
-		case Encoding::Amiga:	return "Amiga";			break;
-		case Encoding::Ace:		return "Ace";			break;
-		case Encoding::Unknown:	break;
-	}
-	return "Unknown";
-}
-
 //////////////////////////////////////////////////////////////////////////////
 
 Disk::Disk (Format &fmt_)

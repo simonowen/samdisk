@@ -105,10 +105,10 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				util::cout << colour::RED << "-" << (sector.size() - sector.data_size()) << colour::none;	// Less data than sector size
 			}
 
-			if (sector.encoding == Encoding::FM && context.sector.encoding == Encoding::MFM)
+			if (sector.encoding != context.sector.encoding)
 			{
 				item_separator(items++);
-				util::cout << colour::CYAN << "fm" << colour::none;	// FM sector on MFM track
+				util::cout << colour::CYAN << short_name(sector.encoding) << colour::none;	// FM sector on MFM track
 			}
 
 			if (sector.has_gapdata())

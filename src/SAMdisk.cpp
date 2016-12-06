@@ -117,6 +117,7 @@ struct option long_options[] =
 	{ "cpm",			  no_argument, &opt.cpm, 1 },
 	{ "resize",			  no_argument, &opt.resize, 1 },
 	{ "fm-overlap",		  no_argument, &opt.fmoverlap, 1 },
+	{ "multi-format",	  no_argument, &opt.multiformat, 1 },
 	{ "offsets",		  no_argument, &opt.offsets, 1 },
 	{ "abs-offsets",	  no_argument, &opt.absoffsets, 1 },
 	{ "no-write",		  no_argument, &opt.nowrite, 1 },

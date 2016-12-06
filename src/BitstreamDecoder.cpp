@@ -79,6 +79,10 @@ void scan_flux (TrackData &trackdata)
 				break;
 		}
 
+		// Continue scanning formats in multi-format mode
+		if (opt.multiformat)
+			continue;
+
 		// Something found?
 		if (!trackdata.track().empty())
 		{
