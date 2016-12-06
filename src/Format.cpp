@@ -13,7 +13,6 @@ int Format::sector_size() const
 
 int Format::track_size() const
 {
-	assert(sectors && size <= 7);
 	return sector_size() * sectors;
 }
 
