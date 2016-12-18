@@ -1,4 +1,4 @@
-// Built-in disk images used for testing
+﻿// Built-in disk images used for testing
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
@@ -24,6 +24,37 @@ static Track &complete (Track &track)
 }
 
 
+template<typename T>
+void fill(T &x, uint8_t val) {
+	std::fill(x.begin(), x.end(), val);
+}
+
+template<typename T>
+void fill(T &x, size_t from, uint8_t val) {
+	std::fill(x.begin() + from, x.end(), val);
+}
+
+template<typename T>
+void fill(T &x, size_t from, size_t to, uint8_t val) {
+	std::fill(x.begin() + from, x.begin() + to, val);
+}
+
+template<typename T>
+void iota(T &x, uint8_t first_val) {
+	std::iota(x.begin(), x.end(), first_val);
+}
+
+template<typename T>
+void iota(T &x, size_t from, uint8_t first_val) {
+	std::iota(x.begin() + from, x.end(), first_val);
+}
+
+template<typename T>
+void iota(T &x, size_t from, size_t to, uint8_t first_val) {
+	std::iota(x.begin() + from, x.begin() + to, first_val);
+}
+
+
 bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	CylHead cylhead(0, 0);
@@ -36,7 +67,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		case 0:
 		{
 #if 0
-			// 21 sectors/track
+		// 21 sectors/track
 		{
 			Track track(21);
 
@@ -63,7 +94,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
 #endif
-			// Missing data fields
+		// Missing data fields
 		{
 			Track track(18);
 
@@ -143,7 +174,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
 #endif
-			// +3 Speedlock sector (fully weak - Arctic Fox)
+		// +3 Speedlock sector (fully weak - Arctic Fox)
 		{
 			Track track(9);
 
@@ -164,11 +195,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			track[0].add(Data(data0));
 
 			// Create 3 different copies of the weak sector
-			std::iota(data0.begin(), data0.end(), 0);
+			iota(data0, 0);
 			track[1].add(Data(data0), true);
-			std::iota(data0.begin(), data0.end(), 1);
+			iota(data0, 1);
 			track[1].add(Data(data0), true);
-			std::iota(data0.begin(), data0.end(), 2);
+			iota(data0, 2);
 			track[1].add(Data(data0), true);
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
@@ -197,13 +228,13 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add 3 copies with differences matching the Robocop weakness (and SAMdisk v3)
 			Data data1(512, 0);
-			std::fill(data1.begin(), data1.begin() + 256, 0xe5);
+			fill(data1, 0, 256, 0xe5);
 			track[1].add(Data(data1), true);
-			std::iota(data1.begin() + 256, data1.end(), 1);
-			std::fill(data1.begin() + 256 + 32, data1.begin() + 256 + 32 + 48, 2);
+			iota(data1, 256, 1);
+			fill(data1, 256 + 32, 256 + 32 + 48, 2);
 			track[1].add(Data(data1), true);
-			std::iota(data1.begin() + 256, data1.end(), 0);
-			std::fill(data1.begin() + 256 + 32, data1.begin() + 256 + 32 + 48, 1);
+			iota(data1, 256, 0);
+			fill(data1, 256 + 32, 256 + 32 + 48, 1);
 			track[1].add(Data(data1), true);
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
@@ -227,13 +258,13 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add 3 copies with differences matching the typical weak sector
 			Data data7(512, 0);
-			std::fill(data7.begin(), data7.begin() + 256, 0xe5);
+			fill(data7, 0, 256, 0xe5);
 			track[7].add(Data(data7), true);
-			std::iota(data7.begin() + 256, data7.end(), 1);
-			std::fill(data7.begin() + 256 + 40, data7.begin() + 256 + 40 + 40, 2);
+			iota(data7, 256, 1);
+			fill(data7, 256 + 40, 256 + 40 + 40, 2);
 			track[7].add(Data(data7), true);
-			std::iota(data7.begin() + 256, data7.end(), 0);
-			std::fill(data7.begin() + 256 + 40, data7.begin() + 256 + 40 + 40, 1);
+			iota(data7, 256, 0);
+			fill(data7, 256 + 40, 256 + 40 + 40, 1);
 			track[7].add(Data(data7), true);
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
@@ -258,13 +289,13 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add 3 copies with differences matching the typical weak sector
 			Data data1(512, 0);
-			std::fill(data1.begin(), data1.begin() + 256, 0xe5);
+			fill(data1, 0, 256, 0xe5);
 			track[1].add(Data(data1), true);
-			std::iota(data1.begin() + 100, data1.begin() + 100 + 207, 101);
-			std::fill(data1.begin() + 100 + 207, data1.end(), 2);
+			iota(data1, 100, 100 + 207, 101);
+			fill(data1, 100 + 207, 2);
 			track[1].add(Data(data1), true);
-			std::iota(data1.begin() + 100, data1.begin() + 100 + 207, 101);
-			std::fill(data1.begin() + 100 + 207, data1.end(), 1);
+			iota(data1, 100, 100 + 207, 101);
+			fill(data1, 100 + 207, 1);
 			track[1].add(Data(data1), true);
 
 			Data data3(512, 0);
@@ -291,11 +322,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			std::copy(sig.begin(), sig.end(), data9.begin());
 			track[9].add(Data(data9), true);
 
-			std::iota(data9.begin() + 4, data9.begin() + 4 + 4, 5);
-			std::iota(data9.begin() + 4 + 4 + 124, data9.begin() + 4 + 4 + 124 + 4, 125);
+			iota(data9, 4, 4 + 4, 5);
+			iota(data9, 4 + 4 + 124, 4 + 4 + 124 + 4, 125);
 			track[9].add(Data(data9), true);
-			std::iota(data9.begin() + 4, data9.begin() + 4 + 4, 4);
-			std::iota(data9.begin() + 4 + 4 + 124, data9.begin() + 4 + 4 + 124 + 4, 124);
+			iota(data9, 4, 4 + 4, 4);
+			iota(data9, 4 + 4 + 124, 4 + 4 + 124 + 4, 124);
 			track[9].add(Data(data9), true);
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
@@ -376,7 +407,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			const std::string sig = "HELLO!";
 			Data data0(6144, 0x01);
-			std::fill(data0.begin(), data0.begin() + sector.size(), 0x00);
+			fill(data0, 0, sector.size(), 0x00);
 			std::copy(sig.begin(), sig.end(), std::prev(data0.end(), sig.size()));
 
 			CRC16 crc("\xa1\xa1\xa1", 3);
@@ -490,7 +521,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
 #endif
-			// Logo Professor (overformatted track, with offsets)
+		// Logo Professor (overformatted track, with offsets)
 		{
 			Track track(10);
 
@@ -722,7 +753,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		}
 
 #if 1
-			// Some HP disks described on cctalk
+		// Some HP disks described on cctalk
 		{
 			Track track(18);
 

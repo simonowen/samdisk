@@ -82,8 +82,8 @@ std::string lowercase (const std::string &str)
 {
 	std::string ret = str;
 	ret.reserve(str.length());
-	std::transform(str.begin(), str.end(), ret.begin(), [] (char c) {
-		return std::tolower(static_cast<int>(static_cast<uint8_t>(c)));
+	std::transform(str.cbegin(), str.cend(), ret.begin(), [] (char c) {
+		return static_cast<uint8_t>(std::tolower(static_cast<int>(c)));
 	});
 	return ret;
 }

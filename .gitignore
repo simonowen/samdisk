@@ -4,6 +4,7 @@
 /cmake_install.cmake
 /samdisk.dir
 /include/config.h
+/.vs
 .DS_Store
 *.o
 *.aps
