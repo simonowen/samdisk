@@ -265,6 +265,7 @@
     <ProjectGuid>{DC06DE50-59A6-48C0-BFC6-DDC87B0CF364}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SAMdisk</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -289,7 +290,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -305,7 +306,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -342,12 +343,16 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(UCRTContentRoot)Include\10.0.14393.0\shared;$(UCRTContentRoot)Include\10.0.14393.0\um</IncludePath>
+    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x86;P:\Src\Lib;$(UniversalCRTSdkDir)Lib\10.0.14393.0\um\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(UCRTContentRoot)Include\10.0.14393.0\shared;$(UCRTContentRoot)Include\10.0.14393.0\um</IncludePath>
+    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x64;P:\Src\Lib\x64;$(UniversalCRTSdkDir)Lib\10.0.14393.0\um\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -147,7 +147,6 @@ typedef void * HANDLE;
 #include <windows.h>
 #include <devguid.h>
 #include <winioctl.h>
-#include <VersionHelpers.h>
 #include "CrashDump.h"
 #else
 #endif // WIN32

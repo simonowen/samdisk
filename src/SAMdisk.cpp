@@ -408,12 +408,6 @@ int main (int argc_, char *argv_[])
 
 	SetUnhandledExceptionFilter(CrashDumpUnhandledExceptionFilter);
 
-	if (!IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN2K), LOBYTE(_WIN32_WINNT_WIN2K), 0))
-	{
-		util::cout << "This program requires Windows 2000 or later.\n";
-		return 1;
-	}
-
 	// Check if we've been run from GUI mode with no arguments
 	if (!IsConsoleWindow() && util::is_stdout_a_tty() && argc_ == 1)
 	{
