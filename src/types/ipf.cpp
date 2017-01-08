@@ -29,6 +29,35 @@ typedef struct
 extern "C" CapsLong CAPSGetVersionInfo(void *pversioninfo, CapsULong flag) __attribute__((weak_import));
 #endif
 
+static std::string error_string (SDWORD ret_code)
+{
+	switch (ret_code)
+	{
+	case imgeOk:				return "imgeOk";
+	case imgeUnsupported:		return "imgeUnsupported";
+	case imgeGeneric:			return "imgeGeneric";
+	case imgeOutOfRange:		return "imgeOutOfRange";
+	case imgeReadOnly:			return "imgeReadOnly";
+	case imgeOpen:				return "imgeOpen";
+	case imgeType:				return "imgeType";
+	case imgeShort:				return "imgeShort";
+	case imgeTrackHeader:		return "imgeTrackHeader";
+	case imgeTrackStream:		return "imgeTrackStream";
+	case imgeTrackData:			return "imgeTrackData";
+	case imgeDensityHeader:		return "imgeDensityHeader";
+	case imgeDensityStream:		return "imgeDensityStream";
+	case imgeDensityData:		return "imgeDensityData";
+	case imgeIncompatible:		return "imgeIncompatible";
+	case imgeUnsupportedType:	return "imgeUnsupportedType";
+	case imgeBadBlockType:		return "imgeBadBlockType";
+	case imgeBadBlockSize:		return "imgeBadBlockSize";
+	case imgeBadDataStart:		return "imgeBadDataStart";
+	case imgeBufferShort:		return "imgeBufferShort";
+	}
+
+	return util::fmt("%d", ret_code);
+}
+
 #endif // HAVE_CAPSIMAGE
 
 
@@ -56,7 +85,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	auto ret = CAPSInit();
 	if (ret != imgeOk)
-		throw util::exception("capsimg initialisation failed (", ret, ")");
+		throw util::exception("capsimg initialisation failed (", error_string(ret), ")");
 
 	auto id = CAPSAddImage();
 	auto pb = const_cast<PUBYTE>(file.data().data());
@@ -72,7 +101,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 		if (ret == imgeIncompatible)
 			throw util::exception("failed to lock image, please upgrade capsimg");
 		else
-			throw util::exception("failed to lock image file (", ret, ")");
+			throw util::exception("failed to lock image file (", error_string(ret), ")");
 	}
 
 	auto image_type = CAPSGetImageTypeMemory(pb, static_cast<UDWORD>(file.size()));
@@ -131,7 +160,8 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 					if (ret == imgeIncompatible)
 						throw util::exception("failed to lock track, please upgrade capsimg");
 
-					throw util::exception(util::fmt("failed to lock %s (%d)", CH(cyl, head), ret));
+					Message(msgWarning, "failed to lock %s (%s)", CH(cyl, head), error_string(ret).c_str());
+					break;
 				}
 
 				// Unformatted track?
@@ -202,6 +232,8 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 	CAPSUnlockImage(id);
 	CAPSRemImage(id);
 	CAPSExit();
+
+	disk->metadata["library"] = util::fmt("%lu.%lu", vi.release, vi.revision);
 
 	if (cii.release != 0)
 		disk->metadata["release"] = util::fmt("%lu", cii.release);
