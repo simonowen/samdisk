@@ -23,6 +23,7 @@ std::string to_string (const Encoding &encoding)
 		case Encoding::GCR:		return "GCR";			break;
 		case Encoding::Amiga:	return "Amiga";			break;
 		case Encoding::Ace:		return "Ace";			break;
+		case Encoding::MX:		return "MX";			break;
 		case Encoding::Unknown:	break;
 	}
 	return "Unknown";
@@ -37,6 +38,7 @@ std::string short_name (const Encoding &encoding)
 		case Encoding::GCR:		return "gcr";			break;
 		case Encoding::Amiga:	return "ami";			break;
 		case Encoding::Ace:		return "ace";			break;
+		case Encoding::MX:		return "mx";			break;
 		case Encoding::Unknown:	break;
 	}
 	return "unk";

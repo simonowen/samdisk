@@ -83,7 +83,7 @@ extern "C" {
 #include "getopt_long.h"
 }
 
-enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER };
+enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE };
 
 struct option long_options[] =
 {
@@ -151,6 +151,7 @@ struct option long_options[] =
 	{ "byte-swap",		  no_argument, &opt.byteswap, 1 },
 	{ "atom",			  no_argument, &opt.byteswap, 1 },
 	{ "ace",			  no_argument, &opt.ace, 1 },
+	{ "mx",				  no_argument, &opt.mx, 1 },
 	{ "quick",			  no_argument, &opt.quick, 1 },
 	{ "repair",			  no_argument, &opt.repair, 1},
 	{ "fix",			  no_argument, &opt.fix, 1 },
@@ -181,6 +182,7 @@ struct option long_options[] =
 	{ "hdf",		required_argument, nullptr, OPT_HDF },
 	{ "order",		required_argument, nullptr, OPT_ORDER },
 	{ "version",		  no_argument, nullptr, OPT_VERSION },
+	{ "scale",		required_argument, nullptr, OPT_SCALE },
 
 	{ 0, 0, 0, 0 }
 };
@@ -303,6 +305,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_RPM:	if (!GetInt(optarg, opt.rpm) || (opt.rpm != 300 && opt.rpm != 360)) return BadValue("rpm"); break;
 			case OPT_BYTES: if (!GetInt(optarg, opt.bytes) || !opt.bytes) return BadValue("bytes"); break;
 			case OPT_HDF:	if (!GetInt(optarg, opt.hdf) || (opt.hdf != 10 && opt.hdf != 11)) return BadValue("hdf"); break;
+			case OPT_SCALE: if (!GetInt(optarg, opt.scale)) return BadValue("scale"); break;
 
 			case OPT_VERSION:
 				Version();

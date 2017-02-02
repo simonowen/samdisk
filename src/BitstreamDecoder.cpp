@@ -38,6 +38,12 @@ void scan_flux (TrackData &trackdata)
 		return;
 	}
 
+	if (opt.mx)
+	{
+		scan_flux_mx(trackdata);
+		return;
+	}
+
 	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
 	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
 	encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
@@ -104,6 +110,12 @@ void scan_bitstream (TrackData &trackdata)
 	if (opt.ace)
 	{
 		scan_bitstream_ace(trackdata);
+		return;
+	}
+
+	if (opt.mx)
+	{
+		scan_bitstream_mx(trackdata);
 		return;
 	}
 
@@ -371,6 +383,106 @@ void scan_flux_ace (TrackData &trackdata)
 
 	trackdata.add(std::move(bitbuf));
 	scan_bitstream_ace(trackdata);
+}
+
+
+/*
+ * DVK MX format.  DVK was a family of DEC LSI-11 compatible computers
+ * produced by Soviet Union in 1980's, MX.SYS is the RT-11 driver name
+ * for the controller.
+ *
+ * FM encoding. Track format is driver-dependent (except the sync word).
+ * Hardware always reads or writes entire track, hence no sector headers.
+ *
+ * 1. gap1 (8 words)
+ * 2. sync (1 word, 000363 octal, regular FM encoding)
+ * 3. zero-based track number (1 word)
+ * 4. 11 sectors:
+ *   data (128 words)
+ *   checksum (1 word)
+ * 5. extra (1..4 words)
+ * 6. gap4 (or unformatted)
+ *
+ * See also http://torlus.com/floppy/forum/viewtopic.php?f=19&t=1384
+ */
+
+void scan_bitstream_mx (TrackData &trackdata)
+{
+	Track track;
+	Data block;
+	uint64_t dword = 0;
+	uint16_t stored_cksum = 0, cksum = 0;
+
+	auto &bitbuf = trackdata.bitstream();
+	bitbuf.seek(0);
+	bitbuf.encoding = Encoding::FM;
+	track.tracklen = bitbuf.track_bitsize();
+	bool sync = false;
+
+	while (!bitbuf.wrapped())
+	{
+		// Give up if no headers were found in the first revolution
+		if (!track.size() && bitbuf.tell() > track.tracklen)
+			break;
+
+		// ignore sync sequences after first one
+		if (sync)
+			break;
+
+		dword = (dword << 1) | bitbuf.read1();
+		if (opt.debug)
+		util::cout << util::fmt ("  s_b_mx %016lx c:h %d:%d\n", dword, trackdata.cylhead.cyl, trackdata.cylhead.head);
+
+		switch (dword)
+		{
+			case 0x88888888aaaa88aa:	// FM-encoded 0x00f3 (000363 octal)
+				sync = true;
+				if (opt.debug) util::cout << "  s_b_mx found sync at " << bitbuf.tell() << "\n";
+				break;
+
+			default:
+				continue;
+		}
+
+		// skip track number
+		bitbuf.read_byte();
+		bitbuf.read_byte();
+
+		// read sectors
+		for (auto s = 0; s < 11; s++) {
+			Sector sector(DataRate::_250K, Encoding::MX, Header(trackdata.cylhead, s, SizeToCode(256)));
+
+			block.clear();
+			cksum = 0;
+
+			for (auto i = 0; i < 128; i++) {
+				auto msb = bitbuf.read_byte();
+				auto lsb = bitbuf.read_byte();
+				cksum += (lsb | (msb << 8));
+				block.push_back(lsb);
+				block.push_back(msb);
+			}
+
+			stored_cksum  = bitbuf.read_byte() << 8;
+			stored_cksum |= bitbuf.read_byte();
+
+			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %06o:%06o (%04x:%04x)\n",
+				s, stored_cksum, cksum, stored_cksum, cksum);
+
+			sector.add(std::move(block), cksum != stored_cksum, 0);
+			track.add(std::move(sector));
+		}
+	}
+
+	trackdata.add(std::move(track));
+}
+
+void scan_flux_mx (TrackData &trackdata)
+{
+	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), opt.scale);
+	BitBuffer bitbuf(DataRate::_250K, decoder);
+
+	trackdata.add(std::move(bitbuf));
 }
 
 
