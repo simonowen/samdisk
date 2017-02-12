@@ -179,19 +179,19 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 
 	Data track_data;
 	track_data.reserve(1'000'000);
+	Data chunk(0x10000);
 
 	// Start stream, for 1 more index hole than we require revolutions
 	Control(REQ_STREAM, ((revs + 1) << 8) | 0x01);
 
 	for (;;)
 	{
-		uint8_t buf[0x10000];
-		auto len = Read(buf, sizeof(buf));
-		track_data.insert(track_data.end(), buf, buf + len);
+		auto len = Read(chunk.data(), chunk.size());
+		track_data.insert(track_data.end(), chunk.begin(), chunk.begin() + len);
 
 		// Check for end marker at end of current packet.
 		// ToDo: parse this properly, due to small risk of false positives.
-		if (len >= 7 && !memcmp(buf + len - 7, "\xd\xd\xd\xd\xd\xd\xd", 7))
+		if (len >= 7 && !memcmp(chunk.data() + len - 7, "\xd\xd\xd\xd\xd\xd\xd", 7))
 		{
 			// Stop streaming and finish
 			Control(REQ_STREAM, 0);
