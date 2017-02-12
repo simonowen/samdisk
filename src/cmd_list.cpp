@@ -9,7 +9,7 @@ static const char *aszPartTypes[256] =
 	NULL, NULL, "OS/2 Boot", "FAT32", "FAT32 LBA", NULL, "VFAT LBA", "(Extended LBA)",					//08-0f
 	NULL, "FAT12 Hidden", "Compaq", NULL, "FAT16 <32M Hidden", NULL, "FAT16 32M+ Hidden", "NTFS Hidden",//10-17
 	NULL, NULL, NULL, "FAT32 Hidden", "FAT32 LBA Hidden", NULL, "VFAT LBA Hidden", NULL,				//18-1f
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,														//20-27
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, "NTFS Hidden",											//20-27
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,														//28-2f
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,														//30-27
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,														//38-2f
