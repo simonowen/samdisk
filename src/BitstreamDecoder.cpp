@@ -430,7 +430,7 @@ void scan_bitstream_mx (TrackData &trackdata)
 	Track track;
 	Data block;
 	uint64_t dword = 0;
-	uint16_t stored_cksum = 0, cksum = 0;
+	uint16_t stored_cksum = 0, cksum = 0, stored_track = 0, extra = 0;
 
 	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
@@ -449,8 +449,6 @@ void scan_bitstream_mx (TrackData &trackdata)
 			break;
 
 		dword = (dword << 1) | bitbuf.read1();
-		if (opt.debug)
-		util::cout << util::fmt ("  s_b_mx %016lx c:h %d:%d\n", dword, trackdata.cylhead.cyl, trackdata.cylhead.head);
 
 		switch (dword)
 		{
@@ -464,12 +462,12 @@ void scan_bitstream_mx (TrackData &trackdata)
 		}
 
 		// skip track number
-		bitbuf.read_byte();
-		bitbuf.read_byte();
+		stored_track = bitbuf.read_byte() << 8;
+		stored_track |= bitbuf.read_byte();
 
 		// read sectors
 		for (auto s = 0; s < 11; s++) {
-			Sector sector(bitbuf.datarate, Encoding::MX, Header(trackdata.cylhead, s, SizeToCode(256)));
+			Sector sector(DataRate::_250K, Encoding::FM, Header(trackdata.cylhead, s, SizeToCode(256)));
 			sector.offset = bitbuf.track_offset(bitbuf.tell());
 
 			block.clear();
@@ -489,9 +487,16 @@ void scan_bitstream_mx (TrackData &trackdata)
 			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %06o:%06o (%04x:%04x)\n",
 				s, stored_cksum, cksum, stored_cksum, cksum);
 
-			sector.add(std::move(block), cksum != stored_cksum, 0);
+			sector.add(std::move(block), cksum != stored_cksum, 0xfb);
 			track.add(std::move(sector));
 		}
+
+		extra = bitbuf.read_byte() << 8;
+		extra |= bitbuf.read_byte();
+
+		if (opt.debug)
+		util::cout << util::fmt ("  s_b_mx c:h %d:%d stored %d extra %06o\n",
+			trackdata.cylhead.cyl, trackdata.cylhead.head, stored_track, extra);
 	}
 
 	trackdata.add(std::move(track));
@@ -1480,7 +1485,7 @@ void scan_bitstream_agat (TrackData &trackdata)
 				}
 			}
 
-			sector.add(std::move(data), bad_crc, dam);
+			sector.add(std::move(data), bad_crc, dam == 0x95 ? 0xfb : dam);
 
 			// If the data is good there's no need to search for more data fields
 			if (!bad_crc)
