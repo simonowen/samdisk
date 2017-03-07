@@ -417,7 +417,20 @@ int main (int argc_, char *argv_[])
 	if (!IsConsoleWindow() && util::is_stdout_a_tty() && argc_ == 1)
 	{
 		FreeConsole();
-		MessageBox(nullptr, "I'm a console-mode utility, please run me from a Command Prompt!", "SAMdisk", MB_OK | MB_ICONSTOP);
+
+		char szPath[MAX_PATH];
+		GetModuleFileName(GetModuleHandle(NULL), szPath, ARRAYSIZE(szPath));
+
+		auto strCommand = std::string("/k \"") + szPath + "\" --help";
+		GetEnvironmentVariable("COMSPEC", szPath, ARRAYSIZE(szPath));
+
+		auto ret = reinterpret_cast<int>(
+			ShellExecute(NULL, "open", szPath, strCommand.c_str(), NULL, SW_NORMAL));
+
+		// Fall back on the old message if it failed
+		if (ret < 32)
+			MessageBox(nullptr, "I'm a console-mode utility, please run me from a Command Prompt!", "SAMdisk", MB_OK | MB_ICONSTOP);
+
 		return 0;
 	}
 #endif // WIN32
