@@ -145,7 +145,7 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				else
 				{
 					// Show offset from previous sector
-					if (offset > prevoffset)
+					if (offset >= prevoffset)
 						util::cout << util::fmt("%s ", WordStr((offset - prevoffset) >> shift));
 					else
 						util::cout << util::fmt("-%s ", WordStr((prevoffset - offset) >> shift));

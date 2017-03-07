@@ -40,7 +40,13 @@ void scan_flux (TrackData &trackdata)
 
 	if (opt.mx)
 	{
-		scan_flux_mx(trackdata);
+		// Try 300K first (5.25" drive)
+		scan_flux_mx(trackdata, DataRate::_300K);
+
+		// If that fails, fall back on 250K (3.5" drive)
+		if (trackdata.track().empty())
+			scan_flux_mx(trackdata, DataRate::_250K);
+
 		return;
 	}
 
@@ -450,7 +456,8 @@ void scan_bitstream_mx (TrackData &trackdata)
 
 		// read sectors
 		for (auto s = 0; s < 11; s++) {
-			Sector sector(DataRate::_250K, Encoding::MX, Header(trackdata.cylhead, s, SizeToCode(256)));
+			Sector sector(bitbuf.datarate, Encoding::MX, Header(trackdata.cylhead, s, SizeToCode(256)));
+			sector.offset = bitbuf.track_offset(bitbuf.tell());
 
 			block.clear();
 			cksum = 0;
@@ -477,12 +484,13 @@ void scan_bitstream_mx (TrackData &trackdata)
 	trackdata.add(std::move(track));
 }
 
-void scan_flux_mx (TrackData &trackdata)
+void scan_flux_mx (TrackData &trackdata, DataRate datarate)
 {
-	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), opt.scale);
-	BitBuffer bitbuf(DataRate::_250K, decoder);
+	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
+	BitBuffer bitbuf(datarate, decoder);
 
 	trackdata.add(std::move(bitbuf));
+	scan_bitstream_mx(trackdata);
 }
 
 
