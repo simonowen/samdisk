@@ -7,8 +7,8 @@
 
 FluxDecoder::FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent)
 	: m_flux_revs(flux_revs), m_clock(bitcell_ns), m_clock_centre(bitcell_ns),
-	m_clock_min(bitcell_ns * (100 - CLOCK_MAX_ADJUST) / 100),
-	m_clock_max(bitcell_ns * (100 + CLOCK_MAX_ADJUST) / 100),
+	m_clock_min(bitcell_ns * (100 - opt.plladjust) / 100),
+	m_clock_max(bitcell_ns * (100 + opt.plladjust) / 100),
 	m_flux_scale_percent(flux_scale_percent)
 {
 	assert(flux_revs.size());
@@ -77,12 +77,12 @@ int FluxDecoder::next_bit ()
 	{
 		// In sync: adjust base clock by percentage of phase mismatch
 		auto diff = m_flux / (m_clocked_zeros + 1);
-		m_clock += diff / CLOCK_MAX_ADJUST;
+		m_clock += diff / opt.plladjust;
 	}
 	else
 	{
 		// Out of sync: adjust base clock towards centre
-		m_clock += (m_clock_centre - m_clock) / CLOCK_MAX_ADJUST;
+		m_clock += (m_clock_centre - m_clock) / opt.plladjust;
 
 		// Require 256 good bits before reporting another loss of sync
 		if (m_goodbits >= 256)

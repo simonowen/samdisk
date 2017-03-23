@@ -83,7 +83,7 @@ extern "C" {
 #include "getopt_long.h"
 }
 
-enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE };
+enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST };
 
 struct option long_options[] =
 {
@@ -183,6 +183,7 @@ struct option long_options[] =
 	{ "order",		required_argument, nullptr, OPT_ORDER },
 	{ "version",		  no_argument, nullptr, OPT_VERSION },
 	{ "scale",		required_argument, nullptr, OPT_SCALE },
+	{ "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
 
 	{ 0, 0, 0, 0 }
 };
@@ -306,6 +307,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_BYTES: if (!GetInt(optarg, opt.bytes) || !opt.bytes) return BadValue("bytes"); break;
 			case OPT_HDF:	if (!GetInt(optarg, opt.hdf) || (opt.hdf != 10 && opt.hdf != 11)) return BadValue("hdf"); break;
 			case OPT_SCALE: if (!GetInt(optarg, opt.scale)) return BadValue("scale"); break;
+			case OPT_PLLADJUST: if (!GetInt(optarg, opt.plladjust) || opt.plladjust <= 0 || opt.plladjust > 50) return BadValue("pll-adjust"); break;
 
 			case OPT_VERSION:
 				Version();
