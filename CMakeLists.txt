@@ -89,7 +89,7 @@ check_function_exists(_snprintf HAVE__SNPRINTF)
 check_function_exists(sysconf HAVE_SYSCONF)
 
 add_definitions(-DHAVE_CONFIG_H)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h)
 
 set(CMAKE_THREAD_PREFER_PTHREAD pthread)
 find_package(Threads REQUIRED)
