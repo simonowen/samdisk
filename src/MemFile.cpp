@@ -101,7 +101,13 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 
 			// Stop if something went wrong
 			if (nRet < 0)
+			{
+				// Retry bad files without zlib if they lack an explicit .zip extension
+				if (nRet == UNZ_BADZIPFILE && !IsFileExt(path_, ".zip"))
+					return open(path_, false);
+
 				throw util::exception("zip extraction failed (", nRet, ")");
+			}
 
 			uRead = nRet;
 			m_compress = Compress::Zip;
