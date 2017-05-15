@@ -209,7 +209,7 @@ bool IsFloppy (const std::string &path)
 	// This gives better handling of USB floppy drives, or non-existent drives.
 	return path.length() == 2 &&
 		std::isalpha(static_cast<uint8_t>(path[0])) &&
-		path[2] == ':';
+		path[1] == ':';
 }
 
 bool IsHddImage (const std::string &path)
