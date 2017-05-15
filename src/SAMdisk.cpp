@@ -16,7 +16,7 @@ volatile bool g_fAbort;
 
 void Version ()
 {
-	util::cout << colour::WHITE << "SAMdisk 4.0 alpha (" __DATE__ ")" << colour::none << ", (c) 2016 Simon Owen\n";
+	util::cout << colour::WHITE << "SAMdisk 4.0 alpha (" __DATE__ ")" << colour::none << ", (c) 2017 Simon Owen\n";
 }
 
 int Usage ()
@@ -372,7 +372,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 }
 
 
-enum { argNone, argFloppy, argBlock, argHDD, argBootSector, argRecord, argUnknown, ARG_COUNT };
+enum { argNone, argBlock, argHDD, argBootSector, argDisk, ARG_COUNT };
 
 int GetArgType (const std::string &arg)
 {
@@ -383,10 +383,10 @@ int GetArgType (const std::string &arg)
 		return argBootSector;
 
 	if (IsRecord(arg))
-		return argRecord;	// in most cases records are treated as disk images
+		return argDisk;
 
 	if (IsFloppy(arg))
-		return argFloppy;
+		return argDisk;
 
 	if (BlockDevice::IsRecognised(arg))
 		return argBlock;
@@ -394,7 +394,8 @@ int GetArgType (const std::string &arg)
 	if (IsHddImage(arg))
 		return argHDD;
 
-	return argUnknown;
+	// Assume a disk or image.
+	return argDisk;
 }
 
 void signal_handler (int)
@@ -465,15 +466,15 @@ int main (int argc_, char *argv_[])
 				if (nSource == argNone || nTarget == argNone)
 					Usage();
 
-				if (nSource == argUnknown && IsTrinity(opt.szTarget))
+				if (nSource == argDisk && IsTrinity(opt.szTarget))
 					f = Image2Trinity(opt.szSource, opt.szTarget);			// file/image -> Trinity
-				else if ((nSource == argRecord || nSource == argBlock || nSource == argUnknown) && (nTarget == argRecord || nTarget == argUnknown || nTarget == argHDD /*for .raw*/))
+				else if ((nSource == argBlock || nSource == argDisk) && (nTarget == argDisk || nTarget == argHDD /*for .raw*/))
 					f = ImageToImage(opt.szSource, opt.szTarget);			// image -> image
 				else if ((nSource == argHDD || nSource == argBlock) && nTarget == argHDD)
 					f = Hdd2Hdd(opt.szSource, opt.szTarget);				// hdd -> hdd
-				else if (nSource == argBootSector && nTarget == argUnknown)
+				else if (nSource == argBootSector && nTarget == argDisk)
 					f = Hdd2Boot(opt.szSource, opt.szTarget);				// boot -> file
-				else if (nSource == argUnknown && nTarget == argBootSector)
+				else if (nSource == argDisk && nTarget == argBootSector)
 					f = Boot2Hdd(opt.szSource, opt.szTarget);				// file -> boot
 				else if (nSource == argBootSector && nTarget == argBootSector)
 					f = Boot2Boot(opt.szSource, opt.szTarget);				// boot -> boot
@@ -492,7 +493,7 @@ int main (int argc_, char *argv_[])
 					f = ListDrives(opt.verbose);
 				else if (nSource == argHDD || nSource == argBlock)
 					f = ListRecords(opt.szSource);
-				else if (nSource == argRecord || nSource == argUnknown)
+				else if (nSource == argDisk)
 					f = DirImage(opt.szSource);
 				else
 					Usage();
@@ -511,7 +512,7 @@ int main (int argc_, char *argv_[])
 #endif
 					if (nSource == argHDD)
 						f = ListRecords(opt.szSource);
-					else if (nSource == argRecord || nSource == argUnknown)
+					else if (nSource == argDisk)
 						f = DirImage(opt.szSource);
 					else
 						Usage();
@@ -524,7 +525,7 @@ int main (int argc_, char *argv_[])
 				if (nSource == argNone || nTarget != argNone)
 					Usage();
 
-				if (nSource == argRecord || nSource == argBlock || nSource == argUnknown)
+				if (nSource == argBlock || nSource == argDisk)
 					f = ScanImage(opt.szSource, opt.range);
 				else
 					Usage();
@@ -542,11 +543,9 @@ int main (int argc_, char *argv_[])
 
 				if (nSource == argHDD)
 					f = FormatHdd(opt.szSource);
-#if 0
-				else if (nSource == argRecord)
+				else if (IsRecord(opt.szSource))
 					f = FormatRecord(opt.szSource);
-#endif
-				else if (nSource == argUnknown)
+				else if (nSource == argDisk)
 					f = UnformatImage(opt.szSource, opt.range);
 				else
 					Usage();
@@ -596,7 +595,7 @@ int main (int argc_, char *argv_[])
 							FormatHdd(opt.szSource);
 						else if (nSource == argBootSector)
 							FormatBoot(opt.szSource);
-						else if (nSource == argRecord)
+						else if (IsRecord(opt.szSource))
 							FormatRecord(opt.szSource);
 						else
 							Usage();
@@ -614,7 +613,7 @@ int main (int argc_, char *argv_[])
 
 				if (nSource == argHDD && IsHddImage(opt.szSource) && (nTarget != argNone || opt.sectors != -1))
 					f = CreateHddImage(opt.szSource, strtoul(opt.szTarget, nullptr, 0));
-				else if (nSource == argUnknown && nTarget == argNone)
+				else if (nSource == argDisk && nTarget == argNone)
 					f = CreateImage(opt.szSource, opt.range);
 				else
 					Usage();
@@ -629,7 +628,7 @@ int main (int argc_, char *argv_[])
 
 				if (nSource == argHDD || nSource == argBlock)
 					f = HddInfo(opt.szSource, opt.verbose);
-				else if (nSource == argRecord || nSource == argUnknown)
+				else if (nSource == argDisk)
 					f = ImageInfo(opt.szSource);
 				else
 					Usage();
@@ -646,7 +645,7 @@ int main (int argc_, char *argv_[])
 					f = ViewHdd(opt.szSource, opt.range);
 				else if (nSource == argBootSector)
 					f = ViewBoot(opt.szSource, opt.range);
-				else if (nSource == argRecord || nSource == argUnknown)
+				else if (nSource == argDisk)
 					f = ViewImage(opt.szSource, opt.range);
 				else
 					Usage();
@@ -659,7 +658,7 @@ int main (int argc_, char *argv_[])
 				if (nSource == argNone || nTarget != argNone)
 					Usage();
 
-				if (nSource == argRecord || nSource == argUnknown)
+				if (nSource == argDisk)
 					f = DiskRpm(opt.szSource);
 				else
 					Usage();
