@@ -144,7 +144,7 @@ bool WriteImage (const std::string &path, std::shared_ptr<Disk> &disk)
 		if (!p->pszType)
 			throw util::exception("unknown output file type");
 		else if (!p->pfnWrite)
-			throw util::exception(p->pszType, " is not supported as an output type");
+			throw util::exception("unsupported output file type");
 
 		// Create the output file
 		// ToDo: change to stream or wrap in try-catch so file is closed

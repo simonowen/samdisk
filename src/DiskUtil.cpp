@@ -296,7 +296,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				Message(msgFix, "added suitable second copy of +3 Speedlock weak sector");
 			}
 			else
-				Message(msgWarning, "image is missing multiple copies of +3 Speedlock weak sector");
+				Message(msgWarning, "missing multiple copies of +3 Speedlock weak sector");
 		}
 
 		auto &sector7 = track[7];
@@ -314,7 +314,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				Message(msgFix, "added suitable second copy of CPC Speedlock weak sector");
 			}
 			else
-				Message(msgWarning, "image is missing multiple copies of CPC Speedlock weak sector");
+				Message(msgWarning, "missing multiple copies of CPC Speedlock weak sector");
 		}
 	}
 
@@ -345,7 +345,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				Message(msgFix, "added suitable second copy of Rainbow Arts weak sector");
 			}
 			else
-				Message(msgWarning, "image is missing multiple copies of Rainbow Arts weak sector");
+				Message(msgWarning, "missing multiple copies of Rainbow Arts weak sector");
 		}
 	}
 
