@@ -2,7 +2,6 @@
 
 #include "SAMdisk.h"
 #include "SuperCardPro.h"
-#include "FluxTrackBuffer.h"
 
 #ifdef HAVE_FTD2XX
 #include "SCP_FTD2XX.h"

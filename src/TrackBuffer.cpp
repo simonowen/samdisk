@@ -8,7 +8,7 @@ TrackBuffer::TrackBuffer (bool mfm)
 {
 }
 
-void TrackBuffer::addByte (uint8_t data, uint8_t clock)
+void TrackBuffer::addByte (int data, int clock)
 {
 	for (auto i = 0; i < 8; ++i)
 	{
@@ -35,7 +35,7 @@ void TrackBuffer::addDataBit (bool one)
 	}
 }
 
-void TrackBuffer::addByte (uint8_t byte)
+void TrackBuffer::addByte (int byte)
 {
 	for (auto i = 0; i < 8; ++i)
 	{
@@ -44,31 +44,31 @@ void TrackBuffer::addByte (uint8_t byte)
 	}
 }
 
-void TrackBuffer::addBlock (uint8_t byte, size_t count)
+void TrackBuffer::addBlock (int byte, int count)
 {
-	for (size_t i = 0; i < count; ++i)
+	for (int i = 0; i < count; ++i)
 		addByte(byte);
 }
 
-void TrackBuffer::addBlock (const void *buf, size_t len)
+void TrackBuffer::addBlock (const void *buf, int len)
 {
-	const uint8_t *pb = reinterpret_cast<const uint8_t *>(buf);
+	auto pb = reinterpret_cast<const uint8_t *>(buf);
 	while (len-- > 0)
 		addByte(*pb++);
 }
 
-void TrackBuffer::addGap (size_t count, uint8_t fill)
+void TrackBuffer::addGap (int  count, int fill)
 {
 	addBlock(fill, count);
 }
 
 void TrackBuffer::addSync ()
 {
-	uint8_t sync = 0x00;
+	auto sync{0x00};
 	addBlock(sync, m_mfm ? 12 : 6);
 }
 
-void TrackBuffer::addAM (uint8_t type)
+void TrackBuffer::addAM (int type)
 {
 	if (m_mfm)
 	{
@@ -152,7 +152,7 @@ void TrackBuffer::addTrackEnd ()
 		addByte(GAP_FILL_BYTE);	// gap 4b
 }
 */
-void TrackBuffer::addSectorHeader (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t size)
+void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size)
 {
 	addIDAM();
 	addByte(cyl);
@@ -167,9 +167,14 @@ void TrackBuffer::addSectorHeader (uint8_t cyl, uint8_t head, uint8_t sector, ui
 	addCRC();
 }
 
-void TrackBuffer::addSectorData (const void *buf, size_t len, bool deleted)
+void TrackBuffer::addSectorHeader(const Header &header)
 {
-	uint8_t am = deleted ? 0xf8 : 0xfb;
+	addSectorHeader(header.cyl, header.head, header.sector, header.size);
+}
+
+void TrackBuffer::addSectorData (const void *buf, int len, bool deleted)
+{
+	auto am{deleted ? 0xf8 : 0xfb};
 	addAM(am);
 	addBlock(buf, len);
 
@@ -177,7 +182,12 @@ void TrackBuffer::addSectorData (const void *buf, size_t len, bool deleted)
 	addCRC();
 }
 
-void TrackBuffer::addSector (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t size, const void *buf, size_t len, size_t gap3, bool deleted)
+void TrackBuffer::addSectorData(const Data &data, bool deleted)
+{
+	addSectorData(data.data(), data.size(), deleted);
+}
+
+void TrackBuffer::addSector (int cyl, int head, int sector, int size, const void *buf, int len, int gap3, bool deleted)
 {
 	addSync();
 	addSectorHeader(cyl, head, sector, size);
@@ -187,11 +197,15 @@ void TrackBuffer::addSector (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t 
 	addGap(gap3);	// gap 3
 }
 
+void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, bool deleted)
+{
+	addSector(header.cyl, header.head, header.sector, header.size, data.data(), data.size(), gap3, deleted);
+}
 
 void TrackBuffer::addAmigaTrackStart ()
 {
 	m_mfm = true;
-	uint8_t fill = 0x00;
+	auto fill{0x00};
 	addBlock(fill, 60);		// Shift the first sector away from the index
 }
 /*
@@ -221,9 +235,9 @@ void TrackBuffer::addAmigaBits (std::vector<uint32_t> &bits)
 	}
 }
 
-std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, size_t len, uint32_t &checksum)
+std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, int len, uint32_t &checksum)
 {
-	auto dwords = len / sizeof(uint32_t);
+	auto dwords = len / static_cast<int>(sizeof(uint32_t));
 	const uint32_t *pdw = reinterpret_cast<const uint32_t*>(buf);
 	std::vector<uint32_t> odddata;
 	odddata.reserve(dwords * 2);
@@ -232,7 +246,7 @@ std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, size_t len, 
 	for (auto i = 0; i < 2; ++i)
 	{
 		// All DWORDs in the block
-		for (size_t j = 0; j < dwords; ++j)
+		for (int j = 0; j < dwords; ++j)
 		{
 			uint32_t bits = 0;
 			uint32_t data = frombe32(pdw[j]) << i;
@@ -252,7 +266,7 @@ std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, size_t len, 
 	return odddata;
 }
 
-void TrackBuffer::addAmigaSector (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t remain, const void *buf)
+void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, const void *buf)
 {
 	addByte(0x00);
 	addByte(0x00);

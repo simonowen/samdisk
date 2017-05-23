@@ -16,8 +16,8 @@ public:
 	operator uint16_t () const;
 
 	void init(uint16_t crc = INIT_CRC);
-	uint16_t add (uint8_t byte);
-	uint16_t add (uint8_t byte, size_t len);
+	uint16_t add (int byte);
+	uint16_t add (int byte, size_t len);
 	uint16_t add (const void *buf, size_t len);
 
 private:

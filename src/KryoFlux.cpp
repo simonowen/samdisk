@@ -2,7 +2,6 @@
 
 #include "SAMdisk.h"
 #include "KryoFlux.h"
-#include "FluxTrackBuffer.h"
 
 #ifdef HAVE_LIBUSB1
 #include "KF_libusb.h"

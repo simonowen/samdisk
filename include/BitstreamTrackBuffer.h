@@ -6,15 +6,13 @@
 class BitstreamTrackBuffer final : public TrackBuffer
 {
 public:
-	explicit BitstreamTrackBuffer (bool mfm = true);
+	BitstreamTrackBuffer (DataRate datarate, Encoding encoding);
 
 	void addBit (bool one) override;
+	BitBuffer &buffer();
 
 private:
-	std::vector<uint8_t> m_data {};
-	std::vector<size_t> m_indexes {};
-	size_t m_bitsize = 0;
-	size_t m_bitpos = 0;
+	BitBuffer m_buffer;
 };
 
 #endif // BITSTREAMTRACKBUFFER_H

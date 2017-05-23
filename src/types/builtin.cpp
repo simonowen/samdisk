@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
+#include "BitstreamTrackBuffer.h"
 
 static Track &complete (Track &track)
 {
@@ -893,6 +894,34 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
+			break;
+		}
+
+		// 500Kbps MFM bitstream
+		case 16 + 0:
+		{
+			const Data data(512, 0x00);
+			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::MFM);
+
+			bitbuf.addTrackStart();
+			for (i = 0; i < 18; i++)
+				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+
+			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			break;
+		}
+
+		// 250Kbps MFM bitstream
+		case 16 + 2:
+		{
+			const Data data(512, 0x00);
+			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+
+			bitbuf.addTrackStart();
+			for (i = 0; i < 9; i++)
+				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+
+			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
 			break;
 		}
 

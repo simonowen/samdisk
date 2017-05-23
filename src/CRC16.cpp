@@ -46,13 +46,13 @@ void CRC16::init (uint16_t init_crc)
 	m_crc = init_crc;
 }
 
-uint16_t CRC16::add (uint8_t byte)
+uint16_t CRC16::add (int byte)
 {
 	m_crc = (m_crc << 8) ^ s_crc_lookup[((m_crc >> 8) ^ byte) & 0xff];
 	return m_crc;
 }
 
-uint16_t CRC16::add (uint8_t byte, size_t len)
+uint16_t CRC16::add (int byte, size_t len)
 {
 	while (len-- > 0)
 		add(byte);

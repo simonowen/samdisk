@@ -5,7 +5,7 @@
 
 class TrackBuffer
 {
-	static const uint8_t GAP_FILL_BYTE = 0x4e;	// IBM System 34 gap filler
+	static const int GAP_FILL_BYTE = 0x4e;	// IBM System 34 gap filler
 
 public:
 	explicit TrackBuffer (bool mfm = true);
@@ -16,16 +16,15 @@ public:
 
 	virtual void addBit (bool one) = 0;
 
-//	void addBit (bool one);
 	void addDataBit (bool one);
-	void addByte (uint8_t byte);
-	void addByte (uint8_t data, uint8_t clock);
-	void addBlock (uint8_t byte, size_t count);
-	void addBlock (const void *buf, size_t len);
+	void addByte (int byte);
+	void addByte (int data, int clock);
+	void addBlock (int byte, int count);
+	void addBlock (const void *buf, int len);
 
-	void addGap (size_t count, uint8_t fill = GAP_FILL_BYTE);
+	void addGap (int count, int fill = GAP_FILL_BYTE);
 	void addSync ();
-	void addAM (uint8_t type);
+	void addAM (int type);
 	void addIAM ();
 	void addIDAM ();
 	void addDAM ();
@@ -36,16 +35,19 @@ public:
 
 	void addTrackStart ();
 	void addTrackEnd ();
-	void addSectorHeader (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t size);
-	void addSectorData (const void *buf, size_t len, bool deleted = false);
-	void addSector (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t size, const void *buf, size_t len, size_t gap3, bool deleted = false);
+	void addSectorHeader (int cyl, int head, int sector, int size);
+	void addSectorHeader(const Header &header);
+	void addSectorData (const void *buf, int len, bool deleted = false);
+	void addSectorData(const Data &data, bool deleted = false);
+	void addSector (int cyl, int head, int sector, int size, const void *buf, int len, int gap3, bool deleted = false);
+	void addSector(const Header &header, const Data &data, int gap3, bool deleted = false);
 
 	void addAmigaTrackStart ();
 	void addAmigaTrackEnd ();
-	std::vector<uint32_t> splitAmigaBits (const void *buf, size_t len, uint32_t &checksum);
+	std::vector<uint32_t> splitAmigaBits (const void *buf, int len, uint32_t &checksum);
 	void addAmigaBits (std::vector<uint32_t> &bits);
 	void addAmigaDword (uint32_t dword, uint32_t &checksum);
-	void addAmigaSector (uint8_t cyl, uint8_t head, uint8_t sector, uint8_t remain, const void *buf);
+	void addAmigaSector (int cyl, int head, int sector, int remain, const void *buf);
 
 protected:
 	bool m_mfm = true;
