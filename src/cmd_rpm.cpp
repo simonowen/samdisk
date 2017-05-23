@@ -13,6 +13,7 @@ bool DiskRpm (const std::string &path)
 		opt.range.cyl_end + 1, opt.range.head_end);
 
 	auto forever = opt.force && util::is_stdout_a_tty();
+	opt.retries = opt.rescans = 0;
 
 	// Display 5 revolutions, or run forever if forced
 	for (auto i = 0; !g_fAbort && (forever || i < 5); ++i)

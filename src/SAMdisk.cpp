@@ -244,9 +244,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 				break;
 
 			case 'R':
-				if (!optarg)
-					opt.rescans = 1;
-				else if (!GetInt(optarg, opt.rescans))
+				if (!GetInt(optarg, opt.rescans))
 					return BadValue("rescans");
 				break;
 
