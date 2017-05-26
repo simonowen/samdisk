@@ -17,6 +17,8 @@ void TrackBuffer::addByte (int data, int clock)
 		clock <<= 1;
 		data <<= 1;
 	}
+
+	m_onelast = (data & 0x100) != 0;
 }
 
 void TrackBuffer::addDataBit (bool one)
@@ -33,6 +35,8 @@ void TrackBuffer::addDataBit (bool one)
 		addBit(true);
 		addBit(one);
 	}
+
+	m_onelast = one;
 }
 
 void TrackBuffer::addByte (int byte)
