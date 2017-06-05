@@ -73,16 +73,15 @@ int FluxDecoder::next_bit ()
 	}
 
 	// PLL: Adjust clock frequency according to phase mismatch
-	if ((m_clocked_zeros >= 1) && (m_clocked_zeros <= 3))
+	if (m_clocked_zeros <= 3)
 	{
 		// In sync: adjust base clock by percentage of phase mismatch
-		auto diff = m_flux / (m_clocked_zeros + 1);
-		m_clock += diff / opt.plladjust;
+		m_clock += m_flux * opt.plladjust / 100;
 	}
 	else
 	{
 		// Out of sync: adjust base clock towards centre
-		m_clock += (m_clock_centre - m_clock) / opt.plladjust;
+		m_clock += (m_clock_centre - m_clock) * opt.plladjust / 100;
 
 		// Require 256 good bits before reporting another loss of sync
 		if (m_goodbits >= 256)
@@ -95,7 +94,7 @@ int FluxDecoder::next_bit ()
 	m_clock = std::min(std::max(m_clock_min, m_clock), m_clock_max);
 
 	// Authentic PLL: Do not snap the timing window to each flux transition
-	new_flux = m_flux / 2;
+	new_flux = m_flux * (100 - opt.pllphase) / 100;
 	m_flux = new_flux;
 
 	++m_goodbits;
