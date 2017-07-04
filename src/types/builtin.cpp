@@ -1004,6 +1004,34 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			break;
 		}
 
+		// 500Kbps Amiga bitstream
+		case 32 + 0:
+		{
+			const Data data(512, 0x00);
+			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::Amiga);
+
+			bitbuf.addAmigaTrackStart();
+			for (i = 0; i < 22; i++)
+				bitbuf.addAmigaSector(cylhead.cyl, cylhead.head, i, (22 - i), data.data());
+
+			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			break;
+		}
+
+		// 250Kbps Amiga bitstream
+		case 32 + 2:
+		{
+			const Data data(512, 0x00);
+			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::Amiga);
+
+			bitbuf.addAmigaTrackStart();
+			for (i = 0; i < 11; i++)
+				bitbuf.addAmigaSector(cylhead, i, (11 - i), data.data());
+
+			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			break;
+		}
+
 		default:
 			throw util::exception("unknown built-in type");
 	}

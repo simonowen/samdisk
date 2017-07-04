@@ -521,7 +521,7 @@ static bool amiga_read_dwords (BitBuffer &bitbuf, uint32_t *pdw, size_t dwords, 
 		*pdw++ = util::betoh(value);
 	}
 
-	return !bitbuf.wrapped();
+	return !bitbuf.wrapped() || !bitbuf.tell();
 }
 
 void scan_bitstream_amiga (TrackData &trackdata)
@@ -560,7 +560,8 @@ void scan_bitstream_amiga (TrackData &trackdata)
 		uint8_t eot = (info >> 24) & 0xff;
 
 		// Check for AmigaDOS (0xff), sector / sector end within normal range, and track number matching physical location
-		if (type != 0xff || sector_nr >= 11 || !eot || eot > 11 ||
+		auto max_sectors{(bitbuf.datarate == DataRate::_500K) ? 22 : 11};
+		if (type != 0xff || sector_nr >= max_sectors || !eot || eot > max_sectors ||
 			track_nr != static_cast<uint8_t>((trackdata.cylhead.cyl << 1) + trackdata.cylhead.head))
 			continue;
 
@@ -582,7 +583,7 @@ void scan_bitstream_amiga (TrackData &trackdata)
 		if (calcsum != 0 && !opt.idcrc)
 			continue;
 
-		Sector sector(DataRate::_250K, Encoding::Amiga, Header(trackdata.cylhead, sector_nr, 2));
+		Sector sector(bitbuf.datarate, Encoding::Amiga, Header(trackdata.cylhead, sector_nr, 2));
 		sector.offset = bitbuf.track_offset(sector_offset);
 
 		// Read the data checksum
