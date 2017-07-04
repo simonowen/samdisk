@@ -266,7 +266,7 @@ bool SuperCardPro::ReadFlux (int revs, FluxData &flux_revs)
 			else
 			{
 				total_time += util::betoh<uint16_t>(time);
-				flux_times.push_back(total_time * NS_PER_BITCELL);	// 25ns per bit cell
+				flux_times.push_back(total_time * NS_PER_TICK);
 				total_time = 0;
 			}
 		}
@@ -277,21 +277,39 @@ bool SuperCardPro::ReadFlux (int revs, FluxData &flux_revs)
 	return true;
 }
 
-bool SuperCardPro::WriteFlux (const void *flux, int nr_bitcells)
+bool SuperCardPro::WriteFlux (const std::vector<uint32_t> &flux_times)
 {
-	uint32_t length = nr_bitcells * sizeof(uint16_t);
+	std::vector<uint16_t> flux_data;
+	flux_data.reserve(flux_times.size());
+	for (auto time_ns : flux_times)
+	{
+		auto time_ticks{(time_ns + (NS_PER_TICK / 2)) / NS_PER_TICK};
+		time_ticks = time_ticks * opt.scale / 100;
+		time_ticks |= 1;
+
+		while (time_ticks >= 0x10000)
+		{
+			flux_data.push_back(0);
+			time_ticks -= 0x10000;
+		}
+
+		flux_data.push_back(util::htobe(static_cast<uint16_t>(time_ticks)));
+	}
+
+	auto flux_count{flux_data.size()};
+	auto flux_bytes{flux_count * sizeof(flux_data[0])};
 
 	uint32_t start_len[2];
 	start_len[0] = 0;
-	start_len[1] = util::htobe(static_cast<uint32_t>(length));
-	if (!SendCmd(CMD_LOADRAM_USB, &start_len, sizeof(start_len), const_cast<void *>(flux), length))
+	start_len[1] = util::htobe(flux_bytes);
+	if (!SendCmd(CMD_LOADRAM_USB, &start_len, sizeof(start_len), flux_data.data(), flux_bytes))
 		return false;
 
 	uint8_t params[5] = {};
-	params[0] = static_cast<uint8_t>(nr_bitcells >> 24);	// big endian
-	params[1] = static_cast<uint8_t>(nr_bitcells >> 16);
-	params[2] = static_cast<uint8_t>(nr_bitcells >> 8);
-	params[3] = static_cast<uint8_t>(nr_bitcells);
+	params[0] = static_cast<uint8_t>(flux_count >> 24);	// big endian
+	params[1] = static_cast<uint8_t>(flux_count >> 16);
+	params[2] = static_cast<uint8_t>(flux_count >> 8);
+	params[3] = static_cast<uint8_t>(flux_count);
 	params[4] = ff_Wipe | ff_Index;
 
 	if (!SendCmd(CMD_WRITEFLUX, &params, sizeof(params)))

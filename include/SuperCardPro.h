@@ -5,7 +5,7 @@ class SuperCardPro
 {
 public:
 	static const int MAX_FLUX_REVS = 5;			// firmware has this hard limit
-	static const int NS_PER_BITCELL = 25;		// 25ns per tick in flux times
+	static const int NS_PER_TICK = 25;			// 25ns per tick in flux times
 
 	static const uint8_t pr_Unused = 0x00;		// not used (to disallow NULL responses)
 	static const uint8_t pr_BadCommand = 0x01;	// bad command
@@ -50,7 +50,7 @@ public:
 	bool RamTest ();
 	bool SetPin33 (bool high);
 	bool ReadFlux (int revs, FluxData &flux_revs);
-	bool WriteFlux (const void *p, int nr_bitcells);
+	bool WriteFlux (const std::vector<uint32_t> &flux_times);
 	bool GetInfo (int &hwversion, int &fwversion);
 
 	uint8_t GetErrorStatus () const { return m_error; }
