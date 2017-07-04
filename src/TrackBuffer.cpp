@@ -3,36 +3,32 @@
 #include "SAMdisk.h"
 #include "TrackBuffer.h"
 
-TrackBuffer::TrackBuffer (bool mfm)
-	: m_mfm(mfm)
+TrackBuffer::TrackBuffer (Encoding encoding)
+	: m_encoding(encoding)
 {
-}
-
-void TrackBuffer::addByte (int data, int clock)
-{
-	for (auto i = 0; i < 8; ++i)
+	switch (encoding)
 	{
-		addBit((clock & 0x80) != 0);
-		addBit((data & 0x80) != 0);
-		clock <<= 1;
-		data <<= 1;
+	case Encoding::MFM:
+	case Encoding::FM:
+	case Encoding::Amiga:
+		break;
+	default:
+		throw util::exception("unsupported bitstream encoding (", encoding, ")");
 	}
-
-	m_onelast = (data & 0x100) != 0;
 }
 
 void TrackBuffer::addDataBit (bool one)
 {
-	if (m_mfm)
+	if (m_encoding == Encoding::FM)
 	{
-		// MFM has a reversal between consecutive zeros (clock or data)
-		addBit(!m_onelast && !one);
+		// FM has a reversal before every data bit
+		addBit(true);
 		addBit(one);
 	}
 	else
 	{
-		// FM has a reversal before every data bit
-		addBit(true);
+		// MFM has a reversal between consecutive zeros (clock or data)
+		addBit(!m_onelast && !one);
 		addBit(one);
 	}
 
@@ -48,20 +44,53 @@ void TrackBuffer::addByte (int byte)
 	}
 }
 
+void TrackBuffer::addByteBits (int byte, int num_bits)
+{
+	byte <<= (8 - num_bits);
+
+	for (auto i = 0; i < num_bits; ++i)
+	{
+		// Add bottom 'num_bits' bits, most-significant first.
+		addDataBit((byte & 0x80) != 0);
+		byte <<= 1;
+	}
+}
+
+void TrackBuffer::addByteWithClock(int data, int clock)
+{
+	for (auto i = 0; i < 8; ++i)
+	{
+		addBit((clock & 0x80) != 0);
+		addBit((data & 0x80) != 0);
+		clock <<= 1;
+		data <<= 1;
+	}
+
+	m_onelast = (data & 0x100) != 0;
+}
+
 void TrackBuffer::addBlock (int byte, int count)
 {
 	for (int i = 0; i < count; ++i)
 		addByte(byte);
 }
 
-void TrackBuffer::addBlock (const void *buf, int len)
+void TrackBuffer::addBlock (const Data &data)
 {
-	auto pb = reinterpret_cast<const uint8_t *>(buf);
-	while (len-- > 0)
-		addByte(*pb++);
+	for (auto & byte : data)
+		addByte(byte);
 }
 
-void TrackBuffer::addGap (int  count, int fill)
+void TrackBuffer::addBlockUpdateCrc (const Data &data)
+{
+	for (auto & byte : data)
+	{
+		addByte(byte);
+		m_crc.add(byte);
+	}
+}
+
+void TrackBuffer::addGap (int count, int fill)
 {
 	addBlock(fill, count);
 }
@@ -69,44 +98,44 @@ void TrackBuffer::addGap (int  count, int fill)
 void TrackBuffer::addSync ()
 {
 	auto sync{0x00};
-	addBlock(sync, m_mfm ? 12 : 6);
+	addBlock(sync, (m_encoding == Encoding::FM) ? 6 : 12);
 }
 
 void TrackBuffer::addAM (int type)
 {
-	if (m_mfm)
+	if (m_encoding == Encoding::FM)
 	{
-		addByte(0xa1, 0x0a);	// A1 with missing clock bit
-		addByte(0xa1, 0x0a);	// clock: 0 0 0 0 1 X 1 0
-		addByte(0xa1, 0x0a);	// data:   1 0 1 0 0 0 0 1
-		addByte(type);
+		// FM address marks use clock of C7
+		addByteWithClock(type, 0xc7);
 
-		m_crc.init(0xcdb4);		// A1A1A1
+		m_crc.init();
 		m_crc.add(type);
 	}
 	else
 	{
-		// FM address marks use clock of C7
-		addByte(type, 0xc7);
+		addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
+		addByteWithClock(0xa1, 0x0a);	// clock: 0 0 0 0 1 X 1 0
+		addByteWithClock(0xa1, 0x0a);	// data:   1 0 1 0 0 0 0 1
+		addByte(type);
 
-		m_crc.init();
+		m_crc.init(0xcdb4);		// A1A1A1
 		m_crc.add(type);
 	}
 }
 
 void TrackBuffer::addIAM ()
 {
-	if (m_mfm)
+	if (m_encoding == Encoding::FM)
 	{
-		addByte(0xc2, 0x14);	// C2 with missing clock bit
-		addByte(0xc2, 0x14);	// clock: 0 0 0 1 X 1 0 0
-		addByte(0xc2, 0x14);	// data:   1 1 0 0 0 0 1 0
-		addByte(0xfc);
+		// FM IAM uses a clock of D7
+		addByteWithClock(0xfc, 0xd7);
 	}
 	else
 	{
-		// FM IAM uses a clock of D7
-		addByte(0xfc, 0xd7);
+		addByteWithClock(0xc2, 0x14);	// C2 with missing clock bit
+		addByteWithClock(0xc2, 0x14);	// clock: 0 0 0 1 X 1 0 0
+		addByteWithClock(0xc2, 0x14);	// data:   1 1 0 0 0 0 1 0
+		addByte(0xfc);
 	}
 }
 
@@ -149,13 +178,7 @@ void TrackBuffer::addTrackStart ()
 	addIAM();
 	addGap(50);	// gap 1
 }
-/*
-void TrackBuffer::addTrackEnd ()
-{
-	while (m_total_ticks < m_trackend_ticks)
-		addByte(GAP_FILL_BYTE);	// gap 4b
-}
-*/
+
 void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size)
 {
 	addIDAM();
@@ -176,49 +199,45 @@ void TrackBuffer::addSectorHeader(const Header &header)
 	addSectorHeader(header.cyl, header.head, header.sector, header.size);
 }
 
-void TrackBuffer::addSectorData (const void *buf, int len, bool deleted)
+void TrackBuffer::addSectorData(const Data &data, bool deleted)
 {
 	auto am{deleted ? 0xf8 : 0xfb};
 	addAM(am);
-	addBlock(buf, len);
 
-	m_crc.add(buf, len);
-	addCRC();
+	if (data.size() > 0)
+	{
+		addBlockUpdateCrc(data);
+		addCRC();
+	}
 }
 
-void TrackBuffer::addSectorData(const Data &data, bool deleted)
-{
-	addSectorData(data.data(), data.size(), deleted);
-}
-
-void TrackBuffer::addSector (int cyl, int head, int sector, int size, const void *buf, int len, int gap3, bool deleted)
+void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted)
 {
 	addSync();
 	addSectorHeader(cyl, head, sector, size);
-	addGap(m_mfm ? 22 : 11);	// gap 2
+	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
 	addSync();
-	addSectorData(buf, len, deleted);
+	addSectorData(data, deleted);
 	addGap(gap3);	// gap 3
 }
 
 void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, bool deleted)
 {
-	addSector(header.cyl, header.head, header.sector, header.size, data.data(), data.size(), gap3, deleted);
+	addSector(header.cyl, header.head, header.sector, header.size, data, gap3, deleted);
+}
+
+// Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.
+void TrackBuffer::addSectorUpToData (const Header &header, bool deleted)
+{
+	addSector(header.cyl, header.head, header.sector, header.size, Data(), 0, deleted);
 }
 
 void TrackBuffer::addAmigaTrackStart ()
 {
-	m_mfm = true;
 	auto fill{0x00};
 	addBlock(fill, 60);		// Shift the first sector away from the index
 }
-/*
-void TrackBuffer::addAmigaTrackEnd ()
-{
-	while (m_total_ticks < m_B_ticks)
-		addByte(0x00);
-}
-*/
+
 void TrackBuffer::addAmigaDword (uint32_t dword, uint32_t &checksum)
 {
 	dword = util::htobe(dword);
@@ -274,8 +293,8 @@ void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, con
 {
 	addByte(0x00);
 	addByte(0x00);
-	addByte(0xa1, 0x0a);	// A1 with missing clock bit
-	addByte(0xa1, 0x0a);
+	addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
+	addByteWithClock(0xa1, 0x0a);
 
 	uint32_t checksum = 0;
 	uint32_t info = (0xff << 24) | (((cyl << 1) | head) << 16) | (sector << 8) | remain;
@@ -290,4 +309,9 @@ void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, con
 	bits = splitAmigaBits(buf, 512, checksum);
 	addAmigaDword(checksum, checksum);
 	addAmigaBits(bits);
+}
+
+void TrackBuffer::addAmigaSector(const CylHead &cylhead, int sector, int remain, const void *buf)
+{
+	addAmigaSector(cylhead.cyl, cylhead.head, sector, remain, buf);
 }

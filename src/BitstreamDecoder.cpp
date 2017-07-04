@@ -1110,3 +1110,46 @@ void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate)
 			break;
 	}
 }
+
+void generate_bitstream (TrackData &/*trackdata*/)
+{
+	throw util::exception("track to bitstream conversion not yet implemented");
+}
+
+void generate_flux (TrackData &trackdata)
+{
+	uint8_t last_bit{0}, curr_bit{0};
+	auto &bitbuf = trackdata.bitstream();
+	auto ns_per_bitcell = bitcell_ns(bitbuf.datarate);
+	bitbuf.seek(0);
+
+	uint32_t flux_time{0};
+	std::vector<uint32_t> flux_times{};
+	flux_times.reserve(bitbuf.size());
+
+	while (!bitbuf.wrapped())
+	{
+		auto next_bit{bitbuf.read1()};
+
+		flux_time += ns_per_bitcell;
+		if (curr_bit)
+		{
+			if (trackdata.cylhead.cyl < 40)
+			{
+				flux_times.push_back(flux_time);
+				flux_time = 0;
+			}
+			else
+			{
+				auto pre_comp_ns{(last_bit == next_bit) ? 0 : (last_bit ? +240 : -240)};
+				flux_times.push_back(flux_time + pre_comp_ns);
+				flux_time = 0 - pre_comp_ns;
+			}
+		}
+
+		last_bit = curr_bit;
+		curr_bit = next_bit;
+	}
+
+	trackdata.add(FluxData({flux_times}));
+}

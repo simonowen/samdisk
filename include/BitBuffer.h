@@ -7,8 +7,8 @@ class BitBuffer
 {
 public:
 	BitBuffer () = default;
-	BitBuffer (DataRate dr, int revolutions);
-	BitBuffer (DataRate dr, const uint8_t *pb, int len);
+	BitBuffer (DataRate datarate_, Encoding encoding_=Encoding::Unknown, int revolutions=1);
+	BitBuffer (DataRate datarate_, const uint8_t *pb, int len);
 	BitBuffer (DataRate datarate_, FluxDecoder &decoder);
 
 	bool wrapped () const;
@@ -17,9 +17,12 @@ public:
 
 	int tell () const;
 	bool seek (int offset);
+	bool seek_index (int index);
+	int tell_index () const;
 
 	void index ();
 	void sync_lost ();
+	void clear ();
 	void add (uint8_t bit);
 
 	uint8_t read1 ();
@@ -47,8 +50,8 @@ public:
 	int track_offset (int bitpos) const;
 	bool sync_lost (int begin, int end) const;
 
-	Encoding encoding = Encoding::MFM;
-	DataRate datarate = DataRate::Unknown;
+	DataRate datarate{DataRate::Unknown};
+	Encoding encoding{Encoding::MFM};
 
 private:
 	std::vector<uint32_t> m_data {};

@@ -3,6 +3,8 @@
 #include "SAMdisk.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuffer.h"
+#include "BitstreamDecoder.h"
+#include "FluxTrackBuffer.h"
 
 static Track &complete (Track &track)
 {
@@ -922,6 +924,83 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
 			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			break;
+		}
+
+		// 500Kbps MFM flux
+		case 24 + 0:
+		{
+			const Data data(512, 0x00);
+			FluxTrackBuffer fluxbuf(cylhead, DataRate::_500K, Encoding::MFM);
+
+			fluxbuf.addTrackStart();
+			for (i = 0; i < 18; i++)
+				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+
+			TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
+			disk->add(std::move(trackdata));
+			break;
+		}
+
+		// 250Kbps MFM flux
+		case 24 + 2:
+		{
+			// Simple 9-sector format.
+			{
+				const Data data(512, 0x00);
+				FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+
+				fluxbuf.addTrackStart();
+				for (i = 0; i < 9; i++)
+					fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+
+				TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
+				disk->add(std::move(trackdata));
+			}
+
+			// 9-sector format with weak sector 2.
+			{
+				const Data data(512, 0x00);
+				FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+
+				fluxbuf.addTrackStart();
+				for (i = 0; i < 9; i++)
+				{
+					auto header{Header(cylhead, i + 1, 2)};
+
+					if (i != 1)
+						fluxbuf.addSector(header, data, 0x54);
+					else
+					{
+						fluxbuf.addSectorUpToData(header, false);
+
+						static const auto weakSize = 32;
+						fluxbuf.addBlock(0x00, data.size() / 2);
+						fluxbuf.addWeakBlock(weakSize);
+						fluxbuf.addBlock(0x00, (data.size() / 2) - weakSize);
+						fluxbuf.addGap(0x54);	// gap 3
+					}
+				}
+
+				TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
+				disk->add(std::move(trackdata));
+			}
+
+			break;
+		}
+
+		// 250Kbps FM flux
+		case 28 + 2:
+		{
+			const Data data(512, 0x00);
+			FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::FM);
+
+			fluxbuf.addTrackStart();
+			for (i = 0; i < 9; i++)
+				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+
+			TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
+			disk->add(std::move(trackdata));
 			break;
 		}
 

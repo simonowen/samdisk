@@ -71,17 +71,28 @@ void Disk::add (TrackData &&trackdata)
 	m_trackdata[trackdata.cylhead] = std::move(trackdata);
 }
 
-const Track &Disk::read_track (const CylHead &cylhead)
+TrackData &Disk::trackdata (const CylHead &cylhead)
 {
 	auto cylhead_step = CylHead(cylhead.cyl * opt.step, cylhead.head);
 
 	// Safe look-up requires mutex ownership, in case of call from preload()
-	m_trackdata_mutex.lock();
-	auto &trackdata = m_trackdata[cylhead_step];
-	m_trackdata_mutex.unlock();
+	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
+	return m_trackdata[cylhead_step];
+}
 
-	// Fetch the track outside the lock in case conversion is needed
-	return trackdata.track();
+const Track &Disk::read_track (const CylHead &cylhead)
+{
+	return trackdata(cylhead).track();
+}
+
+const BitBuffer &Disk::read_bitstream (const CylHead &cylhead)
+{
+	return trackdata(cylhead).bitstream();
+}
+
+const FluxData &Disk::read_flux (const CylHead &cylhead)
+{
+	return trackdata(cylhead).flux();
 }
 
 const Track &Disk::write_track (const CylHead &cylhead, const Track &track)

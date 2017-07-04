@@ -30,6 +30,10 @@ public:
 	void add (BitBuffer &&bitstream);
 	void add (FluxData &&flux);
 
+	void keep_track();
+	void keep_bitstream();
+	void keep_flux();
+
 	CylHead cylhead {};
 
 private:

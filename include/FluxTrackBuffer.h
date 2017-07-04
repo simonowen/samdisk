@@ -6,18 +6,22 @@
 class FluxTrackBuffer final : public TrackBuffer
 {
 public:
-	FluxTrackBuffer (int datarate_kbps, int trackms, int nspertick, bool mfm = true);
-
-	operator const uint16_t* () const { return &m_buf[0]; }
-	operator const std::vector<uint16_t>& () const { return m_buf; }
+	FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding);
 
 	void addBit (bool one) override;
+	void addWeakBlock (int length);
+
+	std::vector<uint32_t> &buffer ();
+
+	static const int PRECOMP_NS{240};
 
 private:
-	std::vector<uint16_t> m_buf {};	// ToDo: make this uint32_t to be general?
-	uint16_t m_bitcell_ticks = 0;
-	uint32_t m_total_ticks = 0;
-	uint32_t m_reverse_ticks = 0;
+	CylHead m_cylhead{};
+	std::vector<uint32_t> m_flux_times{};
+	uint32_t m_flux_time{0};
+	uint32_t m_bitcell_ns{0};
+	bool m_last_bit{false};
+	bool m_curr_bit{false};
 };
 
 #endif // FLUXTRACKBUFFER_H

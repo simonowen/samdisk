@@ -132,8 +132,7 @@ bool Track::has_data_error () const
 
 void Track::clear ()
 {
-	m_sectors.clear();
-	tracklen = 0;
+	*this = Track();
 }
 
 void Track::add (Track &&track)

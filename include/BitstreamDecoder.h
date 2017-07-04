@@ -19,4 +19,7 @@ void scan_bitstream_ace (TrackData &trackdata);
 void scan_bitstream_gcr (TrackData &trackdata);
 void scan_bitstream_mx (TrackData &trackdata);
 
+void generate_bitstream (TrackData &trackdata);
+void generate_flux (TrackData &trackdata);
+
 #endif // BITSTREAM_DECODER_H

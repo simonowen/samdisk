@@ -20,11 +20,16 @@ public:
 	virtual bool preload (const Range &range);
 	virtual void unload ();
 
+	TrackData &trackdata (const CylHead &cylhead);
 	void add (TrackData &&trackdata);
 
 	virtual const Track &read_track (const CylHead &cylhead);
 	virtual const Track &write_track (const CylHead &cylhead, const Track &track);
 	virtual const Track &write_track (const CylHead &cylhead, Track &&track);
+
+	const BitBuffer &read_bitstream (const CylHead &cylhead);
+	const FluxData &read_flux (const CylHead &cylhead);
+
 	void each (const std::function<void (const CylHead &cylhead, const Track &track)> &func, bool cyls_first = false);
 
 	void format (const RegularFormat &reg_fmt, const Data &data = Data(), bool cyls_first = false);

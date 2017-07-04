@@ -6,7 +6,7 @@
 #define INIT_BITSIZE   5000000
 
 BitstreamTrackBuffer::BitstreamTrackBuffer (DataRate datarate, Encoding encoding)
-	: TrackBuffer(encoding != Encoding::FM), m_buffer(datarate, 1)
+	: TrackBuffer(encoding), m_buffer(datarate, encoding)
 {
 	switch (encoding)
 	{
@@ -27,4 +27,14 @@ void BitstreamTrackBuffer::addBit (bool one)
 BitBuffer &BitstreamTrackBuffer::buffer()
 {
 	return m_buffer;
+}
+
+DataRate BitstreamTrackBuffer::datarate () const
+{
+	return m_buffer.datarate;
+}
+
+Encoding BitstreamTrackBuffer::encoding () const
+{
+	return m_buffer.encoding;
 }

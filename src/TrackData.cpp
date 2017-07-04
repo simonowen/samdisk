@@ -65,13 +65,12 @@ const Track &TrackData::track ()
 	if (!has_bitstream())
 	{
 		if (has_track())
-			throw util::exception("bitstream data generation is not yet supported");
-
-		if (has_flux())
-		{
+			generate_bitstream(*this);
+		else if (has_flux())
 			scan_flux(*this);
+
+		if (has_bitstream())
 			m_flags |= TD_BITSTREAM;
-		}
 	}
 
 	return m_bitstream;
@@ -81,7 +80,14 @@ const FluxData &TrackData::flux ()
 {
 	if (!has_flux())
 	{
-		throw util::exception("flux data generation is not yet supported");
+		if (!has_bitstream())
+			bitstream();
+
+		if (has_bitstream())
+		{
+			generate_flux(*this);
+			m_flags |= TD_FLUX;
+		}
 	}
 
 	return m_flux;
@@ -120,4 +126,25 @@ void TrackData::add (FluxData &&flux)
 {
 	m_flux = std::move(flux);
 	m_flags |= TD_FLUX;
+}
+
+void TrackData::keep_track ()
+{
+	m_bitstream.clear();
+	m_flux.clear();
+	m_flags &= TD_TRACK;
+}
+
+void TrackData::keep_bitstream()
+{
+	m_track.clear();
+	m_flux.clear();
+	m_flags &= TD_BITSTREAM;
+}
+
+void TrackData::keep_flux()
+{
+	m_track.clear();
+	m_bitstream.clear();
+	m_flags &= TD_FLUX;
 }

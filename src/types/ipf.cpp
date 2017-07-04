@@ -130,7 +130,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 		for (auto head = cii.minhead; head <= cii.maxhead; ++head)
 		{
 			// Start with space for 5 revolutions of 250Kbps
-			BitBuffer bitbuf(DataRate::_250K, 5);
+			BitBuffer bitbuf(DataRate::_250K, Encoding::Unknown, 5);
 
 			// If timing data is available we'll generate flux data instead
 			FluxData flux_revs;

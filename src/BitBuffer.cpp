@@ -3,12 +3,12 @@
 #include "SAMdisk.h"
 #include "BitBuffer.h"
 
-BitBuffer::BitBuffer (DataRate datarate_, int revs)
-	: datarate(datarate_)
+BitBuffer::BitBuffer (DataRate datarate_, Encoding encoding_, int revs)
+	: datarate(datarate_), encoding(encoding_)
 {
-	// Estimate size from double the data bitrate @300rpm, plus 10%.
+	// Estimate size from double the data bitrate @300rpm, plus 20%.
 	// This should be enough for most FM/MFM tracks.
-	auto bitlen = bits_per_second(datarate) * revs / 5 * 2 * 110 / 100;
+	auto bitlen = bits_per_second(datarate) * revs * 60/300 * 2 * 120/100;
 	m_data.resize((bitlen + 31) / 32);
 }
 
@@ -23,12 +23,12 @@ BitBuffer::BitBuffer (DataRate datarate_, const uint8_t *pb, int bitlen)
 BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
 	: datarate(datarate_), m_data(decoder.flux_count())
 {
-	auto bitlen = bits_per_second(datarate) * decoder.flux_revs() / 5 * 2 * 110 / 100;
+	auto bitlen{bits_per_second(datarate) * decoder.flux_revs() * 60/300 * 2 * 120/100};
 	m_data.resize((bitlen + 31) / 32);
 
 	for (;;)
 	{
-		int bit = decoder.next_bit();
+		auto bit{decoder.next_bit()};
 		if (bit < 0)
 			break;
 
@@ -72,6 +72,32 @@ bool BitBuffer::seek (int offset)
 	return m_bitpos == offset;
 }
 
+int BitBuffer::tell_index() const
+{
+	assert(m_bitpos < m_bitsize);
+
+	int rev{0};
+	for (auto index_offset : m_indexes)
+	{
+		if (m_bitpos < index_offset)
+			return rev;
+		++rev;
+	}
+
+	return 0;
+}
+
+bool BitBuffer::seek_index (int index)
+{
+	if (index < 0)
+		index += m_indexes.size();
+
+	if (index < 0 || index >= static_cast<int>(m_indexes.size()))
+		return false;
+
+	return seek(m_indexes[index]);
+}
+
 void BitBuffer::index ()
 {
 	m_indexes.push_back(m_bitpos);
@@ -80,6 +106,11 @@ void BitBuffer::index ()
 void BitBuffer::sync_lost ()
 {
 	m_sync_losses.push_back(m_bitpos);
+}
+
+void BitBuffer::clear ()
+{
+	*this = BitBuffer();
 }
 
 void BitBuffer::add (uint8_t bit)
