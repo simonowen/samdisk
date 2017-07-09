@@ -402,7 +402,12 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector)
 	assert(sector.copies() > 0);
 	std::vector<std::pair<char, size_t>> diffs;
 
-	auto &smallest = sector.data_copy(sector.copies() - 1);
+	auto &smallest = *std::min_element(
+		sector.datas().begin(), sector.datas().end(),
+		[](const Data &d1, const Data &d2) {
+			return d1.size() < d2.size();
+		}
+	);
 	auto it = smallest.begin();
 	auto itEnd = smallest.end();
 
