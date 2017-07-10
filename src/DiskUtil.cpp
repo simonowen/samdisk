@@ -99,6 +99,11 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				item_separator(items++);
 				util::cout << colour::YELLOW << "z" << colour::none;	// Zero data stored
 			}
+			else if (sector.offset && !sector.has_baddatacrc() && track.data_extent_bytes(sector) < sector.size())
+			{
+				item_separator(items++);
+				util::cout << colour::YELLOW << "o" << colour::none;	// Overlaps next sector
+			}
 			else if (sector.has_data() && sector.has_shortdata() && !sector.has_baddatacrc())
 			{
 				item_separator(items++);

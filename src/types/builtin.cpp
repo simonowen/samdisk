@@ -527,11 +527,12 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		// Logo Professor (overformatted track, with offsets)
 		{
 			Track track(10);
+			track.tracklen = 6250 * 16;
 
 			for (i = 0; i < 10; ++i)
 			{
 				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 2 + i, 2));
-				sector.offset = TRACK_OVERHEAD_MFM + (SECTOR_OVERHEAD_MFM + 512 + 28) * (i + 1);
+				sector.offset = (TRACK_OVERHEAD_MFM + (SECTOR_OVERHEAD_MFM + 512 + 25) * (i + 1)) * 16;
 				track.add(std::move(sector));
 			}
 

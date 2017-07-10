@@ -68,7 +68,7 @@ int Track::index_of (const Sector &sector) const
 	return (it == end()) ? -1 : static_cast<int>(std::distance(begin(), it));
 }
 
-int Track::data_extent (const Sector &sector) const
+int Track::data_extent_bits (const Sector &sector) const
 {
 	auto it = find(sector);
 	assert(it != end());
@@ -77,11 +77,17 @@ int Track::data_extent (const Sector &sector) const
 	auto track_len = tracklen ? tracklen : GetTrackCapacity(drive_speed, sector.datarate, sector.encoding);
 
 	// Approximate distance to next ID header
-	auto gap = (std::next(it) != end()) ? std::next(it)->offset : track_len - sector.offset;
+	auto gap = ((std::next(it) != end()) ? std::next(it)->offset : (track_len + begin()->offset)) - sector.offset;
 	auto overhead = (std::next(it) != end()) ? GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding) : 0;
 	auto extent = (gap > overhead) ? gap - overhead : 0;
 
 	return extent;
+}
+
+int Track::data_extent_bytes (const Sector &sector) const
+{
+	auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
+	return data_extent_bits(sector) >> encoding_shift;
 }
 
 bool Track::is_mixed_encoding () const
