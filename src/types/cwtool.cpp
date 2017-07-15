@@ -1,5 +1,5 @@
 ﻿// CWTool = CatWeasel binary disk image created by CWTool:
-//  http://www.discferret.com/w/index.php?title=CWTool_image_format&redirect=no
+//  http://www.discferret.com/wiki/CWTool_image_format
 
 #include "SAMdisk.h"
 

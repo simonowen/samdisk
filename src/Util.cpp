@@ -324,6 +324,7 @@ bool CheckLibrary (const char *pcszLib_, const char *pcszFunc_)
 	// Convert name to the library filename
 	if (!strcasecmp(pcszLib_, "zlib")) pcszLib_ = "zlibwapi.dll";
 	else if (!strcasecmp(pcszLib_, "bzip2")) pcszLib_ = "bzip2.dll";
+	else if (!strcasecmp(pcszLib_, "lzma")) pcszLib_ = "liblzma.dll";
 	else if (!strcasecmp(pcszLib_, "capsimg")) pcszLib_ = "CAPSImg.dll";
 	else if (!strcasecmp(pcszLib_, "winsock2")) pcszLib_ = "ws2_32.dll";
 	else if (!strcasecmp(pcszLib_, "ftdi2")) pcszLib_ = "ftd2xx.dll";

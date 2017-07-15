@@ -109,6 +109,13 @@ if (BZIP2_FOUND)
   link_libraries(${BZIP2_LIBRARIES})
 endif ()
 
+find_package(LibLZMA)
+if (LIBLZMA_FOUND)
+  add_definitions(-DHAVE_LZMA)
+  include_directories(${LIBLZMA_INCLUDE_DIRS})
+  link_libraries(${LIBLZMA_LIBRARIES})
+endif ()
+
 find_library(WINUSB_LIBRARY NAMES winusb ENV LD_LIBRARY_PATH)
 find_path(WINUSB_INCLUDE_DIR NAMES winusb.h)
 if (WINUSB_LIBRARY AND WINUSB_INCLUDE_DIR)

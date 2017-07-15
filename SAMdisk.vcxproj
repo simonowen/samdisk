@@ -370,8 +370,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.lib;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist \Shared copy "$(TargetPath)" \Shared\</Command>
@@ -418,8 +418,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.lib;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist \Shared\ copy "$(TargetPath)" \Shared\
@@ -446,8 +446,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.lib;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --brute -9 "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f

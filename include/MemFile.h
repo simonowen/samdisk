@@ -1,7 +1,7 @@
 #ifndef MEMFILE_H
 #define MEMFILE_H
 
-enum class Compress { None, Zip, Gzip, Bzip2 };
+enum class Compress { None, Zip, Gzip, Bzip2, Xz };
 std::string to_string (const Compress &compress);
 
 

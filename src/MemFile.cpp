@@ -13,6 +13,10 @@
 #include <bzlib.h>
 #endif
 
+#ifdef HAVE_LZMA
+#include <lzma.h>
+#endif
+
 std::string to_string (const Compress &compression)
 {
 	switch (compression)
@@ -22,6 +26,7 @@ std::string to_string (const Compress &compression)
 		case Compress::Zip:		return "zip";
 		case Compress::Gzip:	return "gzip";
 		case Compress::Bzip2:	return "bzip2";
+		case Compress::Xz:		return "xz";
 	}
 }
 
@@ -207,6 +212,41 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 		memcpy(mem.pb, mem2.pb, uRead = uBzRead);
 		m_compress = Compress::Bzip2;
 #endif // HAVE_BZIP2
+	}
+
+	if (uncompress && mem.size > 6 && !memcmp(mem.pb, "\xfd\x37\x7a\x58\x5a\x00", 6))
+	{
+#ifdef HAVE_LZMA
+		if (!CheckLibrary("lzma", "lzma_stream_decoder"))
+#endif
+			throw util::exception("liblzma (liblzma.dll) is required for xz support");
+
+#ifdef HAVE_LZMA
+		MEMORY mem2(MAX_IMAGE_SIZE + 1);
+
+		lzma_stream strm{};
+		const uint32_t flags = LZMA_TELL_UNSUPPORTED_CHECK;
+		auto ret = lzma_stream_decoder (&strm, UINT64_MAX, flags);
+		if (ret == LZMA_OK)
+		{
+			strm.next_in = mem.pb;
+			strm.avail_in = mem.size;
+			strm.next_out = mem2.pb;
+			strm.avail_out = mem2.size;
+
+			ret = lzma_code(&strm, LZMA_FINISH);
+			if (ret == LZMA_STREAM_END)
+			{
+				uRead = mem2.size - strm.avail_out;
+				memcpy(mem.pb, mem2.pb, uRead);
+				m_compress = Compress::Xz;
+				ret = LZMA_OK;
+			}
+		}
+
+		if (ret != LZMA_OK)
+			throw util::exception("xz decompression failed (", ret, ")");
+#endif
 	}
 
 	if (uRead <= MAX_IMAGE_SIZE)

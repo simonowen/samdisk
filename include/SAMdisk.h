@@ -8,6 +8,7 @@
 #ifndef _M_AMD64
 #define HAVE_BZIP2 1
 #endif
+#define HAVE_LZMA 1
 
 #define HAVE_CAPSIMAGE 1
 #define HAVE_FTD2XX 1
