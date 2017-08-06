@@ -49,7 +49,7 @@ void FluxTrackBuffer::addWeakBlock (int length)
 	addBit(1);
 
 	// Approximately 11 ambigious reversals per weak byte.
-	length *= 11;
+	length = length * 21 / 2;
 
 	while (length-- > 0)
 		m_flux_times.push_back(m_bitcell_ns * 3 / 2);

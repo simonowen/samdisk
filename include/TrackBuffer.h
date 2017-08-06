@@ -20,6 +20,7 @@ public:
 	void addByte (int byte);
 	void addByteBits (int byte, int num_bits);
 	void addByteWithClock (int data, int clock);
+	void addWord (uint16_t word);
 	void addBlock (int byte, int count);
 	void addBlock (const Data &data);
 	void addBlockUpdateCrc (const Data &data);
@@ -38,10 +39,11 @@ public:
 	void addTrackStart ();
 	void addSectorHeader (int cyl, int head, int sector, int size);
 	void addSectorHeader(const Header &header);
-	void addSectorData (const Data &data, bool deleted = false);
+	void addSectorData (const Data &data, int size, bool deleted = false);
+	void addSector (const Sector &sector, int gap3);
 	void addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted = false);
 	void addSector (const Header &header, const Data &data, int gap3, bool deleted = false);
-	void addSectorUpToData (const Header &header, bool deleted);
+	void addSectorUpToData (const Header &header, bool deleted = false);
 
 	void addAmigaTrackStart ();
 	std::vector<uint32_t> splitAmigaBits (const void *buf, int len, uint32_t &checksum);

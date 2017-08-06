@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "TrackBuffer.h"
+#include "IBMPC.h"
 
 TrackBuffer::TrackBuffer (Encoding encoding)
 	: m_encoding(encoding)
@@ -56,7 +57,7 @@ void TrackBuffer::addByteBits (int byte, int num_bits)
 	}
 }
 
-void TrackBuffer::addByteWithClock(int data, int clock)
+void TrackBuffer::addByteWithClock (int data, int clock)
 {
 	for (auto i = 0; i < 8; ++i)
 	{
@@ -67,6 +68,13 @@ void TrackBuffer::addByteWithClock(int data, int clock)
 	}
 
 	m_onelast = (data & 0x100) != 0;
+}
+
+void TrackBuffer::addWord (uint16_t word)
+{
+	// Note: added MSB first.
+	addByte(word >> 8);
+	addByte(word & 0xff);
 }
 
 void TrackBuffer::addBlock (int byte, int count)
@@ -199,16 +207,34 @@ void TrackBuffer::addSectorHeader(const Header &header)
 	addSectorHeader(header.cyl, header.head, header.sector, header.size);
 }
 
-void TrackBuffer::addSectorData(const Data &data, bool deleted)
+void TrackBuffer::addSectorData(const Data &data, int size, bool deleted)
 {
+	// Ensure this isn't used for over-sized protected sectors.
+	assert(Sector::SizeCodeToLength(size) == Sector::SizeCodeToLength(size));
+
 	auto am{deleted ? 0xf8 : 0xfb};
 	addAM(am);
 
-	if (data.size() > 0)
+	// Ensure the written data matches the sector size code.
+	auto len_bytes{ Sector::SizeCodeToLength(size) };
+	if (data.size() > len_bytes)
+	{
+		Data data_head(data.begin(), data.begin() + len_bytes);
+		addBlockUpdateCrc(data_head);
+	}
+	else
 	{
 		addBlockUpdateCrc(data);
-		addCRC();
+		Data data_pad(len_bytes - data.size(), 0x00);
+		addBlockUpdateCrc(data_pad);
 	}
+
+	addCRC();
+}
+
+void TrackBuffer::addSector(const Sector &sector, int gap3)
+{
+	addSector(sector.header, sector.data_copy(), gap3, sector.is_deleted());
 }
 
 void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted)
@@ -217,7 +243,7 @@ void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data
 	addSectorHeader(cyl, head, sector, size);
 	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
 	addSync();
-	addSectorData(data, deleted);
+	addSectorData(data, size, deleted);
 	addGap(gap3);	// gap 3
 }
 
@@ -229,7 +255,11 @@ void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, b
 // Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.
 void TrackBuffer::addSectorUpToData (const Header &header, bool deleted)
 {
-	addSector(header.cyl, header.head, header.sector, header.size, Data(), 0, deleted);
+	addSync();
+	addSectorHeader(header.cyl, header.head, header.sector, header.size);
+	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
+	addSync();
+	addAM(deleted ? 0xf8 : 0xfb);
 }
 
 void TrackBuffer::addAmigaTrackStart ()

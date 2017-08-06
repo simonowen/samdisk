@@ -9,6 +9,7 @@ public:
 	BitstreamTrackBuffer (DataRate datarate, Encoding encoding);
 
 	void addBit (bool one) override;
+	void addCrc (int size);
 
 	BitBuffer &buffer ();
 	DataRate datarate () const;

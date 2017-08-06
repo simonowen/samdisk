@@ -1,7 +1,15 @@
 // Copy-protected formats that require special support
+//
+// Contains detection and generation for each track format.
+// Output will be in bitstream or flux format (or both),
+// depending on the format requirements.
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
+#include "BitstreamTrackBuffer.h"
+#include "FluxTrackBuffer.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 // KBI-19 protection for CPC? (19 valid sectors)
 bool IsKBI19Track (const Track &track)
@@ -27,16 +35,103 @@ bool IsKBI19Track (const Track &track)
 	return true;
 }
 
-// Sega System 24 track?
+TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
+{
+	assert(IsKBI19Track(track));
+	(void)track;
+
+	static const uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
+	static const Data gap2_sig{
+		0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,
+		0x20,0x4B,0x42,0x49,0x20,	// " KBI "
+		0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E
+	};
+	static const Data data_sig{
+		// "(c)1986 for KBI"
+		0x28,0x63,0x29,0x20,0x31,0x39,0x38,0x36,0x20,0x66,0x6F,0x72,0x20,0x4B,0x42,0x49,
+		// "by L. TOURNIER"
+		0x20,0x62,0x79,0x20,0x4C,0x2E,0x20,0x54,0x4F,0x55,0x52,0x4E,0x49,0x45,0x52
+	};
+	static const Data end_sig{
+		0x20,0x4D,0x41,0x53,0x54,0x45,0x52,0x20		// " MASTER "
+	};
+
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+
+	// Track start with slightly shorter gap4a.
+	bitbuf.addGap(64);
+	bitbuf.addSync();
+	bitbuf.addIAM();
+	bitbuf.addGap(50);
+
+	// Initial full-sized sector
+	bitbuf.addSync();
+	bitbuf.addSectorHeader(Header(cylhead, 0, 2));
+	bitbuf.addBlock(gap2_sig);
+	bitbuf.addSync();
+	bitbuf.addAM(0xfb);
+	bitbuf.addBlock(Data(512, 0xf6));
+	bitbuf.addCrc(4 + 512);
+
+	auto sector_index{0};
+	for (int j = 0; j < 6; ++j)
+	{
+		// Two short headers that overlap the next sector.
+		for (int k = 0; k < 2; ++k)
+		{
+			bitbuf.addSync();
+			bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
+			bitbuf.addBlock(gap2_sig);
+			bitbuf.addSync();
+			bitbuf.addAM(0xfb);
+			bitbuf.addBlock(data_sig);
+			bitbuf.addGap(30);
+		}
+
+		// Full-sized sector with data completing CRCs above.
+		bitbuf.addSync();
+		bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
+		bitbuf.addBlock(gap2_sig);
+		bitbuf.addSync();
+		bitbuf.addAM(0xfb);
+		bitbuf.addBlock(data_sig);
+		bitbuf.addBlock(0xe5, 239);
+		bitbuf.addCrc(4 + 512);		// CRC for 1st short sector
+		bitbuf.addGap(50);
+		bitbuf.addBlock(0xe5, 69);
+		bitbuf.addCrc(4 + 512);		// CRC for 2nd short sector
+		bitbuf.addGap(50);
+
+		if (ids[sector_index] != 18)
+			bitbuf.addBlock(0xe5, 69);
+		else
+		{
+			// Final sector has MASTER signature.
+			bitbuf.addBlock(0xe5, 69 - end_sig.size());
+			bitbuf.addBlock(end_sig);
+		}
+		bitbuf.addCrc(4 + 512);		// CRC for full-sized sector
+		bitbuf.addGap(80);
+	}
+
+	// Pad up to normal track size.
+	bitbuf.addGap(170);
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Sega System 24 track? (currently just 0x2f00 variant)
 bool IsSystem24Track (const Track &track)
 {
-	static uint8_t sizes[] = { 6, 3, 3, 3, 2, 1 };
+	static const uint8_t sizes[] = { 4,4,4,4,4,3,1 };
 	auto i = 0;
 
-	if (track.size() != 6)
+	if (track.size() != arraysize(sizes))
 		return false;
 
-	for (auto &s : track.sectors())
+	for (auto &s : track)
 	{
 		if (s.datarate != DataRate::_500K || s.encoding != Encoding::MFM ||
 			s.header.size != sizes[i++] || !s.has_data())
@@ -46,6 +141,23 @@ bool IsSystem24Track (const Track &track)
 	if (opt.debug) util::cout << "detected System-24 track\n";
 	return true;
 }
+
+TrackData GenerateSystem24Track (const CylHead &cylhead, const Track &track)
+{
+	assert(IsSystem24Track(track));
+
+	BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::MFM);
+
+	for (auto &s : track)
+	{
+		auto gap3{ (s.header.sector < 6) ? 52 : 41 };
+		bitbuf.addSector(s, gap3);
+	}
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Speedlock weak sector for Spectrum +3?
 bool IsSpectrumSpeedlockTrack (const Track &track, int &random_offset)
@@ -80,6 +192,45 @@ bool IsSpectrumSpeedlockTrack (const Track &track, int &random_offset)
 	if (opt.debug) util::cout << "detected Spectrum Speedlock track\n";
 	return true;
 }
+
+TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset)
+{
+	int temp_offset;
+	assert(IsSpectrumSpeedlockTrack(track, temp_offset));
+	(void)temp_offset;
+
+	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	fluxbuf.addTrackStart();
+
+	for (auto &sector : track)
+	{
+		auto &data_copy = sector.data_copy();
+
+		if (&sector != &track[1])
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+		else if (weak_offset == sector.size())
+		{
+			// Full weak.
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addWeakBlock(sector.size());
+		}
+		else
+		{
+			// Part weak.
+			static const auto weak_size{32};
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
+			fluxbuf.addWeakBlock(weak_size);
+			fluxbuf.addBlock(Data(
+				data_copy.begin() + weak_offset + weak_size,
+				data_copy.begin() + sector.size()));
+		}
+	}
+
+	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Speedlock weak sector for Amstrad CPC?
 bool IsCpcSpeedlockTrack (const Track &track, int &random_offset)
@@ -122,6 +273,45 @@ bool IsCpcSpeedlockTrack (const Track &track, int &random_offset)
 	return true;
 }
 
+TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset)
+{
+	int temp_offset;
+	assert(IsCpcSpeedlockTrack(track, temp_offset));
+	(void)temp_offset;
+
+	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	fluxbuf.addTrackStart();
+
+	for (auto &sector : track)
+	{
+		auto &data_copy = sector.data_copy();
+
+		if (&sector != &track[7])
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+		else if (weak_offset == sector.size())
+		{
+			// Full weak.
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addWeakBlock(sector.size());
+		}
+		else
+		{
+			// Part weak.
+			static const auto weak_size{32};
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
+			fluxbuf.addWeakBlock(weak_size);
+			fluxbuf.addBlock(Data(
+				data_copy.begin() + weak_offset + weak_size,
+				data_copy.begin() + sector.size()));
+		}
+	}
+
+	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Rainbow Arts weak sector for CPC?
 bool IsRainbowArtsTrack (const Track &track, int &random_offset)
 {
@@ -150,6 +340,39 @@ bool IsRainbowArtsTrack (const Track &track, int &random_offset)
 	if (opt.debug) util::cout << "detected Rainbow Arts weak sector track\n";
 	return true;
 }
+
+TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track)
+{
+	int temp_offset;
+	assert(IsRainbowArtsTrack(track, temp_offset));
+	(void)temp_offset;
+
+	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	fluxbuf.addTrackStart();
+
+	for (auto &sector : track)
+	{
+		auto &data_copy = sector.data_copy();
+
+		if (&sector != &track[1])
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+		else
+		{
+			static const auto weak_offset{100};
+			static const auto weak_size{206};
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
+			fluxbuf.addWeakBlock(weak_size);
+			fluxbuf.addBlock(Data(
+				data_copy.begin() + weak_offset + weak_size,
+				data_copy.begin() + sector.size()));
+		}
+	}
+
+	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // KBI-10 weak sector for CPC?
 bool IsKBI10Track (const Track &track)
@@ -180,14 +403,46 @@ bool IsKBI10Track (const Track &track)
 	return true;
 }
 
+TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track)
+{
+	assert(IsKBI10Track(track));
+	(void)track;
+
+	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	fluxbuf.addTrackStart();
+
+	for (auto &sector : track)
+	{
+		auto &data_copy = sector.data_copy();
+
+		if (&sector != &track[9])
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+		else
+		{
+			static const auto weak_offset{4};
+			static const auto weak_size{4};
+			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
+			fluxbuf.addWeakBlock(weak_size);
+			fluxbuf.addBlock(Data(
+				data_copy.begin() + weak_offset + weak_size,
+				data_copy.begin() + sector.size()));
+		}
+	}
+
+	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Logo Professor track?
 bool IsLogoProfTrack (const Track &track)
 {
-	// Accept track with or without placeholder
+	// Accept track with or without placeholder sector
 	if (track.size() != 10 && track.size() != 11)
 		return false;
 
-	for (auto &s : track.sectors())
+	for (auto &s : track)
 	{
 		// Ignore placeholder sector
 		if (s.has_badidcrc() && s.header.sector == 1)
@@ -195,7 +450,7 @@ bool IsLogoProfTrack (const Track &track)
 
 		// Ensure each sector is double-density MFM, 512-bytes, with good data
 		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
-			s.size() != 512 || !s.has_data() || !s.has_baddatacrc())
+			s.size() != 512 || !s.has_data() || s.has_baddatacrc())
 			return false;
 	}
 
@@ -206,10 +461,26 @@ bool IsLogoProfTrack (const Track &track)
 		auto min_offset = Sector::SizeCodeToLength(1) + GetSectorOverhead(Encoding::MFM);
 
 		// Reject if first sector doesn't start late on the track
-		if (track[0].offset < min_offset)
+		if (track[0].offset < (min_offset * 16))
 			return false;
 	}
 
 	if (opt.debug) util::cout << "detected Logo Professor track\n";
 	return true;
 }
+
+TrackData GenerateLogoProfTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(IsLogoProfTrack(track));
+
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+	bitbuf.addGap(600);
+
+	for (auto &sector : track)
+		bitbuf.addSector(sector, 0x20);
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////

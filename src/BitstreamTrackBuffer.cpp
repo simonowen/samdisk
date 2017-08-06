@@ -24,6 +24,21 @@ void BitstreamTrackBuffer::addBit (bool one)
 	m_buffer.add(one);
 }
 
+void BitstreamTrackBuffer::addCrc (int size)
+{
+	auto old_bitpos{ m_buffer.tell() };
+	auto byte_bits{ (m_buffer.encoding == Encoding::FM) ? 32 : 16 };
+	assert(old_bitpos >= size * byte_bits);
+	m_buffer.seek(old_bitpos - size * byte_bits);
+
+	CRC16 crc{};
+	while (size-- > 0)
+		crc.add(m_buffer.read_byte());
+
+	addWord(crc);
+	m_buffer.seek(old_bitpos);
+}
+
 BitBuffer &BitstreamTrackBuffer::buffer()
 {
 	return m_buffer;

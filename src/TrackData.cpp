@@ -128,23 +128,26 @@ void TrackData::add (FluxData &&flux)
 	m_flags |= TD_FLUX;
 }
 
-void TrackData::keep_track ()
+TrackData &TrackData::keep_track ()
 {
 	m_bitstream.clear();
 	m_flux.clear();
 	m_flags &= TD_TRACK;
+	return *this;
 }
 
-void TrackData::keep_bitstream()
+TrackData &TrackData::keep_bitstream()
 {
 	m_track.clear();
 	m_flux.clear();
 	m_flags &= TD_BITSTREAM;
+	return *this;
 }
 
-void TrackData::keep_flux()
+TrackData &TrackData::keep_flux()
 {
 	m_track.clear();
 	m_bitstream.clear();
 	m_flags &= TD_FLUX;
+	return *this;
 }

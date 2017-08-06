@@ -5,6 +5,7 @@
 #include "BitstreamTrackBuffer.h"
 #include "BitstreamDecoder.h"
 #include "FluxTrackBuffer.h"
+#include "SpecialFormat.h"
 
 static Track &complete (Track &track)
 {
@@ -256,7 +257,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			// Add Speedlock signature to first sector
 			Data data0(512, 0);
 			const std::string sig = "SPEEDLOCK";
-			std::copy(sig.begin(), sig.end(), data0.begin() + 9);
+			std::copy(sig.begin(), sig.end(), data0.begin() + 257);
 			track[0].add(std::move(data0));
 
 			// Add 3 copies with differences matching the typical weak sector
@@ -275,11 +276,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Electronic Arts partially weak sector
 		{
-			Track track(9);
+			static constexpr uint8_t ids[]{ 193,198,194,109,195,200,196,201,197 };
+			Track track(arraysize(ids));
 
 			for (i = 0; i < 9; ++i)
 			{
-				static const uint8_t ids[] = { 193,198,194,109,195,200,196,201,197 };
 				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], 2));
 				track.add(std::move(sector));
 			}
@@ -311,11 +312,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// KBI-10 weak sector
 		{
-			Track track(10);
+			static constexpr uint8_t ids[]{ 193,198,194,109,195,200,196,201,197,202 };
+			Track track(arraysize(ids));
 
 			for (i = 0; i < 10; ++i)
 			{
-				static const uint8_t ids[] = { 193,198,194,109,195,200,196,201,197,202 };
 				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], (i == 9) ? 1 : 2));
 				track.add(std::move(sector));
 			}
@@ -425,11 +426,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Le Necromancien typical track, with gap data conflicting with EDSK multiple copies extension
 		{
-			Track track(10);
+			static constexpr uint8_t ids[]{ 1,1,6,2,7,3,8,4,9,5 };
+			Track track(arraysize(ids));
 
 			for (i = 0; i < 10; ++i)
 			{
-				static const uint8_t ids[] = { 1,1,6,2,7,3,8,4,9,5 };
 				Header header((i == 1) ? 1 : cylhead.cyl, (i == 1) ? 4 : cylhead.head, ids[i], i ? 2 : 1);
 				Sector sector(DataRate::_250K, Encoding::MFM, header);
 				if (i == 0) sector.add(Data(512, 0xf7), true);
@@ -509,21 +510,6 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
-#if 0
-			// Logo Professor (overformatted track, old style)
-		{
-			Track track(11);
-
-			for (i = 0; i < 11; ++i)
-			{
-				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
-				if (i == 0) sector.add(Sector::Flag::NoHeader);
-				track.add(std::move(sector));
-			}
-
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
-		}
-#endif
 		// Logo Professor (overformatted track, with offsets)
 		{
 			Track track(10);
@@ -541,8 +527,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Edd the Duck (track 7)
 		{
-			Track track(10);
-			static const uint8_t ids[] { 193, 65, 70, 66, 71, 67, 72, 68, 73, 69, 74 };
+			static constexpr uint8_t ids[]{ 193,65,70,66,71,67,72,68,73,69,74 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -556,8 +542,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Alternative for KBI-10 weak sector
 		{
-			Track track(11);
-			static const uint8_t ids[] { 193,198,194,199,202,195,200,196,201,197,202 };
+			static constexpr uint8_t ids[]{ 193,198,194,199,202,195,200,196,201,197,202 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -576,8 +562,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// KBI-19: CPC Titan (cyl 14) and Mach 3 (cyl 40)
 		{
-			Track track(19);
-			static const uint8_t ids[] { 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
+			static constexpr uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -590,8 +576,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// CAL2BOOT.DMK (track 9)
 		{
-			Track track(5);
-			static const uint8_t ids[] { 1,8,17,9,18 };
+			static constexpr uint8_t ids[]{ 1,8,17,9,18 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -607,8 +593,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Prehistoric 2 (track 30)
 		{
-			Track track(14);
-			static const uint8_t ids[] { 1,193,2,194,3,195,4,196,5,197,6,198,7,199 };
+			static constexpr uint8_t ids[]{ 1,193,2,194,3,195,4,196,5,197,6,198,7,199 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -677,8 +663,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 		// Sports Hero + Mugsy (+3)
 		{
-			Track track(18);
-			static const uint8_t ids[] { 7,14,3,10,17,6,13,2,9,16,5,12,1,8,15,4,11,0 };
+			static constexpr uint8_t ids[]{ 7,14,3,10,17,6,13,2,9,16,5,12,1,8,15,4,11,0 };
+			Track track(arraysize(ids));
 
 			for (auto id : ids)
 			{
@@ -917,14 +903,33 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		// 250Kbps MFM bitstream
 		case 16 + 2:
 		{
-			const Data data(512, 0x00);
-			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+			// Simple 9-sector format.
+			{
+				const Data data(512, 0x00);
+				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
 
-			bitbuf.addTrackStart();
-			for (i = 0; i < 9; i++)
-				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+				bitbuf.addTrackStart();
+				for (i = 0; i < 9; i++)
+					bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+				disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			}
+
+			// KBI-19 format.
+			{
+				static constexpr uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
+				Track track(arraysize(ids));
+
+				// Create a template that passes the IsKBI19Track check.
+				for (auto &id : ids)
+				{
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
+					track.add(std::move(sector));
+				}
+
+				// Generate the full track from it.
+				disk->add(GenerateKBI19Track(cylhead.next_cyl(), complete(track)));
+			}
 			break;
 		}
 
@@ -959,32 +964,128 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				disk->add(std::move(trackdata));
 			}
 
-			// 9-sector format with weak sector 2.
+			// Spectrum +3 Speedlock weak sectors (part and full).
 			{
-				const Data data(512, 0x00);
-				FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+				Track track(9);
 
-				fluxbuf.addTrackStart();
-				for (i = 0; i < 9; i++)
+				for (i = 0; i < 9; ++i)
 				{
-					auto header{Header(cylhead, i + 1, 2)};
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
 
-					if (i != 1)
-						fluxbuf.addSector(header, data, 0x54);
-					else
-					{
-						fluxbuf.addSectorUpToData(header, false);
+					if (i >= 2 && i <= 7)
+						sector.add(Data(sector.size(), i), false, 0xf8);
 
-						static const auto weakSize = 32;
-						fluxbuf.addBlock(0x00, data.size() / 2);
-						fluxbuf.addWeakBlock(weakSize);
-						fluxbuf.addBlock(0x00, (data.size() / 2) - weakSize);
-						fluxbuf.addGap(0x54);	// gap 3
-					}
+					track.add(std::move(sector));
 				}
 
-				TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
-				disk->add(std::move(trackdata));
+				// Add Speedlock signature to first sector
+				Data data0(512, 0);
+				std::string sig = "SPEEDLOCK";
+				std::copy(sig.begin(), sig.end(), data0.begin() + 304);
+				track[0].add(Data(data0));
+
+				// Data error for weak sector.
+				track[1].add(Data(512, 0), true);
+
+				complete(track);
+				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256).keep_flux()));
+				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 512).keep_flux()));
+			}
+
+			// Amstrad CPC Speedlock weak sectors (part and full).
+			{
+				Track track(9);
+
+				for (i = 0; i < 9; ++i)
+				{
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 64 + i, 2));
+					track.add(std::move(sector));
+				}
+
+				// Add Speedlock signature to first sector
+				Data data0(512, 0);
+				const std::string sig = "SPEEDLOCK";
+				std::copy(sig.begin(), sig.end(), data0.begin() + 257);
+				track[0].add(std::move(data0));
+
+				// Data error for weak sector.
+				track[7].add(Data(512, 0), true);
+
+				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256).keep_flux()));
+				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 512).keep_flux()));
+			}
+
+			// Rainbow Arts weak sector.
+			{
+				static constexpr uint8_t ids[]{ 193,198,194,109,195,200,196,201,197 };
+				Track track(arraysize(ids));
+
+				for (i = 0; i < 9; ++i)
+				{
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], 2));
+					track.add(std::move(sector));
+				}
+
+				// Data error for weak sector.
+				Data data1(512, 0);
+				track[1].add(std::move(data1), true);
+
+				// Add signature to 4th sector
+				Data data3(512, 0);
+				const std::string sig{"\x2a\x6d\xa7\x01\x30\x01\xaf\xed\x42\x4d\x44\x21\x70\x01"};
+				std::copy(sig.begin(), sig.end(), data3.begin());
+				track[3].add(std::move(data3));
+
+				disk->add(TrackData(GenerateRainbowArtsTrack(cylhead.next_cyl(), complete(track))));
+			}
+
+			// KBI-10 weak sector.
+			{
+				static constexpr uint8_t ids[]{ 193,198,194,199,195,200,196,201,197,202 };
+				Track track(arraysize(ids));
+
+				for (i = 0; i < 10; ++i)
+				{
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], (i==9)?1:2));
+					track.add(std::move(sector));
+				}
+
+				// Signature and data error for weak sector.
+				Data data9(256, 0);
+				const std::string sig = "KBI";
+				std::copy(sig.begin(), sig.end(), data9.begin());
+				track[9].add(std::move(data9), true);
+
+				disk->add(TrackData(GenerateKBI10Track(cylhead.next_cyl(), complete(track))));
+			}
+
+			// Logo Professor (overformatted track).
+			{
+				Track track(10);
+				track.tracklen = 6250 * 16;
+
+				for (i = 0; i < 10; ++i)
+				{
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 2 + i, 2));
+					sector.offset = (TRACK_OVERHEAD_MFM + (SECTOR_OVERHEAD_MFM + 512 + 25) * (i + 1)) * 16;
+					track.add(std::move(sector));
+				}
+
+				disk->add(TrackData(GenerateLogoProfTrack(cylhead.next_cyl(), complete(track))));
+			}
+
+			// Sega System 24 (0x2f00 size)
+			{
+				Track track(7);
+
+				for (i = 0; i < 7; ++i)
+				{
+					static const uint8_t sizes[] = {4,4,4,4,4,3,1};
+					Sector sector(DataRate::_500K, Encoding::MFM, Header(cylhead, 1 + i, sizes[i]));
+					track.add(std::move(sector));
+				}
+
+				disk->add(TrackData(GenerateSystem24Track(cylhead.next_cyl(), complete(track))));
 			}
 
 			break;
