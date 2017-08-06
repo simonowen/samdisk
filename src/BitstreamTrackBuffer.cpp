@@ -35,8 +35,9 @@ void BitstreamTrackBuffer::addCrc (int size)
 	while (size-- > 0)
 		crc.add(m_buffer.read_byte());
 
-	addWord(crc);
+	// Seek back to the starting position to write the CRC.
 	m_buffer.seek(old_bitpos);
+	addWord(crc);
 }
 
 BitBuffer &BitstreamTrackBuffer::buffer()
