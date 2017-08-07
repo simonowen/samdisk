@@ -172,10 +172,11 @@ void TrackBuffer::addAltDDAM ()	// RX02
 	addAM(0xfd);
 }
 
-void TrackBuffer::addCRC ()
+void TrackBuffer::addCRC (bool bad_crc)
 {
-	addByte(m_crc >> 8);
-	addByte(m_crc & 0xff);
+	uint16_t adjust = bad_crc ? 0x5555 : 0;
+	addByte((m_crc ^ adjust) >> 8);
+	addByte((m_crc ^ adjust) & 0xff);
 }
 
 void TrackBuffer::addTrackStart ()
@@ -187,7 +188,7 @@ void TrackBuffer::addTrackStart ()
 	addGap(50);	// gap 1
 }
 
-void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size)
+void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size, bool crc_error)
 {
 	addIDAM();
 	addByte(cyl);
@@ -199,15 +200,15 @@ void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size)
 	m_crc.add(head);
 	m_crc.add(sector);
 	m_crc.add(size);
-	addCRC();
+	addCRC(crc_error);
 }
 
-void TrackBuffer::addSectorHeader(const Header &header)
+void TrackBuffer::addSectorHeader(const Header &header, bool crc_error)
 {
-	addSectorHeader(header.cyl, header.head, header.sector, header.size);
+	addSectorHeader(header.cyl, header.head, header.sector, header.size, crc_error);
 }
 
-void TrackBuffer::addSectorData(const Data &data, int size, bool deleted)
+void TrackBuffer::addSectorData(const Data &data, int size, bool deleted, bool crc_error)
 {
 	// Ensure this isn't used for over-sized protected sectors.
 	assert(Sector::SizeCodeToLength(size) == Sector::SizeCodeToLength(size));
@@ -229,27 +230,27 @@ void TrackBuffer::addSectorData(const Data &data, int size, bool deleted)
 		addBlockUpdateCrc(data_pad);
 	}
 
-	addCRC();
+	addCRC(crc_error);
 }
 
 void TrackBuffer::addSector(const Sector &sector, int gap3)
 {
-	addSector(sector.header, sector.data_copy(), gap3, sector.is_deleted());
+	addSector(sector.header, sector.data_copy(), gap3, sector.is_deleted(), sector.has_baddatacrc());
 }
 
-void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted)
+void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted, bool crc_error)
 {
 	addSync();
 	addSectorHeader(cyl, head, sector, size);
 	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
 	addSync();
-	addSectorData(data, size, deleted);
+	addSectorData(data, size, deleted, crc_error);
 	addGap(gap3);	// gap 3
 }
 
-void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, bool deleted)
+void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, bool deleted, bool crc_error)
 {
-	addSector(header.cyl, header.head, header.sector, header.size, data, gap3, deleted);
+	addSector(header.cyl, header.head, header.sector, header.size, data, gap3, deleted, crc_error);
 }
 
 // Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.

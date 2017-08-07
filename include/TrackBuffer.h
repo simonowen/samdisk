@@ -34,15 +34,15 @@ public:
 	void addDDAM ();
 	void addAltDAM ();
 	void addAltDDAM ();
-	void addCRC ();
+	void addCRC (bool bad_crc = false);
 
 	void addTrackStart ();
-	void addSectorHeader (int cyl, int head, int sector, int size);
-	void addSectorHeader(const Header &header);
-	void addSectorData (const Data &data, int size, bool deleted = false);
+	void addSectorHeader (int cyl, int head, int sector, int size, bool crc_error = false);
+	void addSectorHeader(const Header &header, bool crc_error = false);
+	void addSectorData (const Data &data, int size, bool deleted = false, bool crc_error = false);
 	void addSector (const Sector &sector, int gap3);
-	void addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted = false);
-	void addSector (const Header &header, const Data &data, int gap3, bool deleted = false);
+	void addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted = false, bool crc_error = false);
+	void addSector (const Header &header, const Data &data, int gap3, bool deleted = false, bool crc_error = false);
 	void addSectorUpToData (const Header &header, bool deleted = false);
 
 	void addAmigaTrackStart ();

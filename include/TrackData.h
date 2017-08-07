@@ -37,8 +37,8 @@ public:
 	CylHead cylhead {};
 
 private:
-	TrackDataType m_type = TrackDataType::None;
-	int m_flags = TD_NONE;
+	TrackDataType m_type{ TrackDataType::None };
+	int m_flags{ TD_NONE };
 
 	mutable Track m_track {};
 	mutable BitBuffer m_bitstream {};

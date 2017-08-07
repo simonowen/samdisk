@@ -281,13 +281,13 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 #endif
 	}
 
-	auto weak_offset = 0;
+	int weak_offset, weak_size;
 
 	// Check for Speedlock weak sector (either +3 or CPC)
 	if (opt.fix != 0 && cylhead.cyl == 0 && track.size() == 9)
 	{
 		auto &sector1 = track[1];
-		if (sector1.copies() == 1 && IsSpectrumSpeedlockTrack(track, weak_offset))
+		if (sector1.copies() == 1 && IsSpectrumSpeedlockTrack(track, weak_offset, weak_size))
 		{
 			// Are we to add the missing weak sector?
 			if (opt.fix == 1)
@@ -305,7 +305,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 		}
 
 		auto &sector7 = track[7];
-		if (sector7.copies() == 1 && IsCpcSpeedlockTrack(track, weak_offset))
+		if (sector7.copies() == 1 && IsCpcSpeedlockTrack(track, weak_offset, weak_size))
 		{
 			// Are we to add the missing weak sector?
 			if (opt.fix == 1)
@@ -327,7 +327,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 	if (opt.fix != 0 && cylhead.cyl == 40 && track.size() == 9)
 	{
 		auto &sector1 = track[1];
-		if (sector1.copies() == 1 && IsRainbowArtsTrack(track, weak_offset))
+		if (sector1.copies() == 1 && IsRainbowArtsTrack(track, weak_offset, weak_size))
 		{
 			// Are we to add the missing weak sector?
 			if (opt.fix == 1)

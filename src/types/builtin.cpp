@@ -194,7 +194,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add Speedlock signature to first sector
 			Data data0(512, 0);
-			std::string sig = "SPEEDLOCK";
+			std::string sig{ "SPEEDLOCK" };
 			std::copy(sig.begin(), sig.end(), data0.begin() + 304);
 			track[0].add(Data(data0));
 
@@ -226,7 +226,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add Speedlock signature to first sector
 			Data data0(512, 0);
-			const std::string sig = "SPEEDLOCK";
+			const std::string sig{ "SPEEDLOCK" };
 			std::copy(sig.begin(), sig.end(), data0.begin() + 304);
 			track[0].add(std::move(data0));
 
@@ -256,7 +256,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Add Speedlock signature to first sector
 			Data data0(512, 0);
-			const std::string sig = "SPEEDLOCK";
+			const std::string sig{ "SPEEDLOCK" };
 			std::copy(sig.begin(), sig.end(), data0.begin() + 257);
 			track[0].add(std::move(data0));
 
@@ -274,20 +274,20 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
-		// Electronic Arts partially weak sector
+		// Rainbow Arts partially weak sector
 		{
 			static constexpr uint8_t ids[]{ 193,198,194,109,195,200,196,201,197 };
 			Track track(arraysize(ids));
 
-			for (i = 0; i < 9; ++i)
+			for (auto id : ids)
 			{
-				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], 2));
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
 				track.add(std::move(sector));
 			}
 
 			// Add Speedlock signature to first sector
 			Data data0(512, 0);
-			const std::string sig = "SPEEDLOCK";
+			const std::string sig{ "SPEEDLOCK" };
 			std::copy(sig.begin(), sig.end(), data0.begin() + 9);
 			track[0].add(std::move(data0));
 
@@ -303,9 +303,9 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			track[1].add(Data(data1), true);
 
 			Data data3(512, 0);
-			const std::string codesig = "\x2a\x6d\xa7\x01\x30\x01\xaf\xed\x42\x4d\x44\x21\x70\x01";
-//				static const uint8_t codesig[] = { 0x2a, 0x6d, 0xa7, 0x01, 0x30, 0x01, 0xaf, 0xed, 0x42, 0x4d, 0x44, 0x21, 0x70, 0x01 };
+			const std::string codesig{ "\x2a\x6d\xa7\x01\x30\x01\xaf\xed\x42\x4d\x44\x21\x70\x01" };
 			std::copy(codesig.begin(), codesig.end(), data3.begin());
+			track[3].add(std::move(data3));
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
 		}
@@ -322,7 +322,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			}
 
 			Data data9(256, 0xe5);
-			const std::string sig = "KBI.";
+			const std::string sig{ "KBI." };
 			std::copy(sig.begin(), sig.end(), data9.begin());
 			track[9].add(Data(data9), true);
 
@@ -389,7 +389,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			const std::string sig = "HELLO!";
+			const std::string sig{ "HELLO!" };
 			Data data0(512 + 2 + sig.size(), 0x01);
 			std::copy(sig.begin(), sig.end(), data0.begin() + 512 + 2);
 
@@ -409,7 +409,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1, 0));
 			track.add(std::move(sector));
 
-			const std::string sig = "HELLO!";
+			const std::string sig{ "HELLO!" };
 			Data data0(6144, 0x01);
 			fill(data0, 0, sector.size(), 0x00);
 			std::copy(sig.begin(), sig.end(), std::prev(data0.end(), sig.size()));
@@ -552,7 +552,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			std::string sig = "KBI";
+			std::string sig{ "KBI" };
 			Data data3(512, 0);
 			std::copy(sig.begin(), sig.end(), data3.begin());
 			track[3].add(std::move(data3));
@@ -980,7 +980,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 				// Add Speedlock signature to first sector
 				Data data0(512, 0);
-				std::string sig = "SPEEDLOCK";
+				std::string sig{ "SPEEDLOCK" };
 				std::copy(sig.begin(), sig.end(), data0.begin() + 304);
 				track[0].add(Data(data0));
 
@@ -988,8 +988,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track[1].add(Data(512, 0), true);
 
 				complete(track);
-				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256).keep_flux()));
-				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 512).keep_flux()));
+				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256, 32).keep_flux()));
+				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512).keep_flux()));
 			}
 
 			// Amstrad CPC Speedlock weak sectors (part and full).
@@ -1004,15 +1004,15 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 				// Add Speedlock signature to first sector
 				Data data0(512, 0);
-				const std::string sig = "SPEEDLOCK";
+				const std::string sig{ "SPEEDLOCK" };
 				std::copy(sig.begin(), sig.end(), data0.begin() + 257);
 				track[0].add(std::move(data0));
 
 				// Data error for weak sector.
 				track[7].add(Data(512, 0), true);
 
-				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256).keep_flux()));
-				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 512).keep_flux()));
+				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256, 32).keep_flux()));
+				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 0, 512).keep_flux()));
 			}
 
 			// Rainbow Arts weak sector.
@@ -1020,9 +1020,9 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				static constexpr uint8_t ids[]{ 193,198,194,109,195,200,196,201,197 };
 				Track track(arraysize(ids));
 
-				for (i = 0; i < 9; ++i)
+				for (auto id : ids)
 				{
-					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], 2));
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
 					track.add(std::move(sector));
 				}
 
@@ -1032,11 +1032,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 				// Add signature to 4th sector
 				Data data3(512, 0);
-				const std::string sig{"\x2a\x6d\xa7\x01\x30\x01\xaf\xed\x42\x4d\x44\x21\x70\x01"};
+				const std::string sig{ "\x2a\x6d\xa7\x01\x30\x01\xaf\xed\x42\x4d\x44\x21\x70\x01" };
 				std::copy(sig.begin(), sig.end(), data3.begin());
 				track[3].add(std::move(data3));
 
-				disk->add(TrackData(GenerateRainbowArtsTrack(cylhead.next_cyl(), complete(track))));
+				disk->add(TrackData(GenerateRainbowArtsTrack(cylhead.next_cyl(), complete(track), 100, 256)));
 			}
 
 			// KBI-10 weak sector.
@@ -1044,19 +1044,19 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				static constexpr uint8_t ids[]{ 193,198,194,199,195,200,196,201,197,202 };
 				Track track(arraysize(ids));
 
-				for (i = 0; i < 10; ++i)
+				for (auto id : ids)
 				{
-					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], (i==9)?1:2));
+					Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, (id == 202) ? 1 : 2));
 					track.add(std::move(sector));
 				}
 
 				// Signature and data error for weak sector.
 				Data data9(256, 0);
-				const std::string sig = "KBI";
+				const std::string sig{ "KBI" };
 				std::copy(sig.begin(), sig.end(), data9.begin());
 				track[9].add(std::move(data9), true);
 
-				disk->add(TrackData(GenerateKBI10Track(cylhead.next_cyl(), complete(track))));
+				disk->add(TrackData(GenerateKBI10Track(cylhead.next_cyl(), complete(track), 4, 4)));
 			}
 
 			// Logo Professor (overformatted track).
@@ -1076,11 +1076,12 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Sega System 24 (0x2f00 size)
 			{
-				Track track(7);
+				static constexpr uint8_t sizes[]{ 4,4,4,4,4,3,1 };
+				Track track(arraysize(sizes));
 
-				for (i = 0; i < 7; ++i)
+				for (i = 0; i < arraysize(sizes); ++i)
 				{
-					static const uint8_t sizes[] = {4,4,4,4,4,3,1};
+					
 					Sector sector(DataRate::_500K, Encoding::MFM, Header(cylhead, 1 + i, sizes[i]));
 					track.add(std::move(sector));
 				}

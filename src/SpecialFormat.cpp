@@ -160,7 +160,7 @@ TrackData GenerateSystem24Track (const CylHead &cylhead, const Track &track)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Speedlock weak sector for Spectrum +3?
-bool IsSpectrumSpeedlockTrack (const Track &track, int &random_offset)
+bool IsSpectrumSpeedlockTrack(const Track &track, int &weak_offset, int &weak_size)
 {
 	if (track.size() != 9)
 		return false;
@@ -185,39 +185,45 @@ bool IsSpectrumSpeedlockTrack (const Track &track, int &random_offset)
 	// If there's no common block at the start, assume fully random
 	// Buggy Boy has only 255, so don't check the full first half!
 	if (memcmp(data1.data(), data1.data() + 1, (sector1.size() / 2) - 1))
-		random_offset = 5;		// -512
+	{
+		// -512
+		weak_offset = 0;
+		weak_size = 512;
+	}
 	else
-		random_offset = 336;	// =256 -33 +47 -176
+	{
+		// =256 -33 +47 -176
+		weak_offset = 336;
+		weak_size = 32;
+	}
 
 	if (opt.debug) util::cout << "detected Spectrum Speedlock track\n";
 	return true;
 }
 
-TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset)
+TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
 {
-	int temp_offset;
-	assert(IsSpectrumSpeedlockTrack(track, temp_offset));
-	(void)temp_offset;
+#ifdef _DEBUG
+	int temp_offset, temp_size;
+	assert(IsSpectrumSpeedlockTrack(track, temp_offset, temp_size));
+	assert(weak_offset == temp_offset && weak_size == temp_size);
+#endif
 
 	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+
 	for (auto &sector : track)
 	{
 		auto &data_copy = sector.data_copy();
+		auto is_weak{ &sector == &track[1] };
 
-		if (&sector != &track[1])
+		if (!is_weak)
 			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
-		else if (weak_offset == sector.size())
-		{
-			// Full weak.
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
-			fluxbuf.addWeakBlock(sector.size());
-		}
 		else
 		{
-			// Part weak.
-			static const auto weak_size{32};
 			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
@@ -225,15 +231,29 @@ TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &t
 				data_copy.begin() + weak_offset + weak_size,
 				data_copy.begin() + sector.size()));
 		}
+
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+
+		// Add duplicate weak sector half way around track.
+		if (&sector == &track[5])
+		{
+			auto &sector1{ track[1] };
+			auto data1{ sector1.data_copy() };
+			std::fill(data1.begin() + weak_offset, data1.begin() + weak_offset + weak_size, uint8_t(0xee));
+			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.is_deleted(), true);
+		}
 	}
 
-	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+	TrackData trackdata(cylhead);
+	trackdata.add(std::move(bitbuf.buffer()));
+	//trackdata.add(FluxData({ fluxbuf.buffer() }));
+	return trackdata;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Speedlock weak sector for Amstrad CPC?
-bool IsCpcSpeedlockTrack (const Track &track, int &random_offset)
+bool IsCpcSpeedlockTrack (const Track &track, int &weak_offset, int &weak_size)
 {
 	if (track.size() != 9)
 		return false;
@@ -263,41 +283,47 @@ bool IsCpcSpeedlockTrack (const Track &track, int &random_offset)
 	// If there's no common block at the start, assume fully random
 	// Buggy Boy has only 255, so don't check the full first half!
 	if (memcmp(data7.data(), data7.data() + 1, (sector7.size() / 2) - 1))
-		random_offset = 5;	// -512
+		weak_offset = 5;	// -512
 	else if (data0[129] == 'S')
-		random_offset = 256;
+	{
+		// =256 -256
+		weak_offset = 256;
+		weak_size = 256;
+	}
 	else
-		random_offset = 336;	// =256 -33 +47 -176
+	{
+		// =256 -33 +47 -176
+		weak_offset = 336;
+		weak_size = 32;
+	}
 
 	if (opt.debug) util::cout << "detected CPC Speedlock track\n";
 	return true;
 }
 
-TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset)
+TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
 {
-	int temp_offset;
-	assert(IsCpcSpeedlockTrack(track, temp_offset));
-	(void)temp_offset;
+#ifdef _DEBUG
+	int temp_offset, temp_size;
+	assert(IsCpcSpeedlockTrack(track, temp_offset, temp_size));
+	assert(weak_offset == temp_offset && weak_size == temp_size);
+#endif
 
 	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+
 	for (auto &sector : track)
 	{
 		auto &data_copy = sector.data_copy();
+		auto is_weak{ &sector == &track[7] };
 
-		if (&sector != &track[7])
+		if (!is_weak)
 			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
-		else if (weak_offset == sector.size())
-		{
-			// Full weak.
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
-			fluxbuf.addWeakBlock(sector.size());
-		}
 		else
 		{
-			// Part weak.
-			static const auto weak_size{32};
 			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
@@ -305,15 +331,29 @@ TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track,
 				data_copy.begin() + weak_offset + weak_size,
 				data_copy.begin() + sector.size()));
 		}
+
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+
+		// Add duplicate weak sector half way around track.
+		if (&sector == &track[1])
+		{
+			auto &sector7{ track[7] };
+			auto data7{ sector7.data_copy() };
+			std::fill(data7.begin() + weak_offset, data7.begin() + weak_offset + weak_size, uint8_t(0xee));
+			bitbuf.addSector(sector7.header, data7, 0x2e, sector7.is_deleted(), true);
+		}
 	}
 
-	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+	TrackData trackdata(cylhead);
+	trackdata.add(std::move(bitbuf.buffer()));
+	//trackdata.add(FluxData({ fluxbuf.buffer() }));
+	return trackdata;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Rainbow Arts weak sector for CPC?
-bool IsRainbowArtsTrack (const Track &track, int &random_offset)
+bool IsRainbowArtsTrack (const Track &track, int &weak_offset, int &weak_size)
 {
 	if (track.size() != 9)
 		return false;
@@ -335,31 +375,36 @@ bool IsRainbowArtsTrack (const Track &track, int &random_offset)
 		return false;
 
 	// The first 100 bytes are constant
-	random_offset = 100;	// =100 -258 +151 -3
+	weak_offset = 100;	// =100 -258 +151 -3
+	weak_size = 256;
 
 	if (opt.debug) util::cout << "detected Rainbow Arts weak sector track\n";
 	return true;
 }
 
-TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track)
+TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
 {
-	int temp_offset;
-	assert(IsRainbowArtsTrack(track, temp_offset));
-	(void)temp_offset;
+#ifdef _DEBUG
+	int temp_offset, temp_size;
+	assert(IsRainbowArtsTrack(track, temp_offset, temp_size));
+	assert(weak_offset == temp_offset && weak_size == temp_size);
+#endif
 
 	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+
 	for (auto &sector : track)
 	{
 		auto &data_copy = sector.data_copy();
+		auto is_weak{ &sector == &track[1] };
 
-		if (&sector != &track[1])
+		if (!is_weak)
 			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
 		else
 		{
-			static const auto weak_offset{100};
-			static const auto weak_size{206};
 			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
@@ -367,15 +412,30 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track)
 				data_copy.begin() + weak_offset + weak_size,
 				data_copy.begin() + sector.size()));
 		}
+
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+
+		// Add duplicate weak sector half way around track.
+		if (&sector == &track[5])
+		{
+			// Add a duplicate of the weak sector, with different data from the weak position
+			auto &sector1{ track[1] };
+			auto data1{ sector1.data_copy() };
+			std::fill(data1.begin() + weak_offset, data1.begin() + weak_offset + weak_size, uint8_t(0xee));
+			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.is_deleted(), true);
+		}
 	}
 
-	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+	TrackData trackdata(cylhead);
+	trackdata.add(std::move(bitbuf.buffer()));
+	//trackdata.add(FluxData({ fluxbuf.buffer() }));
+	return trackdata;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // KBI-10 weak sector for CPC?
-bool IsKBI10Track (const Track &track)
+bool IsKBI10Track (const Track &track, int &weak_offset, int &weak_size)
 {
 	if (track.size() != 10)
 		return false;
@@ -396,31 +456,37 @@ bool IsKBI10Track (const Track &track)
 	if (memcmp(data9.data(), "KBI", 3))
 		return false;
 
-	// The weak patches at offsets 4 and 128+4 ?
 	// =4 -4 =124 -4 =120
+	weak_offset = 4;
+	weak_size = 4;
 
 	if (opt.debug) util::cout << "detected KBI-10 track\n";
 	return true;
 }
 
-TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track)
+TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
 {
-	assert(IsKBI10Track(track));
-	(void)track;
+#ifdef _DEBUG
+	int temp_offset, temp_size;
+	assert(IsKBI10Track(track, temp_offset, temp_size));
+	assert(weak_offset == temp_offset && weak_size == temp_size);
+#endif
 
 	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+
 	for (auto &sector : track)
 	{
 		auto &data_copy = sector.data_copy();
+		auto is_weak{ &sector == &track[9] };
 
-		if (&sector != &track[9])
+		if (!is_weak)
 			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
 		else
 		{
-			static const auto weak_offset{4};
-			static const auto weak_size{4};
 			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
@@ -428,9 +494,22 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track)
 				data_copy.begin() + weak_offset + weak_size,
 				data_copy.begin() + sector.size()));
 		}
+
+		bitbuf.addSector(sector.header, data_copy, 1, sector.is_deleted(), is_weak);
+
+		if (&sector == &track[3])
+		{
+			auto &sector9{ track[9] };
+			auto data9{ sector9.data_copy() };
+			std::fill(data9.begin() + weak_offset, data9.begin() + weak_offset + weak_size, uint8_t(0xee));
+			bitbuf.addSector(sector9.header, data9, 1, sector9.is_deleted(), true);
+		}
 	}
 
-	return TrackData(cylhead, FluxData({fluxbuf.buffer()}));
+	TrackData trackdata(cylhead);
+	trackdata.add(std::move(bitbuf.buffer()));
+	//trackdata.add(FluxData({ fluxbuf.buffer() }));
+	return trackdata;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

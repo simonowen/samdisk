@@ -7,6 +7,7 @@
 #include "TrackDataParser.h"
 #include "IBMPC.h"
 #include "JupiterAce.h"
+#include "SpecialFormat.h"
 
 // Scan track flux reversals for sectors. We default to the order MFM/FM,
 // Amiga, then GCR. On subsequent calls the last successful encoding is
@@ -1112,9 +1113,48 @@ void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate)
 	}
 }
 
-void generate_bitstream (TrackData &/*trackdata*/)
+bool generate_special (TrackData &trackdata)
 {
-	throw util::exception("track to bitstream conversion not yet implemented");
+	auto track{ trackdata.track() };
+	int weak_offset{ 0 }, weak_size{ 0 };
+
+	// Special formats have special conversions
+	if (IsKBI19Track(track))
+		trackdata.add(GenerateKBI19Track(trackdata.cylhead, track));
+	else if (IsSystem24Track(track))
+		trackdata.add(GenerateSystem24Track(trackdata.cylhead, track));
+	else if (IsSpectrumSpeedlockTrack(track, weak_offset, weak_size))
+		trackdata.add(GenerateSpectrumSpeedlockTrack(trackdata.cylhead, track, weak_offset, weak_size));
+	else if (IsCpcSpeedlockTrack(track, weak_offset, weak_size))
+		trackdata.add(GenerateCpcSpeedlockTrack(trackdata.cylhead, track, weak_offset, weak_size));
+	else if (IsRainbowArtsTrack(track, weak_offset, weak_size))
+		trackdata.add(GenerateRainbowArtsTrack(trackdata.cylhead, track, weak_offset, weak_size));
+	else if (IsKBI10Track(track, weak_offset, weak_size))
+		trackdata.add(GenerateKBI10Track(trackdata.cylhead, track, weak_offset, weak_size));
+	else if (IsLogoProfTrack(track))
+		trackdata.add(GenerateLogoProfTrack(trackdata.cylhead, track));
+	else
+		return false;
+
+	return true;
+}
+
+void generate_bitstream (TrackData &trackdata)
+{
+	assert(trackdata.has_track());
+
+	// Special formats have special conversions
+	if (generate_special(trackdata))
+	{
+		// Fail if we've encountered a flux-only special format, as converting
+		// it to bitstream is unlikely to give a working track.
+		if (!trackdata.has_bitstream())
+			throw util::exception(trackdata.cylhead, " has no suitable bitstream representation");
+	}
+	else
+	{
+		throw util::exception("track to bitstream conversion not yet implemented for ", trackdata.cylhead);
+	}
 }
 
 void generate_flux (TrackData &trackdata)

@@ -96,10 +96,14 @@ const FluxData &TrackData::flux ()
 
 void TrackData::add (TrackData &&trackdata)
 {
-	if (!has_track())
-		track();
+	if (trackdata.has_flux())
+		add(FluxData(trackdata.flux()));
 
-	m_track.add(std::move(trackdata.m_track));
+	if (trackdata.has_bitstream())
+		add(BitBuffer(trackdata.bitstream()));
+
+	if (trackdata.has_track())
+		add(Track(trackdata.track()));
 }
 
 void TrackData::add (Track &&track)
