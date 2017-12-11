@@ -152,6 +152,7 @@ struct option long_options[] =
 	{ "atom",			  no_argument, &opt.byteswap, 1 },
 	{ "ace",			  no_argument, &opt.ace, 1 },
 	{ "mx",				  no_argument, &opt.mx, 1 },
+	{ "agat",			  no_argument, &opt.agat, 1 },
 	{ "quick",			  no_argument, &opt.quick, 1 },
 	{ "repair",			  no_argument, &opt.repair, 1},
 	{ "fix",			  no_argument, &opt.fix, 1 },

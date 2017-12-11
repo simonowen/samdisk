@@ -51,6 +51,12 @@ void scan_flux (TrackData &trackdata)
 		return;
 	}
 
+	if (opt.agat)
+	{
+		scan_flux_agat(trackdata);
+		return;
+	}
+
 	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
 	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
 	encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
@@ -123,6 +129,12 @@ void scan_bitstream (TrackData &trackdata)
 	if (opt.mx)
 	{
 		scan_bitstream_mx(trackdata);
+		return;
+	}
+
+	if (opt.agat)
+	{
+		scan_bitstream_agat(trackdata);
 		return;
 	}
 
@@ -1193,4 +1205,292 @@ void generate_flux (TrackData &trackdata)
 	}
 
 	trackdata.add(FluxData({flux_times}));
+}
+
+bool test_remove_gap3_agat (Data data, int offset, int &gap3)
+{
+	if (data.size() < offset)
+		return false;
+
+	TrackDataParser parser(data.data() + offset, data.size() - offset);
+	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+	auto splice = 0, len = 0;
+	uint8_t fill = 0x00;
+
+	if (opt.debug) util::cout << "----gap3----:\n";
+	while (!parser.IsWrapped())
+	{
+		parser.GetGapRun(&len, &fill);
+
+		if (!len)
+		{
+			splice = 1;
+			for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+			if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+			if (splice > max_splice)
+			{
+				if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+				return false;
+			}
+		}
+
+		if (len == 3 && fill == 0x95)
+		{
+			auto am = parser.ReadByte();
+			if (opt.debug) util::cout << "found AM (" << am << ")\n";
+			break;
+		}
+
+		if (len > 0 && fill != 0x00 && fill != 0xaa)
+		{
+			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+			return false;
+		}
+
+		if (len > 0 && fill == 0xaa && !gap3)
+		{
+			gap3 = static_cast<uint8_t>(len);
+			if (opt.debug) util::cout << "gap3 size is " << len << " bytes\n";
+		}
+		if (len > 0)
+		{
+			if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+		}
+	}
+
+	if (opt.debug) util::cout << "gap3 can be removed\n";
+	return true;
+}
+
+
+/*
+ * Agat 840K MFM format.  Agat was a family of Apple II workalikes
+ * produced by Soviet Union in 1980's, this format is unique to them.
+ *
+ * Via https://github.com/sintech/AGAT/blob/master/docs/agat-840k-format.txt
+ * and http://www.torlus.com/floppy/forum/viewtopic.php?f=19&t=1385
+ */
+
+void scan_bitstream_agat (TrackData &trackdata)
+{
+	Track track;
+	Data block;
+	uint64_t dword = 0;
+	uint16_t stored_cksum = 0, cksum = 0;
+	std::vector<std::pair<int, Encoding>> data_fields;
+
+	auto &bitbuf = trackdata.bitstream();
+	bitbuf.seek(0);
+	bitbuf.encoding = Encoding::MFM;
+	track.tracklen = bitbuf.track_bitsize();
+
+	while (!bitbuf.wrapped())
+	{
+		// Give up if no headers were found in the first revolution
+		if (!track.size() && bitbuf.tell() > track.tracklen)
+			break;
+
+		dword = (dword << 1) | bitbuf.read1();
+		if (opt.debug && 1)
+		util::cout << util::fmt ("  s_b_agat %016lx c:h %d:%d at %d\n",
+			dword, trackdata.cylhead.cyl, trackdata.cylhead.head, bitbuf.tell());
+
+		// MFM encoded address field prologue = 0x49111444; data field prologue = 0x14444911
+		switch (dword & 0x1ffffffff)
+		{
+			case 0x89245555:	// 0100010010010010 0 0101010101010101 = MFM-encoded 0xa4, 2 us gap, 0xff
+			case 0x44922d55:	// 0100010010010010 0 0101 10101010101 (variant)
+			case 0x44905555:	// 01000100100100 0 0 0101010101010101 produced by agath-aim-to-hfe.pl
+				if (opt.debug && 1) util::cout << "  s_b_agat found sync at " << bitbuf.tell() << "\n";
+				break;
+
+			default:
+				continue;
+		}
+
+		auto am = bitbuf.read_byte() << 8;
+		auto am_offset = bitbuf.tell();
+
+		am |= bitbuf.read_byte();
+
+		switch (am)
+		{
+			case 0x956a:	// IDAM
+			{
+				// volume, track, sector, epilogue (= 0x5a)
+				std::array<uint8_t, 4> id;
+				bitbuf.read(id);
+
+				if (id[3] == 0x5a)
+				{
+					Sector s(bitbuf.datarate, bitbuf.encoding, Header(trackdata.cylhead, id[2], SizeToCode(256)));
+					s.offset = bitbuf.track_offset(am_offset);
+
+					if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					track.add(std::move(s));
+				}
+				else
+				{
+					Message(msgWarning, "unknown %s address mark epilogue (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), id[3], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				}
+				break;
+			}
+
+			case 0x6a95:
+			{
+				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
+				break;
+			}
+
+			default:
+				Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				break;
+		}
+	}
+
+	// Process each sector header to look for an associated data field
+	for (auto it = track.begin(); it != track.end(); ++it)
+	{
+		auto &sector = *it;
+		auto final_sector = std::next(it) == track.end();
+
+		auto shift = 4;
+		auto gap2_size = 5;	// gap2 size in MFM bytes
+		auto min_distance = ((1 + 4) << shift) + (gap2_size << 4);			// AM, ID, gap2
+		auto max_distance = ((1 + 4) << shift) + ((40 + gap2_size) << 4);	// 1=AM, 4=ID, 21+gap2=max WD177x offset
+
+		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+
+		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
+		{
+			const auto &dam_offset = itData->first;
+			auto itDataNext = (std::next(itData) == data_fields.end()) ? data_fields.begin() : std::next(itData);
+
+			// Determine distance from header to data field, taking care of track wrapping
+			auto dam_track_offset = bitbuf.track_offset(dam_offset);
+			auto distance = ((dam_track_offset < sector.offset) ? track.tracklen : 0) + dam_track_offset - sector.offset;
+
+			// Reject if the data field is too close or too far away
+			if (distance < min_distance || distance > max_distance)
+				continue;
+
+			// If there's a splice between IDAM and DAM the track was probably modified
+#if 0 // disabled until header/data matching enhancements are complete
+			if (bitbuf.sync_lost(sector.offset, dam_offset))
+				track.modified = true;
+#endif
+			bitbuf.seek(dam_offset);
+			bitbuf.encoding = Encoding::MFM;
+
+			auto dam = bitbuf.read_byte();
+
+			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
+			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
+			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
+			auto next_idam_align = next_idam_distance & ((1 << shift) - 1);
+
+			// Determine the bit offset and distance to the next DAM
+			auto next_dam_offset = itDataNext->first;
+			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_bytes = (next_dam_distance >> shift) - 1;		// -1 due to DAM being read above
+
+			// Attempt to read gap2 from non-final sectors, unless we're asked not to
+			auto read_gap2 = (opt.gap2 != 0);
+
+			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
+			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
+			if (extent_bytes >= 22) extent_bytes -= 22;	// remove AAAA.. XXX
+
+			auto normal_bytes = sector.size() + 2;					// data size + CRC bytes
+			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to check CRC
+
+			// Calculate bytes remaining in the data in current data encoding
+			auto avail_bytes = bitbuf.remaining() >> shift;
+
+			// Ignore truncated copies, unless it's the only copy we have
+			if (avail_bytes < normal_bytes)
+			{
+				// If we've already got a copy, ignore the truncated version
+				if (sector.copies() && (!sector.is_8k_sector() || avail_bytes < 0x1802))	// ToDo: fix nasty check
+				{
+					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					continue;
+				}
+
+				if (opt.debug) util::cout << "using truncated sector data as only copy\n";
+			}
+
+			// Read the full data field and check its CRC
+			Data data(data_bytes);
+			bitbuf.read(data);
+			cksum = 0;
+			stored_cksum = data[256];
+
+			// Truncate at the extent size, unless we're asked to keep overlapping sectors
+			if (!opt.keepoverlap && extent_bytes < sector.size())
+				data.resize(extent_bytes);
+			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
+				data.resize(sector.size());
+
+			for (auto byte = 0; byte < 256; byte++) {
+				if (cksum > 255) { cksum++; cksum &= 255; }
+				cksum += data[byte];
+			}
+			cksum &= 255;
+
+			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %02x:%02x distance %d (min %d max %d)\n",
+				sector.header.sector, stored_cksum, cksum, distance, min_distance, max_distance);
+			bool bad_crc = (stored_cksum != cksum);
+
+			auto gap2_offset = next_idam_bytes + 1 + 4 + 2;
+			auto has_gap2 = false; // data.size() >= gap2_offset;
+			auto has_gap3 = data.size() >= normal_bytes;
+			auto remove_gap2 = false;
+			auto remove_gap3 = false;
+
+			// Check IDAM bit alignment and value, as AnglaisCollege\track00.0.raw has rogue FE junk on cyls 22+26
+			if (has_gap2)
+				remove_gap2 = next_idam_align != 0 || data[next_idam_bytes] != 0xfe || test_remove_gap2(data, gap2_offset);
+
+			if (has_gap3)
+				remove_gap3 = test_remove_gap3_agat(data, normal_bytes, sector.gap3);
+
+			if (opt.gaps != GAPS_ALL)
+			{
+				if (has_gap2 && remove_gap2)
+				{
+					if (opt.debug) util::cout << "removing gap2 data\n";
+					data.resize(next_idam_bytes - ((sector.encoding == Encoding::MFM) ? 3 : 0));
+				}
+				else if (has_gap2)
+				{
+					if (opt.debug) util::cout << "skipping gap2 removal\n";
+				}
+
+				if (has_gap3 && remove_gap3 && (!has_gap2 || remove_gap2))
+				{
+					if (opt.debug) util::cout << "removing gap3 data\n";
+					data.resize(sector.size());
+				}
+			}
+
+			sector.add(std::move(data), bad_crc, dam);
+
+			// If the data is good there's no need to search for more data fields
+			if (!bad_crc)
+				break;
+		}
+	}
+
+	trackdata.add(std::move(track));
+}
+
+void scan_flux_agat (TrackData &trackdata)
+{
+	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), opt.scale);
+	BitBuffer bitbuf(DataRate::_250K, decoder);
+
+	trackdata.add(std::move(bitbuf));
 }
