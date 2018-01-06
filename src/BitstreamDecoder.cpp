@@ -943,7 +943,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 		auto shift = (sector.encoding == Encoding::FM) ? 5 : 4;
 		auto gap2_size = (sector.datarate == DataRate::_1M) ? GAP2_MFM_ED : GAP2_MFM_DDHD;	// gap2 size in MFM bytes (FM is half size but double encoding overhead)
 		auto min_distance = ((1 + 6) << shift) + (gap2_size << 4);			// AM, ID, gap2 (fixed shift as FM is half size)
-		auto max_distance = ((1 + 6) << shift) + ((21 + gap2_size) << 4);		// 1=AM, 6=ID, 21+gap2=max WD177x offset
+		auto max_distance = ((1 + 6) << shift) + ((23 + gap2_size) << 4);		// 1=AM, 6=ID, 21+gap2=max WD177x offset (gap2 may be longer when formatted by different type of controller)
 
 		// If the header has a CRC error, the data can't be reached
 		if (sector.has_badidcrc())
