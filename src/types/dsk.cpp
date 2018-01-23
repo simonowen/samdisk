@@ -536,7 +536,8 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 					// Hercule II (CPC) has a non-standard DAM (0xFD), and expects it to be unreadable.
 					if (sector.dam != 0xfb && sector.dam != 0xf8)
 					{
-						Message(msgWarning, "discarding data from %s due to non-standard DAM", CHR(cyl, head, sector.header.sector));
+						Message(msgWarning, "discarding data from %s due to non-standard DAM %02x",
+							CHR(cyl, head, sector.header.sector), sector.dam);
 						sector.remove_data();
 					}
 
