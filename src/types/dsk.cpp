@@ -441,7 +441,7 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 	else if (peh->bSides > MAX_SIDES)
 		throw util::exception("too many heads for EDSK");
 
-	bool add_offsets = true;
+	bool add_offsets_block = true;
 	std::vector<uint16_t> offsets;
 	offsets.reserve((peh->bTracks + 1) * peh->bSides);
 
@@ -457,6 +457,7 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 			if (track.is_mixed_encoding())
 				throw util::exception(cylhead, " is mixed-density, which EDSK doesn't support");
 
+			bool added_sector_offsets = false;
 			offsets.push_back(util::htole(static_cast<uint16_t>(track.tracklen / 16)));
 
 			auto pt = reinterpret_cast<EDSK_TRACK*>(mem.pb);
@@ -512,10 +513,12 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 				{
 					auto sector = track[i];
 
-					if (sector.offset)
+					// If any offsets are zero we can't generate append an offsets block.
+					if (!sector.offset)
+						add_offsets_block = false;
+					// Take care to only output offsets on the first pass around the fitting loop.
+					else if (!added_sector_offsets)
 						offsets.push_back(util::htole(static_cast<uint16_t>(sector.offset / 16)));
-					else
-						add_offsets = false;
 
 					auto rpm_time = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
 					auto track_capacity = GetTrackCapacity(rpm_time, sector.datarate, sector.encoding);
@@ -634,6 +637,9 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 					break;
 				}
 
+				// Flag that sector offsets have already been generated.
+				added_sector_offsets = true;
+
 				// Try again using various techniques to make it fit
 				if (!fFitErrorCopies) { fFitErrorCopies = true;	continue; }
 				if (!fFitErrorSize) { fFitErrorSize = true; continue; }
@@ -654,7 +660,7 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 	}
 
 	// Add offsets if available, unless they're disabled
-	if (!opt.legacy && add_offsets)
+	if (!opt.legacy && add_offsets_block)
 	{
 		EDSK_OFFSETS eo = { EDSK_OFFSETS_SIG, 0 };
 		fwrite(&eo, sizeof(eo), 1, f_);
