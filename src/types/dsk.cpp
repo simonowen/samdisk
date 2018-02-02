@@ -112,6 +112,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 	disk->metadata["creator"] = util::trim(std::string(peh->szCreator, sizeof(peh->szCreator)));
 
 	MEMORY mem(ESDK_MAX_TRACK_SIZE);
+	bool fWarned6K = false;
 
 	for (uint8_t cyl = 0; cyl < cyls; ++cyl)
 	{
@@ -344,6 +345,14 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 					Message(msgWarning, "%s size (%u) does not match index entry (%u)", CH(cyl, head), uTrackEnd - uTrackStart, uTrackSize);
 					file.seek(uTrackEnd);
 				}
+			}
+
+			// Legacy EDSK images only store 6K data for 8K sectors, so any
+			// checksum bytes the disk may have had are lost.
+			if (!fWarned6K && track.is_8k_sector() && track[0].data_size() == 6144)
+			{
+				Message(msgWarning, "missing checksums needed to verify 8K sector integrity");
+				fWarned6K = true;
 			}
 
 			disk->write_track(cylhead, std::move(track));
