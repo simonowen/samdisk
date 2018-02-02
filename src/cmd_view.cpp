@@ -93,6 +93,7 @@ bool ViewImage (const std::string &path, Range range)
 			if (!g_fAbort)
 			{
 				auto track = disk->read_track(cylhead);
+				NormaliseTrack(cylhead, track);
 				ViewTrack(cylhead, track);
 			}
 		}, true);
