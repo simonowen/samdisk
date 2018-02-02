@@ -101,6 +101,7 @@ struct option long_options[] =
 	{ "interleave",	required_argument, nullptr, 'i' },
 	{ "skew",		required_argument, nullptr, 'k' },
 	{ "size",		required_argument, nullptr, 'z' },
+	{ "fill",		required_argument, nullptr, 'F' },
 	{ "base",		required_argument, nullptr, 'b' },
 	{ "head0",		required_argument, nullptr, '0' },
 	{ "head1",		required_argument, nullptr, '1' },
@@ -257,6 +258,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case 'g':	if (!GetInt(optarg, opt.gap3)) return BadValue("gap3"); break;
 			case 'i':	if (!GetInt(optarg, opt.interleave)) return BadValue("sector interleave"); break;
 			case 'k':	if (!GetInt(optarg, opt.skew)) return BadValue("track skew"); break;
+			case 'F':	if (!GetInt(optarg, opt.fill) || opt.fill > 0xff) return BadValue("fill byte"); break;
 			case 'b':	if (!GetInt(optarg, opt.base)) return BadValue("base-sector"); break;
 			case '0':	if (!GetInt(optarg, opt.head0) || opt.head0 > 0xff) return BadValue("head0"); break;
 			case '1':	if (!GetInt(optarg, opt.head1) || opt.head1 > 0xff) return BadValue("head1"); break;
