@@ -476,7 +476,8 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			for (i = 0; i < 9; ++i)
 			{
-				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, (i == 8) ? 0 : 2));
+				Header header(cylhead, 1 + i, (i == 8) ? 0 : 2);
+				Sector sector(DataRate::_250K, Encoding::MFM, header);
 				if (i == 7) sector.header = Header(203, 253, 188, 221);
 				if (i == 7 || i == 8) sector.add(Data(sector.size(), i), true);
 				track.add(std::move(sector));
@@ -930,6 +931,22 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				// Generate the full track from it.
 				disk->add(GenerateKBI19Track(cylhead.next_cyl(), complete(track)));
 			}
+
+			// OperaSoft format with 32K sector.
+			{
+				Track track(9);
+
+				// Create a template that passes the IsOperaSoftTrack check.
+				for (i = 0; i < 9; ++i)
+				{
+					Header header(cylhead, i, (i == 8) ? 8 : 1);
+					Sector sector(DataRate::_250K, Encoding::MFM, header);
+					track.add(std::move(sector));
+				}
+
+				// Generate the full track from it.
+				disk->add(GenerateOperaSoftTrack(cylhead.next_cyl(), complete(track)));
+			}
 			break;
 		}
 
@@ -1081,7 +1098,6 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 				for (i = 0; i < arraysize(sizes); ++i)
 				{
-					
 					Sector sector(DataRate::_500K, Encoding::MFM, Header(cylhead, 1 + i, sizes[i]));
 					track.add(std::move(sector));
 				}

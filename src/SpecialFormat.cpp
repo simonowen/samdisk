@@ -563,3 +563,62 @@ TrackData GenerateLogoProfTrack (const CylHead &cylhead, const Track &track)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// OperaSoft track with 32K sector
+bool IsOperaSoftTrack (const Track &track)
+{
+	uint32_t sector_mask = 0;
+	int i = 0;
+
+	if (track.size() != 9)
+		return false;
+
+	for (auto &s : track)
+	{
+		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM)
+			return false;
+
+		static const uint8_t sizes[] = { 1,1,1,1,1,1,1,1,8 };
+		if (s.header.size != sizes[i++])
+			return false;
+
+		sector_mask |= (1 << s.header.sector);
+	}
+
+	// Sectors must be numbered 0 to 8
+	if (sector_mask != ((1 << 9) - 1))
+		return false;
+
+	if (opt.debug) util::cout << "detected OperaSoft track with 32K sector\n";
+	return true;
+}
+
+TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(IsOperaSoftTrack(track));
+
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+	bitbuf.addGap(600);
+
+	for (auto &sector : track)
+	{
+		if (sector.header.sector != 8)
+			bitbuf.addSector(sector, 0x100);
+		else
+		{
+			auto &sector7 = track[7];
+			auto &sector8 = track[8];
+
+			bitbuf.addSectorUpToData(sector8.header, sector8.is_deleted());
+			bitbuf.addBlock(Data(256, 0x55));
+			bitbuf.addCrc(4 + 256);
+			bitbuf.addBlock(Data(0x512 - 256 - 2, 0x4e));
+			bitbuf.addBlock(sector7.data_copy());
+		}
+	}
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////

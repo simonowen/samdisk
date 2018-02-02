@@ -354,6 +354,40 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 		}
 	}
 
+	// Check for missing OperaSoft 32K sector (CPDRead dumps).
+	if (opt.fix != 0 && cylhead.cyl == 40 && track.size() == 9)
+	{
+		auto &sector7 = track[7];
+		auto &sector8 = track[8];
+		if (sector7.has_data() && sector8.data_size() == 0 && IsOperaSoftTrack(track))
+		{
+			if (opt.fix == 1)
+			{
+				const auto &data7 = sector7.data_copy();
+
+				// Add 0x55 data and correct CRC for 256 bytes
+				auto data8{ Data(256, 0x55) };
+				data8.push_back(0xe8);
+				data8.push_back(0x9f);
+
+				// Fill up to the protection check with gap filler
+				auto fill8{ Data(0x512 - data8.size(), 0x4e) };
+				data8.insert(data8.end(), fill8.begin(), fill8.end());
+
+				// Append sector 7 data to offset 0x512 to pass the protection check.
+				data8.insert(data8.end(), data7.begin(), data7.end());
+
+				// Replace any existing sector 8 data with out hand-crafted version.
+				sector8.remove_data();
+				sector8.add(std::move(data8), true);
+
+				Message(msgFix, "added missing data to OperaSoft 32K sector");
+			}
+			else
+				Message(msgWarning, "missing data in OperaSoft 32K sector");
+		}
+	}
+
 	// Single copy of an 8K sector?
 	if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
 	{

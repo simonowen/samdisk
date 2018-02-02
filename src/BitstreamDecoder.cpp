@@ -1145,6 +1145,8 @@ bool generate_special (TrackData &trackdata)
 		trackdata.add(GenerateKBI10Track(trackdata.cylhead, track, weak_offset, weak_size));
 	else if (IsLogoProfTrack(track))
 		trackdata.add(GenerateLogoProfTrack(trackdata.cylhead, track));
+	else if (IsOperaSoftTrack(track))
+		trackdata.add(GenerateOperaSoftTrack(trackdata.cylhead, track));
 	else
 		return false;
 
