@@ -60,12 +60,12 @@ Header::Header (const CylHead &cylhead, int sector_, int size_)
 
 bool Header::operator== (const Header &rhs) const
 {
-	return compare(rhs);
+	return compare_crn(rhs);	// ToDo: use compare_chrn?
 }
 
 bool Header::operator!= (const Header &rhs) const
 {
-	return !compare(rhs);
+	return !compare_crn(rhs);
 }
 
 Header::operator CylHead() const
@@ -73,10 +73,18 @@ Header::operator CylHead() const
 	return CylHead(cyl, head);
 }
 
-bool Header::compare (const Header &rhs) const
+bool Header::compare_chrn (const Header &rhs) const
 {
 	return cyl == rhs.cyl &&
-		//head == rhs.head &&		don't require a head match, like WD17xx
+		head == rhs.head &&
+		sector == rhs.sector &&
+		size == rhs.size;
+}
+
+bool Header::compare_crn (const Header &rhs) const
+{
+	// Compare without head match, like WD17xx
+	return cyl == rhs.cyl &&
 		sector == rhs.sector &&
 		size == rhs.size;
 }

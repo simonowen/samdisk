@@ -264,7 +264,7 @@ std::vector<Sector>::iterator Track::find (const Sector &sector)
 std::vector<Sector>::iterator Track::find (const Header &header)
 {
 	return std::find_if(begin(), end(), [&] (const Sector &s) {
-		return header.compare(s.header);
+		return header == s.header;
 	});
 }
 
@@ -278,7 +278,7 @@ std::vector<Sector>::const_iterator Track::find (const Sector &sector) const
 std::vector<Sector>::const_iterator Track::find (const Header &header) const
 {
 	return std::find_if(begin(), end(), [&] (const Sector &s) {
-		return header.compare(s.header);
+		return header == s.header;
 	});
 }
 

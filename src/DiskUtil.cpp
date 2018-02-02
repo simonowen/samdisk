@@ -201,16 +201,27 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 void NormaliseTrack (const CylHead &cylhead, Track &track)
 {
 	int i;
-	auto sectors = track.size();
 
 	// Clear the track length if offsets are disabled
 	if (opt.offsets == 0)
 		track.tracklen = 0;
 
 	// Pass 1
-	for (i = 0; i < sectors; ++i)
+	for (i = 0; i < track.size(); ++i)
 	{
 		auto &sector = track[i];
+
+		// Remove sectors with duplicate CHRN?
+		if (opt.nodups)
+		{
+			// Remove duplicates found later on the track.
+			for (int j = i + 1; j < track.size(); ++j)
+			{
+				auto &s = track[j];
+				if (s.header.compare_chrn(sector.header) && s.encoding == sector.encoding)
+					track.remove(j--);
+			}
+		}
 
 		// Clear all data, for privacy during diagnostics?
 		if (opt.nodata)
@@ -251,7 +262,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 	}
 
 	// Pass 2
-	for (i = 0; i < sectors; ++i)
+	for (i = 0; i < track.size(); ++i)
 	{
 		Sector &sector = track[i];
 #if 0
@@ -261,7 +272,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 #endif
 
 		// Remove only the final gap if --no-gap4b was used
-		if (i == sectors - 1 && opt.gap4b == 0 && sector.has_gapdata())
+		if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
 			sector.remove_gapdata();
 
 		// Allow overrides for track gap3 and sector size

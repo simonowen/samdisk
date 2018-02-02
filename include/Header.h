@@ -78,7 +78,8 @@ public:
 	operator CylHead() const;
 
 	int sector_size () const;
-	bool compare (const Header &rhs) const;
+	bool compare_chrn (const Header &rhs) const;
+	bool compare_crn (const Header &rhs) const;
 
 	int cyl = 0, head = 0, sector = 0, size = 0;
 };
