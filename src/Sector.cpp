@@ -285,8 +285,23 @@ void Sector::set_baddatacrc (bool bad)
 {
 	m_bad_data_crc = bad;
 
-	if (!bad && copies() > 1)
-		m_data.resize(1);
+	if (!bad)
+	{
+		auto fill_byte = static_cast<uint8_t>((opt.fill >= 0) ? opt.fill : 0);
+
+		if (!has_data())
+			m_data.push_back(Data(size(), fill_byte));
+		else if (copies() > 1)
+		{
+			m_data.resize(1);
+
+			if (data_size() < size())
+			{
+				auto pad{ Data(size() - data_size(), fill_byte) };
+				m_data[0].insert(m_data[0].begin(), pad.begin(), pad.end());
+			}
+		}
+	}
 }
 
 void Sector::remove_data ()
