@@ -90,6 +90,14 @@ int Track::data_extent_bytes (const Sector &sector) const
 	return data_extent_bits(sector) >> encoding_shift;
 }
 
+bool Track::data_overlap (const Sector &sector) const
+{
+	if (!sector.offset)
+		return false;
+
+	return data_extent_bytes(sector) < sector.size();
+}
+
 bool Track::is_mixed_encoding () const
 {
 	if (empty())

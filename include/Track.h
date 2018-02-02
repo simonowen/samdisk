@@ -22,6 +22,7 @@ public:
 
 	int data_extent_bits (const Sector &sector) const;
 	int data_extent_bytes (const Sector &sector) const;
+	bool data_overlap (const Sector &sector) const;
 	bool is_mixed_encoding () const;
 	bool is_8k_sector () const;
 	bool is_repeated (const Sector &sector) const;
