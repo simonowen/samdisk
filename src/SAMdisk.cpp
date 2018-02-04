@@ -16,7 +16,8 @@ volatile bool g_fAbort;
 
 void Version ()
 {
-	util::cout << colour::WHITE << "SAMdisk 4.0 alpha (" __DATE__ ")" << colour::none << ", (c) 2017 Simon Owen\n";
+	util::cout << colour::WHITE << "SAMdisk 4.0 ALPHA (" __DATE__ ")" <<
+		colour::none << ", (c) 2002-" << (__DATE__+9) << " Simon Owen\n";
 }
 
 int Usage ()
