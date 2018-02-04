@@ -190,6 +190,12 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Level3</WarningLevel>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\Util.cpp" />
     <ClCompile Include="src\utils.cpp" />

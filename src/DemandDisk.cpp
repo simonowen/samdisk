@@ -3,6 +3,11 @@
 #include "SAMdisk.h"
 #include "DemandDisk.h"
 
+// Storage for class statics.
+constexpr int DemandDisk::FIRST_READ_REVS;
+constexpr int DemandDisk::REMAIN_READ_REVS;
+
+
 void DemandDisk::extend (const CylHead &cylhead)
 {
 	// Access the track entry to pre-extend the disk ahead of loading it

@@ -6,6 +6,8 @@
 /samdisk.dir
 /include/config.h
 /.vs
+/extern/*
+!/extern/dir.txt
 .DS_Store
 *.o
 *.aps

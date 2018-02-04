@@ -17,11 +17,11 @@ Once the missing functionality has been restored it will be released officially 
 
 ## System Requirements
 
-The current code should build and run under Windows, Linux and Mac OS, and be portable to other systems. Building requires a C++ compiler with good C++11 support and some C++14, such as Visual Studio 2015, g++ 4.9+, or Clang 3.6+.
+The current code should build and run under Windows, Linux and Mac OS, and be portable to other systems. Building requires a C++ compiler with C++14 support, such as Visual Studio 2017, g++ 4.9+, or Clang 3.6+.
 
-The Windows version is usually built using Visual Studio 2015 (the free [Community edition](https://www.visualstudio.com/products/visual-studio-community-vs) works fine), and requires some 3rd-party libraries ([zlib](http://zlib.net/), [bzip2](http://www.bzip.org/), [CAPSimage](http://www.softpres.org/download), [FTDI](http://www.ftdichip.com/Drivers/D2XX.htm)) to be available at compile time. Those dependencies become optional at runtime.
+All platforms use the [CMake](https://cmake.org/) build system. A number of optional libraries are used if they are available at configuration time. Use `cmake -DCMAKE_BUILD_TARGET=Release .` to create the build scripts then `make` to build (or `make -j4` to for a parallel build using 4 cores).
 
-Other platforms use the [CMake](https://cmake.org/) build system and require only *zlib* to be available. *gzip2* and *CAPSimage* libraries are used if they are available. Use `cmake .` to create the build scripts then `make` to build (or `make -j4` to for a parallel build using 4 cores).
+The official Windows release is built using Visual Studio 2017 (the free [Community edition](https://www.visualstudio.com/products/visual-studio-community-vs) is good enough), but the bundled project file requires a number of 3rd-party libraries ([zlib](http://zlib.net/), [bzip2](http://www.bzip.org/), [CAPSimage](http://www.softpres.org/download), and [FTDI](http://www.ftdichip.com/Drivers/D2XX.htm)) to be available at compile time. Those dependencies become optional at runtime.
 
 
 ## License

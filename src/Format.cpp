@@ -1,6 +1,11 @@
 #include "SAMdisk.h"
 #include "Format.h"
 
+// Storage for class statics.
+constexpr int Format::DefaultTracks;
+constexpr int Format::DefaultSides;
+
+
 Format::Format (RegularFormat reg_fmt)
 	: Format(GetFormat(reg_fmt))
 {

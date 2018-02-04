@@ -2,7 +2,7 @@
 
 #include "SAMdisk.h"
 
-#ifdef _WIN32
+#ifdef HAVE_FDRAWCMD_H
 #include <fdrawcmd.h>
 
 DWORD GetDriverVersion ()
@@ -91,4 +91,4 @@ bool ReportDriverVersion ()
 	return true;
 }
 
-#endif // _WIN32
+#endif // HAVE_FDRAWCMD_H

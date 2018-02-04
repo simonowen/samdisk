@@ -23,6 +23,6 @@ private:
 	DWORD m_dwError;
 };
 
-#endif // WIN32
+#endif // _WIN32
 
 #endif // SCP_WIN32_H

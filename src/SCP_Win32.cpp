@@ -98,4 +98,4 @@ bool SuperCardProWin32::Write (const void *p, int len, int *bytes_written)
 	return true;
 }
 
-#endif // WIN32
+#endif // _WIN32

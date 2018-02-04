@@ -50,7 +50,6 @@ int Usage ()
 	exit(1);
 }
 
-
 void ReportTypes ()
 {
 	util::cout << "\nSupported image types:\n";
@@ -78,6 +77,14 @@ void ReportTypes ()
 	util::cout << '\n';
 }
 
+void LongVersion ()
+{
+	Version();
+	ReportTypes();
+#ifdef HAVE_FDRAWCMD_H
+	ReportDriverVersion();
+#endif
+}
 
 
 extern "C" {
@@ -314,11 +321,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_PLLPHASE: if (!GetInt(optarg, opt.pllphase) || opt.pllphase <= 0 || opt.pllphase > 90) return BadValue("pll-phase"); break;
 
 			case OPT_VERSION:
-				Version();
-				ReportTypes();
-#ifdef _WIN32
-				ReportDriverVersion();
-#endif
+				LongVersion();
 				return false;
 
 			case ':':
@@ -343,11 +346,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			Usage();
 
 		// Allow -v to show the --version details
-		Version();
-		ReportTypes();
-#ifdef _WIN32
-		ReportDriverVersion();
-#endif
+		LongVersion();
 		return false;
 	}
 
@@ -675,11 +674,7 @@ int main (int argc_, char *argv_[])
 				if (nSource != argNone || nTarget != argNone)
 					Usage();
 
-				Version();
-				ReportTypes();
-#ifdef _WIN32
-				ReportDriverVersion();
-#endif
+				LongVersion();
 				f = true;
 				break;
 			}

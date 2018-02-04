@@ -13,8 +13,9 @@
 #define HAVE_CAPSIMAGE 1
 #define HAVE_FTD2XX 1
 #define HAVE_WINUSB 1
+#define HAVE_FDRAWCMD_H 1
 
-#define HAVE_O_BINARY
+#define HAVE_O_BINARY 1
 
 #define HAVE_SYS_TIMEB_H 1
 #define HAVE_IO_H 1
@@ -143,8 +144,6 @@ typedef void * HANDLE;
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT
-#include <winsock2.h>	// include before windows.h to avoid winsock.h
-#include <ws2tcpip.h>	// for socklen_t
 #include <windows.h>
 #include <devguid.h>
 #include <winioctl.h>
@@ -152,6 +151,11 @@ typedef void * HANDLE;
 #include "CrashDump.h"
 #else
 #endif // WIN32
+
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>	// include before windows.h to avoid winsock.h
+#include <ws2tcpip.h>	// for socklen_t
+#endif
 
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>

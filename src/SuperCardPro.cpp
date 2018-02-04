@@ -14,6 +14,7 @@
 #include "SCP_Win32.h"
 #endif
 
+// Storage for class statics.
 const int SuperCardPro::MAX_FLUX_REVS;	// SCP firmware hard limit
 
 
@@ -301,7 +302,7 @@ bool SuperCardPro::WriteFlux (const std::vector<uint32_t> &flux_times)
 
 	uint32_t start_len[2];
 	start_len[0] = 0;
-	start_len[1] = util::htobe(flux_bytes);
+	start_len[1] = util::htobe(static_cast<uint32_t>(flux_bytes));
 	if (!SendCmd(CMD_LOADRAM_USB, &start_len, sizeof(start_len), flux_data.data(), flux_bytes))
 		return false;
 
