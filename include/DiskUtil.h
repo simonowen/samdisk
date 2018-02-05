@@ -28,7 +28,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track);
 
 std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector);
 
-Sector GetTypicalSector (const CylHead &cylhead, const Track &track, Sector last_sector);
+Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Sector &last);
 
 bool WriteRegularDisk (FILE *f_, Disk &disk, const Format &format);
 

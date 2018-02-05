@@ -544,16 +544,16 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector)
 
 // Determine the common properties of sectors on a track.
 // This is mostly used by scan track headers, to reduce the detail shown for each sector.
-Sector GetTypicalSector (const CylHead &cylhead, const Track &track, Sector last_sector)
+Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Sector &last)
 {
 	std::map<DataRate, int> datarates;
 	std::map<Encoding, int> encodings;
 	std::map<int, int> cyls, heads, sizes, gap3s;
 
-	Sector typical = last_sector;
+	Sector typical = last;
 
 	// Find the most common values
-	for (const auto &sector : track.sectors())
+	for (const auto &sector : track)
 	{
 		if (++datarates[sector.datarate] > datarates[typical.datarate])
 			typical.datarate = sector.datarate;
@@ -574,28 +574,34 @@ Sector GetTypicalSector (const CylHead &cylhead, const Track &track, Sector last
 			typical.gap3 = sector.gap3;
 	}
 
-	// If they are no better than the last typical sector, use with the previous values.
+	// Use the previous values if the typical values are no better,
+	// except for cyl and head where we favour the physical position
+	// and prevent a single different sector changing the values..
 
-	if (datarates[typical.datarate] == datarates[last_sector.datarate])
-		typical.datarate = last_sector.datarate;
+	if (datarates[typical.datarate] == datarates[last.datarate])
+		typical.datarate = last.datarate;
 
-	if (encodings[typical.encoding] == encodings[last_sector.encoding])
-		typical.encoding = last_sector.encoding;
+	if (encodings[typical.encoding] == encodings[last.encoding])
+		typical.encoding = last.encoding;
 
-	if (cyls[typical.header.cyl] == cyls[last_sector.header.cyl])
-		typical.header.cyl = last_sector.header.cyl;
-	else if (cyls[typical.header.cyl] == 1)		// changed cyl from previous, but only 1 sector?
-		typical.header.cyl = cylhead.cyl;		// use physical cyl instead
+	if (cyls[typical.header.cyl] == cyls[cylhead.cyl])
+		typical.header.cyl = cylhead.cyl;
+	else if (cyls[typical.header.cyl] == cyls[last.header.cyl])
+		typical.header.cyl = last.header.cyl;
+	else if (cyls[typical.header.cyl] == 1)
+		typical.header.cyl = cylhead.cyl;
 
-	if (heads[typical.header.head] == heads[last_sector.header.head])
-		typical.header.head = last_sector.header.head;
-	else if (heads[typical.header.head] == 1)	// changed head from previous, but only 1 sector?
-		typical.header.head = cylhead.head;		// use physical head instead
+	if (heads[typical.header.head] == heads[cylhead.head])
+		typical.header.head = cylhead.head;
+	else if (heads[typical.header.head] == heads[last.header.head])
+		typical.header.head = last.header.head;
+	else if (heads[typical.header.head] == 1)
+		typical.header.head = cylhead.head;
 
-	if (sizes[typical.header.size] == sizes[last_sector.header.size])
-		typical.header.size = last_sector.header.size;
+	if (sizes[typical.header.size] == sizes[last.header.size])
+		typical.header.size = last.header.size;
 
-	// Clear the gap3 value unless all gaps are the same size or undefined
+	// Clear the gap3 value unless ALL gaps are the same size or undefined
 	if ((gap3s[typical.gap3] + gap3s[0]) != track.size())
 		typical.gap3 = 0;
 
