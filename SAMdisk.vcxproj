@@ -17,12 +17,12 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Signed Release|Win32">
-      <Configuration>Signed Release</Configuration>
+    <ProjectConfiguration Include="Release (XP)|Win32">
+      <Configuration>Release (XP)</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Signed Release|x64">
-      <Configuration>Signed Release</Configuration>
+    <ProjectConfiguration Include="Release (XP)|x64">
+      <Configuration>Release (XP)</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -50,9 +50,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\HDD.cpp" />
     <ClCompile Include="src\HDFHDD.cpp" />
@@ -63,15 +63,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">NotUsing</PrecompiledHeader>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">Level3</WarningLevel>
     </ClCompile>
     <ClCompile Include="src\cmd_list.cpp" />
     <ClCompile Include="src\KF_libusb.cpp" />
@@ -86,9 +86,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\cmd_rpm.cpp" />
     <ClCompile Include="src\SAMCoupe.cpp" />
@@ -96,9 +96,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\cmd_scan.cpp" />
     <ClCompile Include="src\SCP_FTDI.cpp" />
@@ -115,9 +115,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\types\1dd.cpp" />
     <ClCompile Include="src\types\2d.cpp" />
@@ -163,15 +163,15 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">Level3</WarningLevel>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\types\trd.cpp" />
     <ClCompile Include="src\types\trinload.cpp" />
@@ -181,21 +181,21 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">NotUsing</PrecompiledHeader>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level3</WarningLevel>
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">Level3</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">Level3</WarningLevel>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);HAVE_ZLIB=1</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\Util.cpp" />
     <ClCompile Include="src\utils.cpp" />
@@ -259,10 +259,10 @@
     <ResourceCompile Include="src\SAMdisk.rc">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\include</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\include</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">.\include</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\include</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\include</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">.\include</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
@@ -272,7 +272,7 @@
     <ProjectGuid>{DC06DE50-59A6-48C0-BFC6-DDC87B0CF364}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SAMdisk</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -294,7 +294,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
@@ -308,7 +308,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -327,13 +327,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -348,18 +348,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);$(UCRTContentRoot)Include\10.0.15063.0\shared;$(UCRTContentRoot)Include\10.0.15063.0\um</IncludePath>
-    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x86;P:\Src\Lib;$(UniversalCRTSdkDir)Lib\10.0.15063.0\um\$(PlatformTarget)</LibraryPath>
+    <IncludePath>$(IncludePath);$(WindowsSDK80Path)Include\shared;$(WindowsSDK80Path)Include\um</IncludePath>
+    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x86;$(WindowsSDK80Path)Lib\winv6.3\um\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);$(UCRTContentRoot)Include\10.0.14393.0\shared;$(UCRTContentRoot)Include\10.0.14393.0\um</IncludePath>
-    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x64;P:\Src\Lib\x64;$(UniversalCRTSdkDir)Lib\10.0.14393.0\um\$(PlatformTarget)</LibraryPath>
+    <IncludePath>$(IncludePath);$(WindowsSDK80Path)Include\shared;$(WindowsSDK80Path)Include\um</IncludePath>
+    <LibraryPath>$(LibraryPath);C:\SDK\DirectX (June 2006)\Lib\x64;$(WindowsSDK80Path)Lib\winv6.3\um\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -376,8 +376,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist \Shared copy "$(TargetPath)" \Shared\</Command>
@@ -397,11 +398,12 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zlibwapi.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlibwapi.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\</Command>
+      <Command>@if exist \Shared\$(PlatformTarget) copy "$(TargetPath)" \Shared\$(PlatformTarget)\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -424,15 +426,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared\ copy "$(TargetPath)" \Shared\
+      <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
+@if exist \Shared\ copy "$(TargetPath)" \Shared\
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -452,8 +455,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zdll.lib;bzip2.lib;liblzma.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;bzip2.dll;liblzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --brute -9 "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f
@@ -479,15 +482,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zlibwapi.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlibwapi.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
-@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\x64\$(TargetFileName)"</Command>
+      <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
+@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Signed Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (XP)|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -506,12 +510,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;zlibwapi.lib;bzip2.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlibwapi.dll;bzip2.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
-@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\x64\$(TargetFileName)"</Command>
+      <Command>@if exist \Shared\$(PlatformTarget) copy "$(TargetPath)" \Shared\$(PlatformTarget)\
+@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\$(PlatformTarget)\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

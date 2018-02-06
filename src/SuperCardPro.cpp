@@ -303,7 +303,7 @@ bool SuperCardPro::WriteFlux (const std::vector<uint32_t> &flux_times)
 	uint32_t start_len[2];
 	start_len[0] = 0;
 	start_len[1] = util::htobe(static_cast<uint32_t>(flux_bytes));
-	if (!SendCmd(CMD_LOADRAM_USB, &start_len, sizeof(start_len), flux_data.data(), flux_bytes))
+	if (!SendCmd(CMD_LOADRAM_USB, &start_len, static_cast<int>(sizeof(start_len)), flux_data.data(), static_cast<int>(flux_bytes)))
 		return false;
 
 	uint8_t params[5] = {};

@@ -205,7 +205,9 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 		MEMORY mem2(MAX_IMAGE_SIZE + 1);
 
 		auto uBzRead = static_cast<unsigned>(mem2.size);
-		auto bzerr = BZ2_bzBuffToBuffDecompress(reinterpret_cast<char *>(mem2.pb), &uBzRead, reinterpret_cast<char *>(mem.pb), uRead, 0, 0);
+		auto bzerr = BZ2_bzBuffToBuffDecompress(
+			reinterpret_cast<char *>(mem2.pb), &uBzRead,
+			reinterpret_cast<char *>(mem.pb), static_cast<int>(uRead), 0, 0);
 		if (bzerr != BZ_OK)
 			throw util::exception("bzip2 decompression failed (", bzerr, ")");
 

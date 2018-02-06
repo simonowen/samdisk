@@ -428,8 +428,8 @@ int main (int argc_, char *argv_[])
 		auto strCommand = std::string("/k \"") + szPath + "\" --help";
 		GetEnvironmentVariable("COMSPEC", szPath, ARRAYSIZE(szPath));
 
-		auto ret = reinterpret_cast<int>(
-			ShellExecute(NULL, "open", szPath, strCommand.c_str(), NULL, SW_NORMAL));
+		auto ret = static_cast<int>(reinterpret_cast<ULONG_PTR>(
+			ShellExecute(NULL, "open", szPath, strCommand.c_str(), NULL, SW_NORMAL)));
 
 		// Fall back on the old message if it failed
 		if (ret < 32)

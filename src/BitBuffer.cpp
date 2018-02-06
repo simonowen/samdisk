@@ -90,7 +90,7 @@ int BitBuffer::tell_index() const
 bool BitBuffer::seek_index (int index)
 {
 	if (index < 0)
-		index += m_indexes.size();
+		index += static_cast<int>(m_indexes.size());
 
 	if (index < 0 || index >= static_cast<int>(m_indexes.size()))
 		return false;
