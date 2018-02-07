@@ -49,7 +49,7 @@ BOOL CreateMiniDump (const std::string &name, EXCEPTION_POINTERS* pep)
 			DeleteFile(path.c_str());
 
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
-		fprintf(stderr, "Internal error! Diagnostics saved to %s", path.c_str());
+		fprintf(stderr, "Crashed! Dump file saved to: %s", path.c_str());
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 	}
 

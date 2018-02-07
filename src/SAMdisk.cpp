@@ -688,16 +688,16 @@ int main (int argc_, char *argv_[])
 	{
 		util::cout << "Error: " << colour::RED << e << colour::none << '\n';
 	}
+	catch (util::exception &e)
+	{
+		util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
+	}
 #ifndef _WIN32
 	catch (std::exception &e)
 	{
 		util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
 	}
 #endif
-	catch (...)
-	{
-		util::cout << colour::RED << "Internal error!" << colour::none << '\n';
-	}
 
 	if (opt.time)
 	{
