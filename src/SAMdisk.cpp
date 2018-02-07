@@ -456,6 +456,7 @@ int main (int argc_, char *argv_[])
 
 	SetUnhandledExceptionFilter(CrashDumpUnhandledExceptionFilter);
 
+#ifndef _DEBUG
 	// Check if we've been run from GUI mode with no arguments
 	if (!IsConsoleWindow() && util::is_stdout_a_tty() && argc_ == 1)
 	{
@@ -476,7 +477,8 @@ int main (int argc_, char *argv_[])
 
 		return 0;
 	}
-#endif // WIN32
+#endif // _DEBUG
+#endif // _WIN32
 
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);

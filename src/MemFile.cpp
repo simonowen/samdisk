@@ -37,15 +37,11 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 	size_t uRead = 0;
 
 	// Check if zlib is available
-#ifdef HAVE_ZLIBSTAT
-	bool have_zlib = true;
-#elif defined(HAVE_ZLIB)
-	bool have_zlib = CheckLibrary("zlib", "zlibVersion") && zlibVersion()[0] == ZLIB_VERSION[0];
-#else
+#ifndef HAVE_ZLIB
 	bool have_zlib = false;
-#endif
+#else
+	bool have_zlib = zlibVersion()[0] == ZLIB_VERSION[0];
 
-#ifdef HAVE_ZLIB
 	// Try opening as a zip file
 	if (uncompress && have_zlib)
 	{
@@ -145,13 +141,13 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 
 	// zip compressed? (and not handled above)
 	if (uncompress && mem[0U] == 'P' && mem[1U] == 'K')
-		throw util::exception("zlib (zlib1.dll) is required for zip support");
+		throw util::exception("zlib support is not available for zipped files");
 
 	// gzip compressed?
 	if (uncompress && mem[0U] == 0x1f && mem[1U] == 0x8b && mem[2U] == 0x08)
 	{
 		if (!have_zlib)
-			throw util::exception("zlib (zlib1.dll) is required for gzip support");
+			throw util::exception("zlib support is not available for gzipped files");
 
 #ifdef HAVE_ZLIB
 		MEMORY mem2(MAX_IMAGE_SIZE + 1);
@@ -196,12 +192,9 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 	// bzip2 compressed?
 	if (uncompress && mem[0U] == 'B' && mem[1U] == 'Z')
 	{
-#ifdef HAVE_BZIP2
-		if (!CheckLibrary("bzip2", "BZ2_bzBuffToBuffDecompress"))
-#endif
-			throw util::exception("libbz2 (bzip2.dll) is required for bzip2 support");
-
-#ifdef HAVE_BZIP2
+#ifndef HAVE_BZIP2
+		throw util::exception("bzip2 support is not available");
+#else
 		MEMORY mem2(MAX_IMAGE_SIZE + 1);
 
 		auto uBzRead = static_cast<unsigned>(mem2.size);
@@ -218,12 +211,9 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 
 	if (uncompress && mem.size > 6 && !memcmp(mem.pb, "\xfd\x37\x7a\x58\x5a\x00", 6))
 	{
-#ifdef HAVE_LZMA
-		if (!CheckLibrary("lzma", "lzma_stream_decoder"))
-#endif
-			throw util::exception("liblzma (liblzma.dll) is required for xz support");
-
-#ifdef HAVE_LZMA
+#ifndef HAVE_LZMA
+		throw util::exception("lzma support is not available");
+#else
 		MEMORY mem2(MAX_IMAGE_SIZE + 1);
 
 		lzma_stream strm{};

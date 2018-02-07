@@ -21,10 +21,6 @@ typedef struct
 #define __cdecl
 #include "caps/CapsLibAll.h"
 
-#ifdef _WIN32
-#pragma comment(lib, "CAPSImg.lib")
-#endif
-
 #ifdef __APPLE__
 extern "C" CapsLong CAPSGetVersionInfo(void *pversioninfo, CapsULong flag) __attribute__((weak_import));
 #endif

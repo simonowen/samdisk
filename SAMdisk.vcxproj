@@ -300,6 +300,8 @@
     <PlatformToolset>v141_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
+    <VcpkgEnabled>true</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -377,11 +379,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>
-      </DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared copy "$(TargetPath)" \Shared\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -399,11 +399,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>
-      </DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist \Shared\$(PlatformTarget) copy "$(TargetPath)" \Shared\$(PlatformTarget)\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -427,7 +425,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
@@ -456,7 +454,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --brute -9 "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f
@@ -483,7 +481,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
@@ -511,7 +509,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winusb.lib;ws2_32.lib;setupapi.lib;CAPSImg.lib;ftd2xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>winusb.dll;ws2_32.dll;zlib1.dll;libbz2.dll;lzma.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>@if exist \Shared\$(PlatformTarget) copy "$(TargetPath)" \Shared\$(PlatformTarget)\
