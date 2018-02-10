@@ -77,10 +77,49 @@ void ReportTypes ()
 	util::cout << '\n';
 }
 
+void ReportBuildOptions()
+{
+	static const std::vector<const char*> options{
+#ifdef HAVE_ZLIB
+		"zlib",
+#endif
+#ifdef HAVE_BZIP2
+		"bzip2",
+#endif
+#ifdef HAVE_LZMA
+		"lzma",
+#endif
+#ifdef HAVE_WINUSB
+		"WinUSB",
+#endif
+#ifdef HAVE_LIBUSB1
+		"libusb1",
+#endif
+#ifdef HAVE_FTDI
+		"FTDI",
+#endif
+#ifdef HAVE_FTD2XX
+		"FTD2XX",
+#endif
+#ifdef HAVE_CAPSIMAGE
+		"CAPSimage",
+#endif
+	};
+
+	if (options.size())
+	{
+		util::cout << "\nBuild features:\n";
+		for (const auto &o : options)
+			util::cout << ' ' << o;
+		util::cout << "\n";
+	}
+}
+
 void LongVersion ()
 {
 	Version();
 	ReportTypes();
+	ReportBuildOptions();
 #ifdef HAVE_FDRAWCMD_H
 	ReportDriverVersion();
 #endif
