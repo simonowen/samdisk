@@ -1131,7 +1131,9 @@ bool generate_special (TrackData &trackdata)
 	int weak_offset{ 0 }, weak_size{ 0 };
 
 	// Special formats have special conversions
-	if (IsKBI19Track(track))
+	if (IsEmptyTrack(track))
+		trackdata.add(GenerateEmptyTrack(trackdata.cylhead, track));
+	else if (IsKBI19Track(track))
 		trackdata.add(GenerateKBI19Track(trackdata.cylhead, track));
 	else if (IsSystem24Track(track))
 		trackdata.add(GenerateSystem24Track(trackdata.cylhead, track));

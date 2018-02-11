@@ -11,6 +11,26 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool IsEmptyTrack (const Track &track)
+{
+	return track.size() == 0;
+}
+
+TrackData GenerateEmptyTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(IsEmptyTrack(track));
+	(void)track;
+
+	// Generate a DD track full of gap filler. It shouldn't really matter
+	// which datarate and encoding as long as there are no sync marks.
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addBlock(0x4e, 6250);
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // KBI-19 protection for CPC? (19 valid sectors)
 bool IsKBI19Track (const Track &track)
 {

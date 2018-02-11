@@ -11,7 +11,7 @@ static Track &complete (Track &track)
 {
 	uint8_t fill = 0;
 
-	for (auto &sector : track.sectors())
+	for (auto &sector : track)
 	{
 		// Add test data to sectors that lack it
 		if (!sector.copies())
@@ -914,6 +914,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
 				disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			}
+
+			// Empty track.
+			{
+				disk->add(GenerateEmptyTrack(cylhead.next_cyl(), Track()));
 			}
 
 			// KBI-19 format.
