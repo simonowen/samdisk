@@ -46,11 +46,20 @@ void FixPlus3BootChecksum (Data &data)
 }
 
 
-// Fix issues with some +3 boot loaders when used in a 3.5" drive.
-// Some loaders turn the floppy drive motor off and on, without allowing time for it to
-// reach normal speed. Reading sectors too soon will return errors, which is a problem
-// for those loaders not willing to retry. Here we recognise affected loaders and apply
-// code patches to work around the issues.
+// Fix boot loader issues when loading from a 3.5" drive.
+//
+// The +3DOS ROM switches the motor off just before passing control to the
+// boot sector code. If this code turns the motor on and immediately attempts
+// to read from the disk, it may not yet be up to speed and could fail.
+// If the loader is not willing to retry commands the loader will fail/crash.
+//
+// Even though this is technically a loader bug, 3" spindles seem heavy
+// enough to retain sufficient speed to mask the issue. Modern 3.5" drives
+// spin down more quickly and need a little longer to recover.
+//
+// Below we identify known problem cases and modify the loader to fix it.
+// This requires adding a delay or preventing unnecessary 'off' transitions.
+
 bool FixPlus3BootLoader (std::shared_ptr<Disk> &disk)
 {
 	bool patched = false;
@@ -183,6 +192,47 @@ bool FixPlus3BootLoader (std::shared_ptr<Disk> &disk)
 		std::copy(fix.begin(), fix.end(), data.begin() + 0x10);
 
 		Message(msgFix, "corrected motor issue in UbiSoft boot loader");
+		patched = true;
+	}
+
+	static const std::vector<uint8_t> ubisoft_clear
+	{
+		0xf3,				// DI
+		0x3e, 0x0d,			// LD A,#0D
+		0x01, 0xfd, 0x1f,	// LD BC,#1FFD
+		0xed, 0x79,			// OUT (C),A
+		0x21, 0x00, 0x58,	// LD HL,#5800
+		0x11, 0x01, 0x58,	// LD DE,#5801
+		0x01, 0xFF, 0x02,	// LD BC,#02FF
+		0x36, 0x3F,			// LD (HL),#3f
+		0xed, 0xb0			// LDIR
+	};
+
+	// Matching rules against the block above. Allow only the paging
+	// flags and attribute value to be different.
+	static const char *pcszUbiSoftMatch = "yynyyyyyyyyyyyyyyynyy";
+
+	// Motor on without delay, followed by attribute clear.
+	// Example disk: Zombi (Ubi Soft)
+	if (!patched && (data[0x12] & 0x08) &&	// check for motor on
+		MatchBlock(&data[0x10], ubisoft_clear.data(), pcszUbiSoftMatch))
+	{
+		static const std::vector<uint8_t> fix
+		{
+			0x2e, 0x02,         // LD L,#02
+			0x0b,               // loop: DEC BC
+			0x78,               // LD A,B
+			0xb1,               // OR C
+			0x20, 0xfb,         // JR NZ,loop
+			0x2d,               // DEC L
+			0x20, 0xf8,         // JR NZ,loop
+			0x00, 0x00, 0x00,	// NOP ; NOP ; NOP
+		};
+
+		// Replace the attr clear with a delay.
+		std::copy(fix.begin(), fix.end(), data.begin() + 0x18);
+
+		Message(msgFix, "corrected motor issue in boot loader");
 		patched = true;
 	}
 
