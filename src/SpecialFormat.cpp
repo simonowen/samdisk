@@ -619,12 +619,11 @@ TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track)
 
 	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
-	bitbuf.addGap(600);
 
 	for (auto &sector : track)
 	{
 		if (sector.header.sector != 8)
-			bitbuf.addSector(sector, 0x100);
+			bitbuf.addSector(sector, 0xf0);
 		else
 		{
 			auto &sector7 = track[7];
