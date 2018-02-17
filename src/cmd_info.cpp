@@ -33,19 +33,24 @@ bool ImageInfo (const std::string &path)
 		{
 			auto sep = "\n";
 
-			for (auto &field : disk->metadata)
+			size_t max_key_len{0};
+			for (const auto &p : disk->metadata)
+				max_key_len = std::max(p.first.size(), max_key_len);
+
+			for (const auto &field : disk->metadata)
 			{
-				if (field.first != "comment")
+				if (field.first != "comment" && !field.second.empty())
 				{
 					util::cout << sep;
 					sep = "";
 
-					util::cout << ' ' << colour::cyan << field.first << colour::none << ": " << field.second << "\n";
+					util::cout << ' ' << colour::cyan << std::setw(max_key_len) << field.first <<
+						colour::none << " : " << field.second << "\n";
 				}
 			}
 
 			auto it = disk->metadata.find("comment");
-			if (it != disk->metadata.end())
+			if (it != disk->metadata.end() && !it->second.empty())
 				util::cout << sep << util::trim(it->second) << "\n";
 		}
 
