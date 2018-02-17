@@ -25,7 +25,7 @@ const Track &DemandDisk::read_track (const CylHead &cylhead)
 		auto &track = trackdata.track();
 
 		// Consider error retries
-		for (auto attempt = (FIRST_READ_REVS - 1); attempt < opt.retries; )
+		for (auto attempt = 1; attempt < opt.rescans; )
 		{
 			// Stop if there's nothing to fix
 			if (!track.has_data_error())

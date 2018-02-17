@@ -14,6 +14,7 @@ bool ReadSCPDev (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadKFDev (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk);
+bool ReadFdrawSysDev (const std::string &path, std::shared_ptr<Disk> &disk);
 
 bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool normalise)
 {
@@ -22,10 +23,13 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 
 	if (path.empty())
 		throw util::exception("invalid path");
+#ifdef HAVE_FDRAWCMD_H
+	else if (IsFloppyDevice(path))
+		f = ReadFdrawSysDev(path, disk);
+#endif
 	else if (IsDir(path))
 		throw util::exception("path is a directory");
 
-	// Filter off non-file types
 	if (IsBuiltIn(path))
 		f = ReadBuiltin(path, disk);
 	else if (IsTrinity(path))
@@ -127,6 +131,10 @@ bool WriteImage (const std::string &path, std::shared_ptr<Disk> &disk)
 	// BDOS record?
 	if (IsRecord(path))
 		f = WriteRecord(path, cpm_disk ? cpm_disk : disk);
+#ifdef HAVE_FDRAWCMD_H
+	else if (IsFloppyDevice(path))
+		throw util::exception("fdrawcmd.sys writing is not currently supported");
+#endif
 
 	// Normal image file
 	else

@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\FdrawcmdSys.cpp" />
     <ClCompile Include="src\Format.cpp" />
     <ClCompile Include="src\Header.cpp" />
     <ClCompile Include="src\JupiterAce.cpp" />
@@ -140,6 +141,7 @@
     <ClCompile Include="src\types\dsk.cpp" />
     <ClCompile Include="src\types\dti.cpp" />
     <ClCompile Include="src\types\fdi.cpp" />
+    <ClCompile Include="src\types\fdrawsys_dev.cpp" />
     <ClCompile Include="src\types\hfe.cpp" />
     <ClCompile Include="src\types\imd.cpp" />
     <ClCompile Include="src\types\ipf.cpp" />
@@ -205,6 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CrashDump.h" />
+    <ClInclude Include="include\FdrawcmdSys.h" />
     <ClInclude Include="include\Format.h" />
     <ClInclude Include="include\Header.h" />
     <ClInclude Include="include\JupiterAce.h" />

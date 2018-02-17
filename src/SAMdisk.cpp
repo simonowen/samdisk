@@ -104,6 +104,9 @@ void ReportBuildOptions()
 #ifdef HAVE_CAPSIMAGE
 		"CAPSimage",
 #endif
+#ifdef HAVE_FDRAWCMD_H
+		"fdrawcmd.sys",
+#endif
 	};
 
 	if (options.size())

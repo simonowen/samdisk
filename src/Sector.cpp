@@ -75,19 +75,21 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	if (has_badidcrc())
 		return Merge::Unchanged;
 
-	// If there's enough data, check the CRC state
-	if (static_cast<int>(data.size()) >= (size() + 2))
+#ifdef _DEBUG
+	// If there's enough data, check the CRC
+	if ((encoding == Encoding::MFM || encoding == Encoding::FM) &&
+		static_cast<int>(data.size()) >= (size() + 2))
 	{
 		CRC16 crc;
 		if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
 		crc.add(new_dam);
 		auto bad_data_crc = crc.add(data.data(), size() + 2) != 0;
 		assert(bad_crc == bad_data_crc);
-		(void)bad_data_crc;
 	}
+#endif
 
 	// If the exising sector has good data, ignore supplied data if it's bad
-	if (bad_crc && copies() && !has_baddatacrc())
+	if (bad_crc && has_good_data())
 		return Merge::Unchanged;
 
 	// If the existing sector is bad, new good data will replace it all
@@ -166,8 +168,13 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		}
 
 		// Will we now have multiple copies?
-		if (m_data.size() > 0)
+		if (copies() > 0)
 		{
+			// We should never see different good copies of the same sector.
+			assert(has_baddatacrc());
+			if (!has_baddatacrc())
+				return Merge::Unchanged;
+
 			// Keep multiple copies the same size, whichever is shortest
 			auto new_size = std::min(data.size(), m_data[0].size());
 			data.resize(new_size);
@@ -178,9 +185,9 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		}
 	}
 
-	// Insert the new data copy, unless it the copy count (default is 3)
-	if (copies() < opt.maxcopies)
-		m_data.emplace_back(std::move(data));
+	// Insert the new data copy.
+	m_data.emplace_back(std::move(data));
+	limit_copies(opt.maxcopies);
 
 	// Update the data CRC state and DAM
 	m_bad_data_crc = bad_crc;
@@ -230,6 +237,11 @@ Sector::Merge Sector::merge (Sector &&sector)
 bool Sector::has_data () const
 {
 	return copies() != 0;
+}
+
+bool Sector::has_good_data() const
+{
+	return has_data() && !has_baddatacrc();
 }
 
 bool Sector::has_gapdata () const
@@ -309,6 +321,12 @@ void Sector::remove_data ()
 	m_data.clear();
 	m_bad_data_crc = false;
 	dam = 0xfb;
+}
+
+void Sector::limit_copies (int max_copies)
+{
+	if (copies() > max_copies)
+		m_data.resize(max_copies);
 }
 
 void Sector::remove_gapdata ()

@@ -636,7 +636,7 @@ bool DiskHasMBR (const HDD &hdd)
 
 
 // Attempt to determine the 8K checksum method for a given data block
-CHK8K_METHOD Get8KChecksumMethod (uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_)
+CHK8K_METHOD Get8KChecksumMethod (const uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_)
 {
 	// If there's not enough data, there can be no checksum
 	if (uLen_ <= 0x1800)

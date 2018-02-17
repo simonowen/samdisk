@@ -5,9 +5,9 @@
 
 #ifdef HAVE_FDRAWCMD_H
 
-/*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device)
+/*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
-	auto path = util::format(R"(\\.\fdraw)", device);
+	auto path = util::format(R"(\\.\fdraw)", device_index);
 
 	Win32Handle hdev{CreateFile(
 		path.c_str(),
@@ -31,7 +31,7 @@ FdrawcmdSys::FdrawcmdSys(HANDLE hdev)
 
 bool FdrawcmdSys::Ioctl(DWORD code, void *inbuf, int insize, void *outbuf, int outsize)
 {
-	DWORD dwRet;
+	DWORD dwRet{0};
 	return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, &dwRet, NULL);
 }
 
@@ -43,11 +43,11 @@ constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool FdrawcmdSys::GetResult(FD_CMD_RESULT *result)
+bool FdrawcmdSys::GetResult(FD_CMD_RESULT &result)
 {
 	return Ioctl(IOCTL_FD_GET_RESULT,
 		nullptr, 0,
-		result, sizeof(*result));
+		&result, sizeof(result));
 }
 
 bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)
@@ -97,11 +97,11 @@ bool FdrawcmdSys::SetDiskCheck(bool enable)
 	return Ioctl(IOCTL_FD_SET_DISK_CHECK, &check, sizeof(check));
 }
 
-bool FdrawcmdSys::GetFdcInfo(FD_FDC_INFO *info)
+bool FdrawcmdSys::GetFdcInfo(FD_FDC_INFO &info)
 {
 	return Ioctl(IOCTL_FD_GET_FDC_INFO,
 		nullptr, 0,
-		info, sizeof(*info));
+		&info, sizeof(info));
 }
 
 bool FdrawcmdSys::Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk)
@@ -256,7 +256,7 @@ bool FdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT *timed_scan, int s
 		timed_scan, size);
 }
 
-bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT *result)
+bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT &result)
 {
 	FD_READ_ID_PARAMS rip{};
 	rip.flags = m_encoding_flags;
@@ -264,7 +264,7 @@ bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT *result)
 
 	return Ioctl(IOCTL_FDCMD_READ_ID,
 		&rip, sizeof(rip),
-		result, sizeof(*result));
+		&result, sizeof(result));
 }
 
 bool FdrawcmdSys::FdSetSectorOffset(int index)
@@ -284,11 +284,11 @@ bool FdrawcmdSys::FdSetShortWrite(int length, int finetune)
 	return Ioctl(IOCTL_FD_SET_SHORT_WRITE, &swp, sizeof(swp));
 }
 
-bool FdrawcmdSys::FdGetRemainCount(int *remain)
+bool FdrawcmdSys::FdGetRemainCount(int &remain)
 {
 	return Ioctl(IOCTL_FD_GET_REMAIN_COUNT,
 		nullptr, 0,
-		&remain, sizeof(*remain));
+		&remain, sizeof(remain));
 }
 
 bool FdrawcmdSys::FdCheckDisk()
@@ -296,11 +296,11 @@ bool FdrawcmdSys::FdCheckDisk()
 	return Ioctl(IOCTL_FD_CHECK_DISK);
 }
 
-bool FdrawcmdSys::FdGetTrackTime(int *microseconds)
+bool FdrawcmdSys::FdGetTrackTime(int &microseconds)
 {
 	return Ioctl(IOCTL_FD_GET_TRACK_TIME,
 		nullptr, 0,
-		microseconds, sizeof(*microseconds));
+		&microseconds, sizeof(microseconds));
 }
 
 bool FdrawcmdSys::FdReset()

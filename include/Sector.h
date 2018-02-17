@@ -25,6 +25,7 @@ public:
 	Merge merge (Sector &&sector);
 
 	bool has_data () const;
+	bool has_good_data() const;
 	bool has_gapdata () const;
 	bool has_shortdata () const;
 	bool has_badidcrc () const;
@@ -38,6 +39,7 @@ public:
 	void set_baddatacrc (bool bad = true);
 	void remove_data ();
 	void remove_gapdata ();
+	void limit_copies(int max_copies);
 
 	int size () const;
 	int data_size () const;

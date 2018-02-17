@@ -20,13 +20,13 @@ public:
 	static std::unique_ptr<FdrawcmdSys> Open(int device);
 
 public:
-	bool GetResult(FD_CMD_RESULT *result);
+	bool GetResult(FD_CMD_RESULT &result);
 	bool SetEncRate(Encoding encoding, DataRate datarate);
 	bool SetHeadSettleTime(int ms);
 	bool SetMotorTimeout(int seconds);
 	bool SetMotorOff();
 	bool SetDiskCheck(bool enable);
-	bool GetFdcInfo(FD_FDC_INFO *info);
+	bool GetFdcInfo(FD_FDC_INFO &info);
 	bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
 	bool Specify(uint8_t srt_hut, uint8_t hlt_nd);
 	bool Recalibrate();
@@ -41,12 +41,12 @@ public:
 	bool CmdFormatAndWrite(FD_FORMAT_PARAMS *params, int size);
 	bool CmdScan(int head, FD_SCAN_RESULT *scan, int size);
 	bool CmdTimedScan(int head, FD_TIMED_SCAN_RESULT *timed_scan, int size);
-	bool CmdReadId(int head, FD_CMD_RESULT *result);
+	bool CmdReadId(int head, FD_CMD_RESULT &result);
 	bool FdSetSectorOffset(int index);
 	bool FdSetShortWrite(int length, int finetune);
-	bool FdGetRemainCount(int *remain);
+	bool FdGetRemainCount(int &remain);
 	bool FdCheckDisk();
-	bool FdGetTrackTime(int *microseconds);
+	bool FdGetTrackTime(int &microseconds);
 	bool FdReset();
 
 private:

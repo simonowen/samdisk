@@ -33,6 +33,31 @@ static const FORMATGAP standard_gaps[] =
 #endif
 };
 
+#ifdef _WIN32
+std::string to_string(const MEDIA_TYPE &type)
+{
+	switch (type)
+	{
+	case F5_1Pt2_512:	return "5.25\" 1.2M";
+	case F3_1Pt44_512:	return "3.5\" 1.44M";
+	case F3_2Pt88_512:	return "3.5\" 2.88M";
+	case F3_720_512:	return "3.5\" 720K";
+	case F5_360_512:	return "5.25\" 360K";
+	case F5_320_512:	return "5.25\" 320K";
+	case F5_320_1024:	return "5.25\" 320K, 1024 bytes/sector";
+	case F5_180_512:	return "5.25\" 180K";
+	case F5_160_512:	return "5.25\" 160K";
+	case F3_640_512:	return "3.5\" 640K";
+	case F5_640_512:	return "5.25\" 640K";
+	case F5_720_512:	return "5.25\" 720K";
+	case F3_1Pt2_512:	return "3.5\" 1.2M";
+	case F3_1Pt23_1024:	return "3.5\" 1.23M, 1024 bytes/sector";
+	case F5_1Pt23_1024:	return "5.25\" 1.23M, 1024 bytes/sector";
+	case F8_256_128:	return "8\" 256K";
+	default:			return "Unknown";
+	}
+}
+#endif
 
 // Return the number of microseconds for 1 byte at the given rate
 int GetDataTime (DataRate datarate, Encoding encoding, int len_bytes/*=1*/, bool add_drain_time/*=false*/)

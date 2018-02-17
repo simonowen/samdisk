@@ -25,12 +25,44 @@ const int MAX_GAP3 = 82;	// arbitrary size, to leave a bit more space at the tra
 //#define SAFE_TRACKS_80		83		// Safe seek for 80-track drives
 //#define SAFE_TRACKS_40		42		// Safe seek for 40-track drives
 
-#define RPM_TIME_200		300000
-#define RPM_TIME_300		200000
-#define RPM_TIME_360		166667
+const int RPM_TIME_200 = 300000;
+const int RPM_TIME_300 = 200000;
+const int RPM_TIME_360 = 166667;
 
-#define SIZE_MASK_765		7
+const auto SIZE_MASK_765 = 7U;
 
+// uPD765 status register 0
+const uint8_t STREG0_INTERRUPT_CODE = 0xc0;
+const uint8_t STREG0_SEEK_END = 0x20;
+const uint8_t STREG0_EQUIPMENT_CHECK = 0x10;
+const uint8_t STREG0_NOT_READY = 0x08;
+const uint8_t STREG0_HEAD_ADDRESS = 0x04;
+const uint8_t STREG0_UNIT_SELECT_1 = 0x02;
+const uint8_t STREG0_UNIT_SELECT_0 = 0x01;
+
+// uPD765 status register 1
+const uint8_t STREG1_END_OF_CYLINDER = 0x80;
+const uint8_t STREG1_RESERVED_6 = 0x40;
+const uint8_t STREG1_DATA_ERROR = 0x20;
+const uint8_t STREG1_OVERRUN = 0x10;
+const uint8_t STREG1_RESERVED_3 = 0x08;
+const uint8_t STREG1_NO_DATA = 0x04;
+const uint8_t STREG1_NOT_WRITEABLE = 0x02;
+const uint8_t STREG1_MISSING_ADDRESS_MARK = 0x01;
+
+// uPD765 status register 2
+const uint8_t STREG2_RESERVED_7 = 0x80;
+const uint8_t STREG2_CONTROL_MARK = 0x40;
+const uint8_t STREG2_DATA_ERROR_IN_DATA_FIELD = 0x20;
+const uint8_t STREG2_WRONG_CYLINDER = 0x10;
+const uint8_t STREG2_SCAN_EQUAL_HIT = 0x08;
+const uint8_t STREG2_SCAN_NOT_SATISFIED = 0x04;
+const uint8_t STREG2_BAD_CYLINDER = 0x02;
+const uint8_t STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD = 0x01;
+
+#ifdef _WIN32
+std::string to_string(const MEDIA_TYPE &type);
+#endif
 
 int GetDataTime (DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false);
 int GetTrackOverhead (Encoding encoding);

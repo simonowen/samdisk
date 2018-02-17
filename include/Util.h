@@ -137,8 +137,6 @@ void Message (MsgType type, const char* pcsz_, Args&& ...args)
 		util::cout << msg << colour::none << '\n';
 }
 
-bool OpenLog (const char *pcszLog_ = nullptr);
-void CloseLog ();
 const char* LastError ();
 bool Error(const char *pcsz_ = nullptr);
 
@@ -201,7 +199,7 @@ typedef enum
 	CHK8K_FOUND = CHK8K_SUM_1800
 } CHK8K_METHOD;
 
-CHK8K_METHOD Get8KChecksumMethod (uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_ = CHK8K_UNKNOWN);
+CHK8K_METHOD Get8KChecksumMethod (const uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_ = CHK8K_UNKNOWN);
 const char* Get8KChecksumMethodName (CHK8K_METHOD method, int &checksum_len);
 
 

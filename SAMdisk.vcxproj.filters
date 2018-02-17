@@ -327,6 +327,12 @@
     <ClCompile Include="src\types\cwtool.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\FdrawcmdSys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\fdrawsys_dev.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
@@ -477,6 +483,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\SCP_FTD2XX.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FdrawcmdSys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

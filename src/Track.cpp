@@ -138,6 +138,13 @@ bool Track::is_repeated (const Sector &sector) const
 bool Track::has_data_error () const
 {
 	auto it = std::find_if(begin(), end(), [] (const Sector &sector) {
+		if (sector.is_8k_sector() && sector.has_data())
+		{
+			const Data &data = sector.data_copy();
+			auto chk8k_method = Get8KChecksumMethod(data.data(), data.size());
+			if (chk8k_method == CHK8K_VALID || chk8k_method >= CHK8K_FOUND)
+				return false;
+		}
 		return !sector.has_data() || sector.has_baddatacrc();
 	});
 
@@ -206,7 +213,17 @@ Track::AddResult Track::add (Sector &&sector)
 		else
 		{
 			// Merge details with the existing sector
-			it->merge(std::move(sector));
+			auto ret = it->merge(std::move(sector));
+			if (ret == Sector::Merge::Unchanged)
+				return AddResult::Unchanged;
+
+			// Limit the number of data copies kept for each sector.
+			if (data_overlap(*it) && !is_8k_sector())
+			{
+				util::cout << "limiting to 1 copy\n";
+				it->limit_copies(1);
+			}
+
 			return AddResult::Merge;
 		}
 	}
