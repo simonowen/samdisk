@@ -638,10 +638,10 @@ bool IsCpmDirEntry (const uint8_t *pb_)
 				return false;
 	}
 
-	// Ensure top bit of f5-f8 are clear
-	for (int j = 4; j < 8; ++j)
-		if (p->file[j] & 0x80)
-			return false;
+	// Ensure b7 of [7] is clear. b7 of [5] means hidden, b7 of [6] means read-only.
+	// See http://cpctech.cpc-live.com/docs/catalog.html for details.
+	if (p->file[7] & 0x80)
+		return false;
 
 	// Seems valid
 	return true;
@@ -733,12 +733,15 @@ bool DirCpm (Disk &disk, const Sector &s)
 				auto name = std::string(p->file, p->file + sizeof(p->file));
 				name += '.' + std::string(p->ext, p->ext + sizeof(p->ext));
 
-				if (name[0] < ' ')
+				auto name_masked = name;
+				std::transform(name.begin(), name.end(), name_masked.begin(), [](char ch) { return static_cast<char>(ch & 0x7f); });
+
+				if (name_masked[0] < ' ')
 					continue;
 
 				if (pass == 1)
 				{
-					file_sizes[name] += file_blocks;
+					file_sizes[name_masked] += file_blocks;
 					total_blocks += file_blocks;
 				}
 				else
@@ -746,9 +749,26 @@ bool DirCpm (Disk &disk, const Sector &s)
 					if (p->ex)
 						continue;
 
+					bool readonly = (p->ext[0] & 0x80) != 0;
 					bool hidden = (p->ext[1] & 0x80) != 0;
+
+					std::stringstream ss;
+					if (hidden) ss << "Hidden";
+					if (readonly && hidden) ss << ", ";
+					if (readonly) ss << "Read-Only";
+
 					if (hidden) util::cout << colour::cyan;
-					util::cout << " " << name << util::fmt(" %3uK\n", file_sizes[name] * Sector::SizeCodeToLength(pdpb->bBlockShift) / 1024);
+					util::cout << " " << name_masked <<
+						util::fmt(" %3uK", file_sizes[name_masked] * Sector::SizeCodeToLength(pdpb->bBlockShift) / 1024);
+					if (hidden)
+					{
+						if (!util::is_stdout_a_tty())
+							util::cout << " (" << ss.str() << ")";
+						else
+							util::log << " (" << ss.str() << ")";
+					}
+
+					util::cout << "\n";
 					if (hidden) util::cout << colour::none;
 
 					++num_files;
