@@ -45,6 +45,9 @@ protected:
 		for (i = 1 ; !g_fAbort && i < track.size(); i += 2)
 			ReadSector(cylhead, track, i, firstSectorSeen);
 
+		if (opt.gaps >= GAPS_CLEAN)
+			ReadFirstGap(cylhead, track);
+
 		return TrackData(cylhead, std::move(track));
 	}
 
@@ -59,6 +62,7 @@ private:
 	bool DetectEncodingAndDataRate(int head);
 	Track BlindReadHeaders(const CylHead &cylhead, int &firstSectorSeen);
 	void ReadSector(const CylHead &cylhead, Track &track, int index, int firstSectorSeen=0);
+	void ReadFirstGap(const CylHead &cylhead, Track &track);
 
 	std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
 	Encoding m_lastEncoding{Encoding::Unknown};
@@ -266,7 +270,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead &cylhead, Track &track, int index
 			throw win32_error(GetLastError(), "result");
 
 		// Try again if header or data field are missing.
-		if ((result.st1 & STREG1_MISSING_ADDRESS_MARK) || (result.st1 & STREG1_NO_DATA))
+		if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
 			continue;
 
 		// Header match not found for a sector we scanned earlier?
@@ -303,6 +307,64 @@ void FdrawSysDevDisk::ReadSector(const CylHead &cylhead, Track &track, int index
 			if (chk8k_method == CHK8K_VALID || chk8k_method >= CHK8K_FOUND)
 				break;
 		}
+	}
+}
+
+void FdrawSysDevDisk::ReadFirstGap(const CylHead &cylhead, Track &track)
+{
+	if (track.empty())
+		return;
+
+	auto &sector = track[0];
+
+	if (sector.has_badidcrc() || track.data_overlap(sector))
+		return;
+
+	// Read a size
+	auto size_code = sector.header.size + 1;
+	auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
+	MEMORY mem(size);
+
+	for (int i = 0; !g_fAbort && i <= opt.retries; ++i)
+	{
+		// Invalidate the content so misbehaving FDCs can be identififed.
+		memset(mem.pb, 0xee, mem.size);
+
+		if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
+		{
+			// Reject errors other than CRC, sector not found and missing address marks
+			auto error{ GetLastError() };
+			if (error != ERROR_CRC &&
+				error != ERROR_SECTOR_NOT_FOUND &&
+				error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+			{
+				throw win32_error(error, "read_track");
+			}
+		}
+
+		FD_CMD_RESULT result{};
+		if (!m_fdrawcmd->GetResult(result))
+			throw win32_error(GetLastError(), "result");
+
+		if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_END_OF_CYLINDER))
+			continue;
+		else if (result.st2 & STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD)
+			continue;
+
+		// Sanity check the start of the track against a good copy.
+		if (sector.has_good_data())
+		{
+			const auto data = sector.data_copy();
+			if (std::memcmp(data.data(), mem.pb, data.size()))
+			{
+				Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
+				break;
+			}
+		}
+
+		auto extent = track.data_extent_bytes(sector);
+		sector.add(Data(mem.pb, mem.pb + extent), sector.has_baddatacrc(), sector.dam);
+		break;
 	}
 }
 
