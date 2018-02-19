@@ -3,8 +3,10 @@
 #include "SAMdisk.h"
 #include "DiskUtil.h"
 #include "SpecialFormat.h"
+#include "TrackDataParser.h"
 
 static const int MIN_DIFF_BLOCK = 16;
+static const int DEFAULT_MAX_SPLICE = 72;	// limit of bits treated as splice noise between recognised gap patterns
 
 
 static void item_separator (int items)
@@ -244,9 +246,25 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 			ah[i].size = sector.header.size;
 		}
 #endif
-		// Remove gap data if disabled, or the gap mask doesn't allow it
-		if (sector.has_gapdata() && (opt.gaps == GAPS_NONE || !(opt.gapmask & (1 << i))))
-			sector.remove_gapdata();
+
+		if (sector.has_gapdata())
+		{
+			// Remove gap data if disabled, or the gap mask doesn't allow it
+			if (opt.gaps == GAPS_NONE || !(opt.gapmask & (1 << i)))
+				sector.remove_gapdata();
+			// Remove normal gaps unless we're asked to keep them.
+			else if (opt.gaps != GAPS_ALL && sector.encoding == Encoding::MFM)
+			{
+				int gap3 = 0;
+				if (test_remove_gap3(sector.data_copy(), sector.size(), gap3))
+				{
+					sector.remove_gapdata();
+
+					if (!sector.gap3)
+						sector.gap3 = gap3;
+				}
+			}
+		}
 #if 0
 		// ToDo: move this to affected disk types
 		// Check for short sector wrapping the track end (includes logoprof.dmk and Les Justiciers 2 [1B].scp [CPC])
@@ -265,11 +283,6 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 	for (i = 0; i < track.size(); ++i)
 	{
 		Sector &sector = track[i];
-#if 0
-		// Clean and remove gap data unless we're to keep it all
-		if (fLoadFilter_ && opt.gaps != GAPS_ALL)
-			CleanGap(i);
-#endif
 
 		// Remove only the final gap if --no-gap4b was used
 		if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
@@ -640,5 +653,179 @@ bool WriteRegularDisk (FILE *f_, Disk &disk, const Format &fmt)
 	if (missing && !opt.minimal)
 		Message(msgWarning, "source missing %u sectors from %u/%u/%u/%u regular format", missing, fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
 
+	return true;
+}
+
+
+bool test_remove_gap2(const Data &data, int offset)
+{
+	if (data.size() < offset)
+		return false;
+
+	TrackDataParser parser(data.data() + offset, data.size() - offset);
+	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+	auto splice = 0, len = 0;
+	uint8_t fill;
+
+	if (opt.debug) util::cout << "----gap2----:\n";
+
+	parser.GetGapRun(&len, &fill);
+
+	if (!len)
+	{
+		splice = 1;
+		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+
+		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+		if (splice > max_splice)
+		{
+			if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+			return false;
+		}
+	}
+
+	if (len > 0 && fill == 0x4e)
+	{
+		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+		parser.GetGapRun(&len, &fill);
+	}
+
+	if (!len)
+	{
+		splice = 1;
+		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+
+		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+		if (splice > max_splice)
+		{
+			if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+			return false;
+		}
+	}
+
+	if (len > 0 && fill == 0x00)
+	{
+		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+		parser.GetGapRun(&len, &fill);
+	}
+
+	if (!len)
+	{
+		splice = 1;
+		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+		if (splice > max_splice)
+			return false;
+	}
+
+	if (len > 0)
+	{
+		if (fill != 0x00)
+		{
+			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+			return false;
+		}
+
+		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+	}
+
+	if (opt.debug) util::cout << "gap2 can be removed\n";
+	return true;
+}
+
+bool test_remove_gap3(const Data &data, int offset, int &gap3)
+{
+	if (data.size() < offset)
+		return false;
+
+	TrackDataParser parser(data.data() + offset, data.size() - offset);
+	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+	auto splice = 0, len = 0;
+	uint8_t fill = 0x00;
+
+	if (opt.debug) util::cout << "----gap3----:\n";
+	while (!parser.IsWrapped())
+	{
+		parser.GetGapRun(&len, &fill);
+
+		if (!len)
+		{
+			splice = 1;
+			for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+			if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+			if (splice > max_splice)
+			{
+				if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+				return false;
+			}
+		}
+
+		if (len == 3 && fill == 0xa1)
+		{
+			auto am = parser.ReadByte();
+			if (opt.debug) util::cout << "found AM (" << am << ")\n";
+			break;
+		}
+
+		if (len > 0 && fill != 0x00 && fill != 0x4e)
+		{
+			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+			return false;
+		}
+
+		if (len > 0 && fill == 0x4e && !gap3)
+		{
+			gap3 = static_cast<uint8_t>(len);
+			if (opt.debug) util::cout << "gap3 size is " << len << " bytes\n";
+		}
+		if (len > 0)
+		{
+			if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+		}
+	}
+
+	if (opt.debug) util::cout << "gap3 can be removed\n";
+	return true;
+}
+
+bool test_remove_gap4b(const Data &data, int offset)
+{
+	if (data.size() < offset)
+		return false;
+
+	TrackDataParser parser(data.data() + offset, data.size() - offset);
+	auto splice = 0, len = 0;
+	uint8_t fill;
+
+	if (opt.debug) util::cout << "----gap4b----:\n";
+
+	parser.GetGapRun(&len, &fill);
+
+	if (!len)
+	{
+		splice = 1;
+		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+		/*
+		auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+		if (splice > max_splice)
+		{
+		if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+		return false;
+		}
+		*/
+	}
+
+	if (len > 0 && (fill == 0x4e || fill == 0x00))
+	{
+		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+	}
+	else if (len > 0)
+	{
+		if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+		return false;
+	}
+
+	if (opt.debug) util::cout << "gap4b can be removed\n";
 	return true;
 }

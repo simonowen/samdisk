@@ -208,7 +208,7 @@ typedef void * HANDLE;
 
 static const int MAX_IMAGE_SIZE = 256 * 1024 * 1024;	// 256MiB
 
-enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_TRACK, GAPS_ALL };
+enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_ALL };
 
 // copy
 bool ImageToImage (const std::string &src_path, const std::string &dst_path);

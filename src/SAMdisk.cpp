@@ -179,7 +179,6 @@ struct option long_options[] =
 	{ "no-gaps",		  no_argument, &opt.gaps, GAPS_NONE },
 	{ "gaps",		      no_argument, &opt.gaps, GAPS_CLEAN },
 	{ "clean-gaps",	      no_argument, &opt.gaps, GAPS_CLEAN },
-	{ "read-track",       no_argument, &opt.gaps, GAPS_TRACK },
 	{ "all-gaps",         no_argument, &opt.gaps, GAPS_ALL },
 	{ "gap2",             no_argument, &opt.gap2, 1 },
 	{ "keep-overlap",	  no_argument, &opt.keepoverlap, 1 },

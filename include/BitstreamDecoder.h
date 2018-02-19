@@ -3,8 +3,6 @@
 
 #include "BitBuffer.h"
 
-const int DEFAULT_MAX_SPLICE = 72;	// limit of bits treated as splice noise between recognised gap patterns
-
 void scan_flux (TrackData &trackdata);
 void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate);
 void scan_flux_amiga (TrackData &trackdata);

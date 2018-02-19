@@ -76,18 +76,18 @@ int Track::data_extent_bits (const Sector &sector) const
 	auto drive_speed = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
 	auto track_len = tracklen ? tracklen : GetTrackCapacity(drive_speed, sector.datarate, sector.encoding);
 
-	// Approximate distance to next ID header
-	auto gap = ((std::next(it) != end()) ? std::next(it)->offset : (track_len + begin()->offset)) - sector.offset;
-	auto overhead = (std::next(it) != end()) ? GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding) : 0;
-	auto extent = (gap > overhead) ? gap - overhead : 0;
-
-	return extent;
+	// Approximate bit distance to next ID header.
+	auto gap_bits = ((std::next(it) != end()) ? std::next(it)->offset : (track_len + begin()->offset)) - sector.offset;
+	return gap_bits;
 }
 
 int Track::data_extent_bytes (const Sector &sector) const
 {
 	auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
-	return data_extent_bits(sector) >> encoding_shift;
+	auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
+	auto overhead_bytes = GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding);
+	auto extent_bytes = (gap_bytes > overhead_bytes) ? gap_bytes - overhead_bytes : 0;
+	return extent_bytes;
 }
 
 bool Track::data_overlap (const Sector &sector) const

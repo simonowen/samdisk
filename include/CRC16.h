@@ -19,6 +19,8 @@ public:
 	uint16_t add (int byte);
 	uint16_t add (int byte, size_t len);
 	uint16_t add (const void *buf, size_t len);
+	uint8_t lsb () const;
+	uint8_t msb () const;
 
 private:
 	static void init_crc_table ();

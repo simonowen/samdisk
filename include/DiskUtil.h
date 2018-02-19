@@ -32,4 +32,8 @@ Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Secto
 
 bool WriteRegularDisk (FILE *f_, Disk &disk, const Format &format);
 
+bool test_remove_gap2(const Data &data, int offset);
+bool test_remove_gap3(const Data &data, int offset, int &gap3);
+bool test_remove_gap4b(const Data &data, int offset);
+
 #endif // DISKUTIL_H

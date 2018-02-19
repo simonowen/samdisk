@@ -68,3 +68,13 @@ uint16_t CRC16::add (const void *buf, size_t len)
 
 	return m_crc;
 }
+
+uint8_t CRC16::msb() const
+{
+	return m_crc >> 8;
+}
+
+uint8_t CRC16::lsb() const
+{
+	return m_crc & 0xff;
+}

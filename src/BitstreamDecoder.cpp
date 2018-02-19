@@ -637,181 +637,6 @@ void scan_flux_amiga (TrackData &trackdata)
 	}
 }
 
-
-bool test_remove_gap2 (Data data, int offset)
-{
-	if (data.size() < offset)
-		return false;
-
-	TrackDataParser parser(data.data() + offset, data.size() - offset);
-	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
-	auto splice = 0, len = 0;
-	uint8_t fill;
-
-	if (opt.debug) util::cout << "----gap2----:\n";
-
-	parser.GetGapRun(&len, &fill);
-
-	if (!len)
-	{
-		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-
-		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-		if (splice > max_splice)
-		{
-			if (opt.debug) util::cout << "stopping due to too many splice bits\n";
-			return false;
-		}
-	}
-
-	if (len > 0 && fill == 0x4e)
-	{
-		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		parser.GetGapRun(&len, &fill);
-	}
-
-	if (!len)
-	{
-		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-
-		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-		if (splice > max_splice)
-		{
-			if (opt.debug) util::cout << "stopping due to too many splice bits\n";
-			return false;
-		}
-	}
-
-	if (len > 0 && fill == 0x00)
-	{
-		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		parser.GetGapRun(&len, &fill);
-	}
-
-	if (!len)
-	{
-		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-		if (splice > max_splice)
-			return false;
-	}
-
-	if (len > 0)
-	{
-		if (fill != 0x00)
-		{
-			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
-			return false;
-		}
-
-		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-	}
-
-	if (opt.debug) util::cout << "gap2 can be removed\n";
-	return true;
-}
-
-bool test_remove_gap3 (Data data, int offset, int &gap3)
-{
-	if (data.size() < offset)
-		return false;
-
-	TrackDataParser parser(data.data() + offset, data.size() - offset);
-	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
-	auto splice = 0, len = 0;
-	uint8_t fill = 0x00;
-
-	if (opt.debug) util::cout << "----gap3----:\n";
-	while (!parser.IsWrapped())
-	{
-		parser.GetGapRun(&len, &fill);
-
-		if (!len)
-		{
-			splice = 1;
-			for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-			if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-			if (splice > max_splice)
-			{
-				if (opt.debug) util::cout << "stopping due to too many splice bits\n";
-				return false;
-			}
-		}
-
-		if (len == 3 && fill == 0xa1)
-		{
-			auto am = parser.ReadByte();
-			if (opt.debug) util::cout << "found AM (" << am << ")\n";
-			break;
-		}
-
-		if (len > 0 && fill != 0x00 && fill != 0x4e)
-		{
-			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
-			return false;
-		}
-
-		if (len > 0 && fill == 0x4e && !gap3)
-		{
-			gap3 = static_cast<uint8_t>(len);
-			if (opt.debug) util::cout << "gap3 size is " << len << " bytes\n";
-		}
-		if (len > 0)
-		{
-			if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		}
-	}
-
-	if (opt.debug) util::cout << "gap3 can be removed\n";
-	return true;
-}
-
-bool test_remove_gap4b (Data data, int offset)
-{
-	if (data.size() < offset)
-		return false;
-
-	TrackDataParser parser(data.data() + offset, data.size() - offset);
-	auto splice = 0, len = 0;
-	uint8_t fill;
-
-	if (opt.debug) util::cout << "----gap4b----:\n";
-
-	parser.GetGapRun(&len, &fill);
-
-	if (!len)
-	{
-		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-		/*
-				auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
-				if (splice > max_splice)
-				{
-		if (opt.debug) util::cout << "stopping due to too many splice bits\n";
-					return false;
-				}
-		*/
-	}
-
-	if (len > 0 && (fill == 0x4e || fill == 0x00))
-	{
-		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-	}
-	else if (len > 0)
-	{
-		if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
-		return false;
-	}
-
-	if (opt.debug) util::cout << "gap4b can be removed\n";
-	return true;
-}
-
-
 void scan_bitstream_mfm_fm (TrackData &trackdata)
 {
 	Track track;
@@ -1211,62 +1036,6 @@ void generate_flux (TrackData &trackdata)
 	trackdata.add(FluxData({flux_times}));
 }
 
-bool test_remove_gap3_agat (Data data, int offset, int &gap3)
-{
-	if (data.size() < offset)
-		return false;
-
-	TrackDataParser parser(data.data() + offset, data.size() - offset);
-	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
-	auto splice = 0, len = 0;
-	uint8_t fill = 0x00;
-
-	if (opt.debug) util::cout << "----gap3----:\n";
-	while (!parser.IsWrapped())
-	{
-		parser.GetGapRun(&len, &fill);
-
-		if (!len)
-		{
-			splice = 1;
-			for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
-			if (opt.debug) util::cout << "found " << splice << " splice bits\n";
-			if (splice > max_splice)
-			{
-				if (opt.debug) util::cout << "stopping due to too many splice bits\n";
-				return false;
-			}
-		}
-
-		if (len == 3 && fill == 0x95)
-		{
-			auto am = parser.ReadByte();
-			if (opt.debug) util::cout << "found AM (" << am << ")\n";
-			break;
-		}
-
-		if (len > 0 && fill != 0x00 && fill != 0xaa)
-		{
-			if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
-			return false;
-		}
-
-		if (len > 0 && fill == 0xaa && !gap3)
-		{
-			gap3 = static_cast<uint8_t>(len);
-			if (opt.debug) util::cout << "gap3 size is " << len << " bytes\n";
-		}
-		if (len > 0)
-		{
-			if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		}
-	}
-
-	if (opt.debug) util::cout << "gap3 can be removed\n";
-	return true;
-}
-
-
 /*
  * Agat 840K MFM format.  Agat was a family of Apple II workalikes
  * produced by Soviet Union in 1980's, this format is unique to them.
@@ -1393,7 +1162,6 @@ void scan_bitstream_agat (TrackData &trackdata)
 			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
 			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
 			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
-			auto next_idam_align = next_idam_distance & ((1 << shift) - 1);
 
 			// Determine the bit offset and distance to the next DAM
 			auto next_dam_offset = itDataNext->first;
@@ -1435,7 +1203,7 @@ void scan_bitstream_agat (TrackData &trackdata)
 			// Truncate at the extent size, unless we're asked to keep overlapping sectors
 			if (!opt.keepoverlap && extent_bytes < sector.size())
 				data.resize(extent_bytes);
-			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
+			else if (data.size() > sector.size())
 				data.resize(sector.size());
 
 			for (auto byte = 0; byte < 256; byte++) {
@@ -1447,38 +1215,6 @@ void scan_bitstream_agat (TrackData &trackdata)
 			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %02x:%02x distance %d (min %d max %d)\n",
 				sector.header.sector, stored_cksum, cksum, distance, min_distance, max_distance);
 			bool bad_crc = (stored_cksum != cksum);
-
-			auto gap2_offset = next_idam_bytes + 1 + 4 + 2;
-			auto has_gap2 = false; // data.size() >= gap2_offset;
-			auto has_gap3 = data.size() >= normal_bytes;
-			auto remove_gap2 = false;
-			auto remove_gap3 = false;
-
-			// Check IDAM bit alignment and value, as AnglaisCollege\track00.0.raw has rogue FE junk on cyls 22+26
-			if (has_gap2)
-				remove_gap2 = next_idam_align != 0 || data[next_idam_bytes] != 0xfe || test_remove_gap2(data, gap2_offset);
-
-			if (has_gap3)
-				remove_gap3 = test_remove_gap3_agat(data, normal_bytes, sector.gap3);
-
-			if (opt.gaps != GAPS_ALL)
-			{
-				if (has_gap2 && remove_gap2)
-				{
-					if (opt.debug) util::cout << "removing gap2 data\n";
-					data.resize(next_idam_bytes - ((sector.encoding == Encoding::MFM) ? 3 : 0));
-				}
-				else if (has_gap2)
-				{
-					if (opt.debug) util::cout << "skipping gap2 removal\n";
-				}
-
-				if (has_gap3 && remove_gap3 && (!has_gap2 || remove_gap2))
-				{
-					if (opt.debug) util::cout << "removing gap3 data\n";
-					data.resize(sector.size());
-				}
-			}
 
 			sector.add(std::move(data), bad_crc, dam);
 

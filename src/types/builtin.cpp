@@ -393,15 +393,16 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			const std::string sig{ "HELLO!" };
-			Data data0(512 + 2 + sig.size(), 0x01);
-			std::copy(sig.begin(), sig.end(), data0.begin() + 512 + 2);
+			Data data0(512, 0x01);
 
 			CRC16 crc("\xa1\xa1\xa1", 3);
 			crc.add(0xfb);
 			crc.add(data0.data(), 512);
-			data0[512] = crc >> 8;
-			data0[513] = crc & 0xff;
+			data0.insert(data0.end(), crc.msb());
+			data0.insert(data0.end(), crc.lsb());
+
+			data0.insert(data0.end(), 1, 0x4e);
+			data0.insert(data0.end(), 9, 0xf7);
 			track[0].add(std::move(data0));
 
 			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
