@@ -132,12 +132,11 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 		for (auto datarate : {DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K})
 		{
 			// Skip FM if disabled or the data rate is 1Mbps (not worth checking).
-			if (encoding == Encoding::FM && (opt.fm == 0 || datarate == DataRate::_1M))
+			if (encoding == Encoding::FM && (opt.nofm || datarate == DataRate::_1M))
 				continue;
 
-			// Skip rates not matching user selection (note: legacy values!)
-			static const std::array<DataRate, 4> rates{DataRate::_500K, DataRate::_300K, DataRate::_250K, DataRate::_1M};
-			if (opt.rate >= 0 && opt.rate < static_cast<int>(rates.size()) && datarate != rates[opt.rate])
+			// Skip rates not matching user selection.
+			if (opt.datarate != DataRate::Unknown && datarate != opt.datarate)
 				continue;
 
 			// Skip 1Mbps if the FDC doesn't report it's supported.
@@ -147,7 +146,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 				if (!m_fdrawcmd->GetFdcInfo(fi) || !(fi.SpeedsAvailable & FDC_SPEED_1M))
 				{
 					// Fail if user selected the rate.
-					if (opt.rate != -1)
+					if (opt.datarate == DataRate::_1M)
 						throw util::exception("FDC doesn't support 1Mbps data rate");
 
 					continue;

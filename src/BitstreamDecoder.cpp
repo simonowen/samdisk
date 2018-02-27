@@ -666,7 +666,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			bitbuf.encoding = Encoding::MFM;
 			crc.init(CRC16::A1A1A1);
 		}
-		else if (opt.fm == 0)
+		else if (opt.nofm)
 			continue;
 		else
 		{

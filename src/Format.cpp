@@ -477,7 +477,6 @@ void Format::Override (bool full_control/*=false*/)
 	}
 
 	// Merge any overrides from the command-line
-	if (opt.fm == 1) encoding = Encoding::FM;
 	if (opt.fill >= 0) fill = static_cast<uint8_t>(opt.fill);
 	if (opt.gap3 >= 0) gap3 = opt.gap3;
 	if (opt.base != -1) base = opt.base;
@@ -486,5 +485,6 @@ void Format::Override (bool full_control/*=false*/)
 	if (opt.head0 != -1) head0 = opt.head0;
 	if (opt.head1 != -1) head1 = opt.head1;
 	if (opt.cylsfirst != -1) cyls_first = (opt.cylsfirst != 0);
-	if (opt.rate != -1) datarate = static_cast<DataRate>(opt.rate * 1000);
+	if (opt.datarate != DataRate::Unknown) datarate = opt.datarate;
+	if (opt.encoding != Encoding::Unknown) encoding = opt.encoding;
 }

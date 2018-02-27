@@ -7,6 +7,8 @@ enum class Encoding { Unknown, MFM, FM, Amiga, GCR, Ace, MX, Agat };
 std::string to_string (const DataRate &datarate);
 std::string to_string (const Encoding &encoding);
 std::string short_name (const Encoding &encoding);
+DataRate datarate_from_string (std::string str);
+Encoding encoding_from_string (std::string str);
 
 inline int bitcell_ns (DataRate datarate)
 {

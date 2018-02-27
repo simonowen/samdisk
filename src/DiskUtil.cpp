@@ -288,6 +288,12 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 		if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
 			sector.remove_gapdata();
 
+		// Allow override for sector datarate and encoding.
+		if (opt.datarate != DataRate::Unknown)
+			sector.datarate = opt.datarate;
+		if (opt.encoding != Encoding::Unknown)
+			sector.encoding = opt.encoding;
+
 		// Allow overrides for track gap3 and sector size
 		if (opt.gap3 != -1) sector.gap3 = static_cast<uint8_t>(opt.gap3);
 		// if (opt.size != -1) size = opt.size;	// ToDo: remove?

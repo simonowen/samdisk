@@ -133,7 +133,7 @@ extern "C" {
 #include "getopt_long.h"
 }
 
-enum { OPT_RPM = 256, OPT_RATE, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST, OPT_PLLPHASE };
+enum { OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST, OPT_PLLPHASE };
 
 struct option long_options[] =
 {
@@ -160,6 +160,8 @@ struct option long_options[] =
 	{ "force",			  no_argument, nullptr, 'f' },
 	{ "label",		required_argument, nullptr, 'L' },
 	{ "data-copy",	required_argument, nullptr, 'D' },
+	{ "encoding",   required_argument, nullptr, 'e' },
+	{ "datarate",   required_argument, nullptr, 't' },
 
 	{ "debug",            no_argument, &opt.debug, 1 },
 	{ "dec",              no_argument, &opt.hex, 0 },
@@ -207,8 +209,7 @@ struct option long_options[] =
 	{ "repair",			  no_argument, &opt.repair, 1},
 	{ "fix",			  no_argument, &opt.fix, 1 },
 	{ "no-fix",			  no_argument, &opt.fix, 0 },
-	{ "fm",				  no_argument, &opt.fm, 1 },
-	{ "no-fm",			  no_argument, &opt.fm, 0 },
+	{ "no-fm",			  no_argument, &opt.nofm, 1 },
 	{ "blind",			  no_argument, &opt.blind, 1 },
 //	{ "regular",		  no_argument, &opt.blind, 0 },			ToDo: restore?
 	{ "no-weak",		  no_argument, &opt.noweak, 1 },
@@ -227,7 +228,6 @@ struct option long_options[] =
 	{ "max-copies", required_argument, nullptr, OPT_MAXCOPIES },
 	{ "max-splice-bits",required_argument, nullptr, OPT_MAXSPLICE },
 	{ "check8k",	optional_argument, nullptr, OPT_CHECK8K },
-	{ "rate",		required_argument, nullptr, OPT_RATE },
 	{ "rpm",		required_argument, nullptr, OPT_RPM },
 	{ "bytes",		required_argument, nullptr, OPT_BYTES },
 	{ "hdf",		required_argument, nullptr, OPT_HDF },
@@ -313,6 +313,18 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case '1':	if (!GetInt(optarg, opt.head1) || opt.head1 > 0xff) return BadValue("head1"); break;
 			case 'D':	if (!GetInt(optarg, opt.datacopy)) return BadValue("data-copy"); break;
 
+			case 't':
+				opt.datarate = datarate_from_string(optarg);
+				if (opt.datarate == DataRate::Unknown)
+					return BadValue("datarate");
+				break;
+
+			case 'e':
+				opt.encoding = encoding_from_string(optarg);
+				if (opt.encoding == Encoding::Unknown)
+					return BadValue("encoding");
+				break;
+
 			case 'd':	opt.step = 2; break;
 			case 'f':	++opt.force; break;
 			case 'v':	++opt.verbose; break;
@@ -341,14 +353,6 @@ bool ParseCommandLine (int argc_, char *argv_[])
 					return BadValue("order");
 				break;
 			}
-
-			case OPT_RATE:
-				if (!GetInt(optarg, opt.rate) ||
-					(opt.rate != 250 && opt.rate != 300 && opt.rate != 500 && opt.rate != 1000))
-				{
-					return BadValue("rate");
-				}
-				break;
 
 			case OPT_GAPMASK: if (!GetInt(optarg, opt.gapmask)) return BadValue("gap-mask"); break;
 			case OPT_MAXCOPIES: if (!GetInt(optarg, opt.maxcopies) || opt.maxcopies < 1) return BadValue("max-copies"); break;
@@ -621,7 +625,7 @@ int main (int argc_, char *argv_[])
 					}
 
 					// To ensure it fits by default, halve the sector count in FM mode
-					if (opt.fm == 1) fmt.sectors >>= 1;
+					if (opt.encoding == Encoding:FM) fmt.sectors >>= 1;
 
 					// Allow everything about the format to be overridden
 					Format::Override(&fmt, true);

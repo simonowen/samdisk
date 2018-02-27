@@ -46,6 +46,33 @@ std::string short_name (const Encoding &encoding)
 	return "unk";
 }
 
+
+DataRate datarate_from_string(std::string str)
+{
+	str = util::lowercase(str);
+	auto len = str.size();
+
+	if (str == std::string("250kbps").substr(0, len)) return DataRate::_250K;
+	if (str == std::string("300kbps").substr(0, len)) return DataRate::_300K;
+	if (str == std::string("500kbps").substr(0, len)) return DataRate::_500K;
+	if (str == std::string("1mbps").substr(0, len)) return DataRate::_1M;
+	return DataRate::Unknown;
+}
+
+Encoding encoding_from_string (std::string str)
+{
+	str = util::lowercase(str);
+
+	if (str == "mfm") return Encoding::MFM;
+	if (str == "fm") return Encoding::FM;
+	if (str == "gcr") return Encoding::GCR;
+	if (str == "amiga") return Encoding::Amiga;
+	if (str == "ace") return Encoding::Ace;
+	if (str == "mx") return Encoding::MX;
+	if (str == "agat") return Encoding::Agat;
+	return Encoding::Unknown;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 Header::Header (int cyl_, int head_, int sector_, int size_)
