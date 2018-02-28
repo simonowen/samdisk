@@ -431,6 +431,7 @@ void scan_bitstream_mx (TrackData &trackdata)
 	Data block;
 	uint64_t dword = 0;
 	uint16_t stored_cksum = 0, cksum = 0, stored_track = 0, extra = 0;
+	bool zero_cksum = false;
 
 	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
@@ -484,10 +485,25 @@ void scan_bitstream_mx (TrackData &trackdata)
 			stored_cksum  = bitbuf.read_byte() << 8;
 			stored_cksum |= bitbuf.read_byte();
 
-			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %06o:%06o (%04x:%04x)\n",
+			if (opt.debug) util::cout << util::fmt ("cksum s %2d disk:calc %06o:%06o (%04x:%04x)\n",
 				s, stored_cksum, cksum, stored_cksum, cksum);
 
-			sector.add(std::move(block), cksum != stored_cksum, 0);
+			/*
+			 * Flux stream on some marginal disks may decode as stream of zero bits instead of valid
+			 * data, but checksum of all zeros is also zero...
+			 */
+			if (cksum != stored_cksum)
+			{
+				sector.add(std::move(block), true, 0);
+				if (stored_cksum == 0)
+				{
+					zero_cksum = true;
+				}
+			}
+			else
+			{
+				sector.add(std::move(block), (zero_cksum && stored_cksum == 0), 0);
+			}
 			track.add(std::move(sector));
 		}
 
