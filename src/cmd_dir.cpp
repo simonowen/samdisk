@@ -701,7 +701,13 @@ bool DirCpm (Disk &disk, const Sector &s)
 	uint8_t bSectorBase = (s.header.sector & 0xc0) + 1;
 	int total_blocks = 0;
 	int num_files = 0;
-	std::map<std::string, size_t> file_sizes;
+
+	struct CPM_DIR_DATA
+	{
+		int file_blocks{0};
+		int file_attrs{0};
+	};
+	std::map<std::string, CPM_DIR_DATA> dir_entries;
 
 	for (int pass = 1; pass <= 2; ++pass)
 	{
@@ -718,11 +724,14 @@ bool DirCpm (Disk &disk, const Sector &s)
 			if (!disk.find(Header(cyl, head, sec, 2), sector) || sector->has_shortdata())
 				throw util::exception(CHR(cyl, head, sec), " not found");
 
-			const Data &data = sector->data_copy();
+			// Process the sector data, ignoring gap data.
+			auto data = sector->data_copy();
+			if (data.size() > sector->size())
+				data.resize(sector->size());
 
-			for (auto j = 0; j < sector->data_size(); j += sizeof(CPM_DIR))
+			for (auto j = 0; j < data.size() / static_cast<int>(sizeof(CPM_DIR)); ++j)
 			{
-				auto p = reinterpret_cast<const CPM_DIR *>(data.data() + j);
+				auto p = &reinterpret_cast<const CPM_DIR *>(data.data())[j];
 
 				// Skip unused/deleted entries
 				if (p->user == 0xe5)
@@ -733,48 +742,64 @@ bool DirCpm (Disk &disk, const Sector &s)
 				auto name = std::string(p->file, p->file + sizeof(p->file));
 				name += '.' + std::string(p->ext, p->ext + sizeof(p->ext));
 
+				// Strip bit 7 from each character, and convert to upper-case.
 				auto name_masked = name;
-				std::transform(name.begin(), name.end(), name_masked.begin(), [](char ch) { return static_cast<char>(ch & 0x7f); });
+				std::transform(name.begin(), name.end(), name_masked.begin(), [](char ch) {
+					ch &= 0x7f;
+					if (ch >= 'a' && ch <= 'z')
+						ch ^= 0x20;
+					return ch;
+				});
 
-				if (name_masked[0] < ' ')
+				// Reject filenames containing non-printable or +3DOS illegal characters.
+				if (!std::all_of(name_masked.begin(), name_masked.end(), [](char ch) {
+					static const std::string illegals = R"("!&()+,-/:;<=>[\]|")";
+					return std::isprint(ch) && illegals.find(ch) == std::string::npos;
+				})) {
 					continue;
+				}
 
 				if (pass == 1)
 				{
-					file_sizes[name_masked] += file_blocks;
+					dir_entries[name_masked].file_blocks += file_blocks;
 					total_blocks += file_blocks;
 				}
+				else if (p->ex)
+					continue;
 				else
 				{
-					if (p->ex)
-						continue;
-
-					bool readonly = (p->ext[0] & 0x80) != 0;
-					bool hidden = (p->ext[1] & 0x80) != 0;
-
-					std::stringstream ss;
-					if (hidden) ss << "Hidden";
-					if (readonly && hidden) ss << ", ";
-					if (readonly) ss << "Read-Only";
-
-					if (hidden) util::cout << colour::cyan;
-					util::cout << " " << name_masked <<
-						util::fmt(" %3uK", file_sizes[name_masked] * Sector::SizeCodeToLength(pdpb->bBlockShift) / 1024);
-					if (hidden)
-					{
-						if (!util::is_stdout_a_tty())
-							util::cout << " (" << ss.str() << ")";
-						else
-							util::log << " (" << ss.str() << ")";
-					}
-
-					util::cout << "\n";
-					if (hidden) util::cout << colour::none;
+					int attrs = (p->ext[0] & 0x80) | ((p->ext[1] & 0x80) >> 1);
+					dir_entries[name_masked].file_attrs = attrs;
 
 					++num_files;
 				}
 			}
 		}
+	}
+
+	for (auto it = dir_entries.begin(); it != dir_entries.end(); ++it)
+	{
+		bool readonly = (it->second.file_attrs & 0x80) != 0;
+		bool hidden = (it->second.file_attrs & 0x40) != 0;
+
+		std::stringstream ss;
+		if (hidden) ss << "Hidden";
+		if (readonly && hidden) ss << ", ";
+		if (readonly) ss << "Read-Only";
+
+		if (hidden) util::cout << colour::cyan;
+		util::cout << " " << it->first <<
+			util::fmt(" %3uK", it->second.file_blocks * Sector::SizeCodeToLength(pdpb->bBlockShift) / 1024);
+		if (hidden)
+		{
+			if (!util::is_stdout_a_tty())
+				util::cout << " (" << ss.str() << ")";
+			else
+				util::log << " (" << ss.str() << ")";
+		}
+
+		util::cout << "\n";
+		if (hidden) util::cout << colour::none;
 	}
 
 	auto n = ((pdpb->bTracks * (1 + !!(pdpb->bSidedness & 3))) - pdpb->bResTracks);	// tracks*sides - reserved
