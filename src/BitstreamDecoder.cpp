@@ -41,10 +41,10 @@ void scan_flux (TrackData &trackdata)
 
 	if (opt.mx)
 	{
-		// Try 300K first (5.25" drive)
+		// Try 300K first (5.25" HD drive)
 		scan_flux_mx(trackdata, DataRate::_300K);
 
-		// If that fails, fall back on 250K (3.5" drive)
+		// If that fails, fall back on 250K (5.25" DD drive)
 		if (trackdata.track().empty())
 			scan_flux_mx(trackdata, DataRate::_250K);
 
@@ -53,7 +53,13 @@ void scan_flux (TrackData &trackdata)
 
 	if (opt.agat)
 	{
-		scan_flux_agat(trackdata);
+		// Try 300K first (5.25" HD drive)
+		scan_flux_agat(trackdata, DataRate::_300K);
+
+		// If that fails, fall back on 250K (5.25" DD drive)
+		if (trackdata.track().empty())
+			scan_flux_agat(trackdata, DataRate::_250K);
+
 		return;
 	}
 
@@ -1102,9 +1108,9 @@ void scan_bitstream_agat (TrackData &trackdata)
 				continue;
 		}
 
-		auto am = bitbuf.read_byte() << 8;
 		auto am_offset = bitbuf.tell();
 
+		auto am = bitbuf.read_byte() << 8;
 		am |= bitbuf.read_byte();
 
 		switch (am)
@@ -1117,7 +1123,7 @@ void scan_bitstream_agat (TrackData &trackdata)
 
 				if (id[3] == 0x5a)
 				{
-					Sector s(bitbuf.datarate, bitbuf.encoding, Header(trackdata.cylhead, id[2], SizeToCode(256)));
+					Sector s(bitbuf.datarate, Encoding::Agat, Header(trackdata.cylhead, id[2], SizeToCode(256)));
 					s.offset = bitbuf.track_offset(am_offset);
 
 					if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
@@ -1151,8 +1157,8 @@ void scan_bitstream_agat (TrackData &trackdata)
 
 		auto shift = 4;
 		auto gap2_size = 5;	// gap2 size in MFM bytes
-		auto min_distance = ((1 + 4) << shift) + (gap2_size << 4);			// AM, ID, gap2
-		auto max_distance = ((1 + 4) << shift) + ((40 + gap2_size) << 4);	// 1=AM, 4=ID, 21+gap2=max WD177x offset
+		auto min_distance = ((2 + 4 + gap2_size) << shift);
+		auto max_distance = ((2 + 4 + gap2_size + 16) << shift);	// 2=AM, 4=ID, gap2, 16=guesstimate
 
 		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
@@ -1175,29 +1181,28 @@ void scan_bitstream_agat (TrackData &trackdata)
 				track.modified = true;
 #endif
 			bitbuf.seek(dam_offset);
-			bitbuf.encoding = Encoding::MFM;
 
 			auto dam = bitbuf.read_byte();
+			bitbuf.read_byte();
 
 			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
 			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
 			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
-			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
+			auto next_idam_bytes = (next_idam_distance >> shift) - 2;	// -2 due to DAM being read above
 
 			// Determine the bit offset and distance to the next DAM
 			auto next_dam_offset = itDataNext->first;
 			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
-			auto next_dam_bytes = (next_dam_distance >> shift) - 1;		// -1 due to DAM being read above
+			auto next_dam_bytes = (next_dam_distance >> shift) - 2;		// -2 due to DAM being read above
 
-			// Attempt to read gap2 from non-final sectors, unless we're asked not to
+			// Attempt to read gap2, unless we're asked not to
 			auto read_gap2 = (opt.gap2 != 0);
 
 			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
 			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
-			if (extent_bytes >= 22) extent_bytes -= 22;	// remove AAAA.. XXX
 
-			auto normal_bytes = sector.size() + 2;					// data size + CRC bytes
-			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to check CRC
+			auto normal_bytes = sector.size() + 1;					// data size + checksum byte
+			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to verify checksum
 
 			// Calculate bytes remaining in the data in current data encoding
 			auto avail_bytes = bitbuf.remaining() >> shift;
@@ -1206,7 +1211,7 @@ void scan_bitstream_agat (TrackData &trackdata)
 			if (avail_bytes < normal_bytes)
 			{
 				// If we've already got a copy, ignore the truncated version
-				if (sector.copies() && (!sector.is_8k_sector() || avail_bytes < 0x1802))	// ToDo: fix nasty check
+				if (sector.copies())
 				{
 					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
 					continue;
@@ -1215,7 +1220,7 @@ void scan_bitstream_agat (TrackData &trackdata)
 				if (opt.debug) util::cout << "using truncated sector data as only copy\n";
 			}
 
-			// Read the full data field and check its CRC
+			// Read the full data field and verify its checksum
 			Data data(data_bytes);
 			bitbuf.read(data);
 			cksum = 0;
@@ -1248,10 +1253,11 @@ void scan_bitstream_agat (TrackData &trackdata)
 	trackdata.add(std::move(track));
 }
 
-void scan_flux_agat (TrackData &trackdata)
+void scan_flux_agat (TrackData &trackdata, DataRate datarate)
 {
-	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), opt.scale);
-	BitBuffer bitbuf(DataRate::_250K, decoder);
+	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
+	BitBuffer bitbuf(datarate, decoder);
 
 	trackdata.add(std::move(bitbuf));
+	scan_bitstream_agat(trackdata);
 }
