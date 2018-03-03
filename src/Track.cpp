@@ -83,6 +83,10 @@ int Track::data_extent_bits (const Sector &sector) const
 
 int Track::data_extent_bytes (const Sector &sector) const
 {
+	// We only support real data extent for MFM and FM sectors.
+	if (sector.encoding != Encoding::MFM && sector.encoding != Encoding::FM)
+		return sector.size();
+
 	auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
 	auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
 	auto overhead_bytes = GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding);
