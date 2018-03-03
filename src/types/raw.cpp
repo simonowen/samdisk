@@ -5,6 +5,7 @@
 bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	Format fmt;
+	bool from_size = false;
 	fmt.encoding = Encoding::MFM;
 
 	// An empty format should not match an empty file!
@@ -19,6 +20,7 @@ bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 	{
 		if (!Format::FromSize(file.size(), fmt))
 			return false;
+		from_size = true;
 	}
 
 	assert(fmt.disk_size() == file.size());
@@ -29,7 +31,7 @@ bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 		fmt = RegularFormat::ProDos;
 		disk->strType = "ProDos";
 	}
-	else
+	else if (from_size)
 	{
 		// To prevent unexpected behaviour, warn that this is a raw image file
 		Message(msgWarning, "input file format guessed using only file size");
