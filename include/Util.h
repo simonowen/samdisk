@@ -178,7 +178,7 @@ void TrackUsedInit (Disk &disk);
 bool IsTrackUsed (int cyl_, int head_);
 
 void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &sectors);
-void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls = -1, int def_heads = -1);
+void ValidateRange (Range &range, int max_cyls, int max_heads, int cyl_step = 1, int def_cyls = -1, int def_heads = -1);
 
 int SizeToCode (int sector_size);
 bool ReadSector (const HDD &hdd, int sector, MEMORY &pm_);

@@ -31,7 +31,7 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 	}
 
 	// Limit to our maximum geometry, and default to copy everything present in the source
-	ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, src_disk->cyls(), src_disk->heads());
+	ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, opt.step, src_disk->cyls(), src_disk->heads());
 
 	if (opt.minimal)
 		TrackUsedInit(*src_disk);
@@ -42,7 +42,7 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 		if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
 			return;
 
-		auto src_track = src_disk->read_track(cylhead);
+		auto src_track = src_disk->read_track(cylhead * opt.step);
 		NormaliseTrack(cylhead, src_track);
 
 		if (opt.verbose)

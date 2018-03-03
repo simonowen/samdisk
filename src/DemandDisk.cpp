@@ -16,12 +16,10 @@ void DemandDisk::extend (const CylHead &cylhead)
 
 const Track &DemandDisk::read_track (const CylHead &cylhead)
 {
-	auto cylhead_step = CylHead(cylhead.cyl * opt.step, cylhead.head);
-
-	if (!m_loaded[cylhead_step])
+	if (!m_loaded[cylhead])
 	{
 		// Quick first read, plus sector-based conversion
-		auto trackdata = load(cylhead_step, true);
+		auto trackdata = load(cylhead, true);
 		auto &track = trackdata.track();
 
 		// Consider error retries
@@ -32,15 +30,15 @@ const Track &DemandDisk::read_track (const CylHead &cylhead)
 				break;
 
 			// Read another track and merge with what we have so far
-			trackdata.add(load(cylhead_step));
+			trackdata.add(load(cylhead));
 
 			// Flux reads include 5 revolutions, others just 1
 			attempt += (trackdata.has_flux() ? REMAIN_READ_REVS : FIRST_READ_REVS) - 1;
 		}
 
 		std::lock_guard<std::mutex> lock(m_trackdata_mutex);
-		m_trackdata[cylhead_step] = std::move(trackdata);
-		m_loaded[cylhead_step] = true;
+		m_trackdata[cylhead] = std::move(trackdata);
+		m_loaded[cylhead] = true;
 	}
 
 	return Disk::read_track(cylhead);

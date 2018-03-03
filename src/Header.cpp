@@ -75,6 +75,18 @@ Encoding encoding_from_string (std::string str)
 
 //////////////////////////////////////////////////////////////////////////////
 
+CylHead::operator int() const
+{
+	return (cyl * MAX_DISK_HEADS) + head;
+}
+
+CylHead operator * (const CylHead &cylhead, int cyl_step)
+{
+	return CylHead(cylhead.cyl * cyl_step, cylhead.head);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 Header::Header (int cyl_, int head_, int sector_, int size_)
 	: cyl(cyl_), head(head_), sector(sector_), size(size_)
 {

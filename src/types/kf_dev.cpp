@@ -49,7 +49,7 @@ protected:
 		return TrackData(cylhead, std::move(flux_revs));
 	}
 
-	bool preload (const Range &/*range*/) override
+	bool preload (const Range &/*range*/, int /*cyl_step*/) override
 	{
 		return false;
 	}

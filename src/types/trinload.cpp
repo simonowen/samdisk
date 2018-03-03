@@ -27,7 +27,7 @@ protected:
 		return TrackData(cylhead, std::move(track));
 	}
 
-	bool preload (const Range &/*range*/) override
+	bool preload (const Range &/*range*/, int /*cyl_step*/) override
 	{
 		return false;
 	}

@@ -17,7 +17,7 @@ public:
 
 	explicit Disk (Format &format);
 
-	virtual bool preload (const Range &range);
+	virtual bool preload (const Range &range, int cyl_step);
 	virtual void unload ();
 
 	TrackData &trackdata (const CylHead &cylhead);

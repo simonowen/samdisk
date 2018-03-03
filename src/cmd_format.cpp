@@ -47,7 +47,7 @@ bool UnformatImage (const std::string &path, Range range)
 	if (!ReadImage(path, disk))
 		return false;
 
-	ValidateRange(range, MAX_TRACKS, MAX_SIDES, disk->cyls(), disk->heads());
+	ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
 	range.each([&] (const CylHead &cylhead) {
 		if (!g_fAbort)

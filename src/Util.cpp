@@ -574,15 +574,18 @@ void CalculateGeometry (int64_t total_sectors, int &cyls, int &heads, int &secto
 		cyls = 16383;
 }
 
-void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls/*=0*/, int def_heads/*=0*/)
+void ValidateRange (Range &range, int max_cyls, int max_heads, int cyl_step/*=1*/, int def_cyls/*=0*/, int def_heads/*=0*/)
 {
 	// Default to the normal cyl/head limits
 	if (def_cyls <= 0) def_cyls = max_cyls;
 	if (def_heads <= 0) def_heads = max_heads;
 
 	// Limit default according to step, rounding up
-	if (opt.step > 1)
-		def_cyls = (def_cyls + (opt.step - 1)) / opt.step;
+	if (cyl_step > 1)
+	{
+		def_cyls = (def_cyls + (cyl_step - 1)) / cyl_step;
+		max_cyls = (max_cyls + (cyl_step - 1)) / cyl_step;
+	}
 
 	// Use default if unset
 	if (range.cyls() <= 0)
@@ -591,8 +594,8 @@ void ValidateRange (Range &range, int max_cyls, int max_heads, int def_cyls/*=0*
 		range.cyl_end = def_cyls;
 	}
 
-	if (range.cyl_end > (max_cyls / opt.step))
-		throw util::exception("end cylinder (", range.cyl_end - 1, ") out of range (0-", (max_cyls / opt.step) - 1, ")");
+	if (range.cyl_end > max_cyls)
+		throw util::exception("end cylinder (", range.cyl_end - 1, ") out of range (0-", max_cyls - 1, ")");
 
 	// If no head value is given, use the default range
 	if (range.heads() <= 0)

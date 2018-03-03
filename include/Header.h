@@ -43,7 +43,8 @@ struct CylHead
 		assert(head >= 0 && head < MAX_DISK_HEADS);
 	}
 
-	operator int() const { return (cyl * MAX_DISK_HEADS) + head; }
+	operator int() const;
+
 	std::string to_string () const
 	{
 #if 0	// ToDo
@@ -65,6 +66,7 @@ struct CylHead
 	int cyl = -1, head = -1;
 };
 
+CylHead operator * (const CylHead &cylhead, int cyl_step);
 inline std::ostream & operator<<(std::ostream& os, const CylHead &cylhead) { return os << cylhead.to_string(); }
 
 

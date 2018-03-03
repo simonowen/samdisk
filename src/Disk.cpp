@@ -36,7 +36,7 @@ int Disk::heads () const
 }
 
 
-bool Disk::preload (const Range &range_)
+bool Disk::preload (const Range &range_, int cyl_step)
 {
 	// No pre-loading if multi-threading disabled, or only a single core
 	if (!opt.mt || ThreadPool::get_thread_count() <= 1)
@@ -48,8 +48,8 @@ bool Disk::preload (const Range &range_)
 	range_.each([&] (const CylHead cylhead) {
 		if (!g_fAbort)
 		{
-			rets.push_back(pool.enqueue([this, cylhead] () {
-				read_track(cylhead);
+			rets.push_back(pool.enqueue([this, cylhead, cyl_step] () {
+				read_track(cylhead * cyl_step);
 			}));
 		}
 	});
@@ -73,11 +73,9 @@ void Disk::add (TrackData &&trackdata)
 
 TrackData &Disk::trackdata (const CylHead &cylhead)
 {
-	auto cylhead_step = CylHead(cylhead.cyl * opt.step, cylhead.head);
-
 	// Safe look-up requires mutex ownership, in case of call from preload()
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
-	return m_trackdata[cylhead_step];
+	return m_trackdata[cylhead];
 }
 
 const Track &Disk::read_track (const CylHead &cylhead)

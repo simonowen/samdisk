@@ -112,10 +112,10 @@ bool ScanImage (const std::string &path, Range range)
 		}
 		else
 		{
-			ValidateRange(range, MAX_TRACKS, MAX_SIDES, disk->cyls(), disk->heads());
+			ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
 			util::cout << range << ":\n";
 
-			disk->preload(range);
+			disk->preload(range, opt.step);
 
 			ScanContext context;
 			range.each([&] (const CylHead cylhead) {
@@ -125,7 +125,7 @@ bool ScanImage (const std::string &path, Range range)
 				if (cylhead.cyl == range.cyl_begin)
 					context = ScanContext();
 
-				auto track = disk->read_track(cylhead);
+				auto track = disk->read_track(cylhead * opt.step);
 
 				if (g_fAbort)
 					return;

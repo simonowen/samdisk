@@ -87,12 +87,12 @@ bool ViewImage (const std::string &path, Range range)
 	auto disk = std::make_shared<Disk>();
 	if (ReadImage(path, disk))
 	{
-		ValidateRange(range, MAX_TRACKS, MAX_SIDES, disk->cyls(), disk->heads());
+		ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
 
 		range.each([&] (const CylHead &cylhead) {
 			if (!g_fAbort)
 			{
-				auto track = disk->read_track(cylhead);
+				auto track = disk->read_track(cylhead * opt.step);
 				NormaliseTrack(cylhead, track);
 				ViewTrack(cylhead, track);
 			}
