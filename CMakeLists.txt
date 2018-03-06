@@ -7,7 +7,7 @@ install(TARGETS samdisk DESTINATION bin)
 
 target_include_directories(samdisk PRIVATE include src extern)
 
-target_compile_definitions(samdisk PRIVATE RESOURCE_DIR="${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/")
+target_compile_definitions(samdisk PRIVATE RESOURCE_DIR="${CMAKE_INSTALL_PREFIX}/share/samdisk/")
 target_compile_definitions(samdisk PRIVATE _FILE_OFFSET_BITS=64)
 
 include(CheckIncludeFiles)

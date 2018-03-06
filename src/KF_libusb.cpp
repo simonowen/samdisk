@@ -13,7 +13,32 @@
 	auto ret = libusb_init(&ctx);
 	if (ret == LIBUSB_SUCCESS)
 	{
-		auto hdev = libusb_open_device_with_vid_pid(ctx, KF_VID, KF_PID);
+		libusb_device *dev{nullptr};
+		libusb_device **dev_list{nullptr};
+		auto num_devices = libusb_get_device_list(ctx, &dev_list);
+		ssize_t i;
+
+		for (i = 0; i < num_devices; ++i)
+		{
+			libusb_device_descriptor desc{};
+			ret = libusb_get_device_descriptor(dev_list[i], &desc);
+			if (ret == LIBUSB_SUCCESS)
+			{
+				if (desc.idVendor == KF_VID && desc.idProduct == KF_PID)
+				{
+					dev = dev_list[i];
+					break;
+				}
+			}
+		}
+
+		libusb_device_handle *hdev{nullptr};
+		if (dev)
+			ret = libusb_open(dev, &hdev);
+
+		if (dev_list)
+			libusb_free_device_list(dev_list, 1);
+
 		if (hdev)
 		{
 			if (libusb_kernel_driver_active(hdev, KF_INTERFACE))
@@ -37,8 +62,10 @@
 		libusb_exit(ctx);
 	}
 
-	if (ret != LIBUSB_SUCCESS)
-		throw libusb_error_name(ret);
+	if (ret == LIBUSB_ERROR_ACCESS)
+		throw util::exception(util::format("(open) ", libusb_error_name(ret), " (need root?)"));
+	else if (ret != LIBUSB_SUCCESS)
+		throw util::exception(util::format("(open) ", libusb_error_name(ret)));
 
 	return std::unique_ptr<KryoFlux>();
 }
@@ -90,7 +117,7 @@ std::string KF_libusb::Control (int req, int index, int value)
 		KF_TIMEOUT_MS);
 
 	if (ret < 0)
-		throw libusb_error_name(ret);
+		throw util::exception(util::format("(control) ", libusb_error_name(ret)));
 
 	return std::string(reinterpret_cast<char *>(buf), ret);
 }
@@ -107,7 +134,7 @@ int KF_libusb::Read (void *buf, int len)
 		KF_TIMEOUT_MS);
 
 	if (ret != LIBUSB_SUCCESS)
-		throw libusb_error_name(ret);
+		throw util::exception(util::format("(read) ", libusb_error_name(ret)));
 
 	return read;
 }
@@ -124,7 +151,7 @@ int KF_libusb::Write (const void *buf, int len)
 		KF_TIMEOUT_MS);
 
 	if (ret != LIBUSB_SUCCESS)
-		throw libusb_error_name(ret);
+		throw util::exception(util::format("(write) ", libusb_error_name(ret)));
 
 	return written;
 }

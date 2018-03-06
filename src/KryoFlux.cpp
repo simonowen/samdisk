@@ -118,7 +118,7 @@ void KryoFlux::SamBaCommand (const std::string &cmd, const std::string &end)
 	if (pos == std::string::npos)
 		return 0;
 
-	return static_cast<int>(std::atoi(str.c_str() + pos + 1));
+	return std::atoi(str.c_str() + pos + 1);
 }
 
 
@@ -344,7 +344,9 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 		// Ignore first partial track
 		if (last_pos != 0)
 		{
-			assert(flux_counts[index_offset] != 0);
+			// Find the most recent flux count.
+			while (index_offset && !flux_counts[index_offset])
+				--index_offset;
 
 			// Extract flux segment for current revolution
 			flux_revs.emplace_back(std::vector<uint32_t>(
