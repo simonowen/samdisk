@@ -70,6 +70,12 @@ bool SuperCardPro::WriteExact (const void *buf, int len)
 		len -= bytes_written;
 		p += bytes_written;
 	}
+
+#ifndef _WIN32
+	// ToDo: find why the Raspberry Pi needs this.
+	usleep(5000);
+#endif
+
 	return true;
 }
 
@@ -98,7 +104,10 @@ bool SuperCardPro::SendCmd (uint8_t cmd, void *buf, int len, void *bulkbuf, int 
 	if (!ReadExact(result, sizeof(result)))
 		return false;
 
-	if (result[0] != cmd || result[1] != pr_Ok)
+	if (result[0] != cmd)
+		throw util::exception("SCP result command mismatch");
+
+	if (result[1] != pr_Ok)
 	{
 		m_error = result[1];
 		return false;

@@ -56,6 +56,14 @@ private:
 };
 
 
+static std::string VersionString(int version)
+{
+	std::stringstream ss;
+	if (version)
+		ss << (version >> 4) << "." << (version & 0xf);
+	return ss.str();
+}
+
 bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 {
 	// ToDo: use path to select from multiple devices?
@@ -64,8 +72,14 @@ bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 	if (!supercardpro)
 		throw util::exception("failed to open SuperCard Pro device");
 
+	int hw_version{0}, fw_version{0};
+	supercardpro->GetInfo(hw_version, fw_version);
+
 	auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
 	scp_dev_disk->extend(CylHead(83 - 1, 2 - 1));
+
+	scp_dev_disk->metadata["hw_version"] = VersionString(hw_version);
+	scp_dev_disk->metadata["fw_version"] = VersionString(fw_version);
 
 	scp_dev_disk->strType = "SuperCard Pro";
 	disk = scp_dev_disk;
