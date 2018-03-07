@@ -80,8 +80,8 @@ protected:
 	virtual std::string Control (int req, int index=0, int value=0) = 0;
 	virtual int Read (void *buf, int len) = 0;
 	virtual int Write (const void *buf, int len) = 0;
-	virtual void StartRead (void *, int) { }
-	virtual int WaitRead () { return 0; }
+	virtual int ReadAsync (void *buf, int len) = 0;
+	virtual void StopAsyncRead () = 0;
 };
 
 #endif // KRYOFLUX_H

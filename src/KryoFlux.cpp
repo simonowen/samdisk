@@ -185,7 +185,7 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 
 	for (;;)
 	{
-		auto len = Read(chunk.data(), chunk.size());
+		auto len = ReadAsync(chunk.data(), chunk.size());
 		track_data.insert(track_data.end(), chunk.begin(), chunk.begin() + len);
 
 		// Check for end marker at end of current packet.
@@ -194,6 +194,7 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 		{
 			// Stop streaming and finish
 			Control(REQ_STREAM, 0);
+			StopAsyncRead();
 			break;
 		}
 	}

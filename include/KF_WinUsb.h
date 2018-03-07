@@ -22,6 +22,10 @@ private:
 	int Read (void *buf, int len) override;
 	int Write (const void *buf, int len) override;
 
+	int ReadAsync(void *buf, int len) override;
+	void StartAsyncRead();
+	void StopAsyncRead() override;
+
 	HANDLE m_hdev = NULL;
 	WINUSB_INTERFACE_HANDLE m_winusb = NULL;
 	WINUSB_INTERFACE_HANDLE m_interface1 = NULL;

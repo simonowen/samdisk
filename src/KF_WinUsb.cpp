@@ -200,4 +200,18 @@ int KF_WinUsb::Write (const void *buf, int len)
 	return written;
 }
 
+int KF_WinUsb::ReadAsync(void *buf, int len)
+{
+	// Not implemented yet, so use synchronous version.
+	return Read(buf, len);
+}
+
+void KF_WinUsb::StartAsyncRead()
+{
+}
+
+void KF_WinUsb::StopAsyncRead()
+{
+}
+
 #endif // HAVE_WINUSB

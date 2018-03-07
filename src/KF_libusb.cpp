@@ -41,8 +41,7 @@
 
 		if (hdev)
 		{
-			if (libusb_kernel_driver_active(hdev, KF_INTERFACE))
-				ret = libusb_detach_kernel_driver(hdev, KF_INTERFACE);
+			libusb_set_auto_detach_kernel_driver(hdev, 1);
 
 			if (ret == LIBUSB_SUCCESS)
 			{
@@ -80,7 +79,6 @@ KF_libusb::KF_libusb (
 KF_libusb::~KF_libusb ()
 {
 	libusb_release_interface(m_hdev, KF_INTERFACE);
-	libusb_attach_kernel_driver(m_hdev, KF_INTERFACE);
 	libusb_close(m_hdev);
 	libusb_exit(m_ctx);
 }
@@ -154,6 +152,99 @@ int KF_libusb::Write (const void *buf, int len)
 		throw util::exception(util::format("(write) ", libusb_error_name(ret)));
 
 	return written;
+}
+
+static void read_callback (libusb_transfer *xfer)
+{
+	auto pobj = reinterpret_cast<KF_libusb*>(xfer->user_data);
+	pobj->ReadCallback(xfer);
+}
+
+void KF_libusb::ReadCallback (libusb_transfer *xfer)
+{
+	if (xfer->status != LIBUSB_TRANSFER_COMPLETED)
+	{
+		m_readret = xfer->status;
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(m_readmutex);
+	m_readbuf.insert(
+		m_readbuf.end(),
+		reinterpret_cast<const uint8_t*>(xfer->buffer),
+		reinterpret_cast<const uint8_t*>(xfer->buffer) + xfer->actual_length);
+
+	if (m_reading)
+		m_readret = libusb_submit_transfer(xfer);
+}
+
+void KF_libusb::StartAsyncRead()
+{
+	if (m_reading)
+		return;
+
+	m_readbuf.clear();
+	m_xferpool.resize(m_bufpool.size());
+
+	int i = 0;
+	for (auto &xfer : m_xferpool)
+	{
+		xfer = libusb_alloc_transfer(0);
+		libusb_fill_bulk_transfer(
+			xfer,
+			m_hdev,
+			KF_EP_BULK_IN,
+			m_bufpool[i++].data(),
+			m_bufpool[0].size(),
+			read_callback,
+			this,
+			KF_TIMEOUT_MS);
+	}
+
+	for (auto &xfer : m_xferpool)
+	{
+		auto ret = libusb_submit_transfer(xfer);
+		if (ret != LIBUSB_SUCCESS)
+			throw util::exception(util::format("(submit) ", libusb_error_name(ret)));
+	}
+
+	m_reading = true;
+}
+
+void KF_libusb::StopAsyncRead()
+{
+	if (!m_reading)
+		return;
+
+	std::lock_guard<std::mutex> lock(m_readmutex);
+	m_reading = false;
+
+	for (auto &xfer : m_xferpool)
+	{
+		if (xfer)
+			libusb_cancel_transfer(xfer);
+	}
+
+	m_xferpool.clear();
+}
+
+int KF_libusb::ReadAsync (void *buf, int len)
+{
+	StartAsyncRead();
+
+	struct timeval tv{KF_TIMEOUT_MS / 1000, (KF_TIMEOUT_MS % 1000) * 1000};
+	auto ret = libusb_handle_events_timeout(m_ctx, &tv);
+	if (ret == LIBUSB_SUCCESS)
+		ret = m_readret;
+
+	if (ret != LIBUSB_SUCCESS)
+		throw util::exception(util::format("(events) ", libusb_error_name(ret)));
+
+	std::lock_guard<std::mutex> lock(m_readmutex);
+	len = std::min(len, static_cast<int>(m_readbuf.size()));
+	std::memcpy(buf, m_readbuf.data(), len);
+	m_readbuf.erase(m_readbuf.begin(), m_readbuf.begin() + len);
+	return len;
 }
 
 #endif // HAVE_LIBUSB1
