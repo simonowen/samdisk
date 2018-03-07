@@ -58,7 +58,7 @@ bool SuperCardProUSB::Read (void *p, int len, int *bytes_read)
 			return true;
 		}
 
-		if (errno != EAGAIN || errno != EINTR)
+		if (errno != EAGAIN && errno != EINTR)
 		{
 			m_error = errno;
 			return false;
@@ -77,7 +77,7 @@ bool SuperCardProUSB::Write (const void *p, int len, int *bytes_written)
 			return true;
 		}
 
-		if (errno != EAGAIN || errno != EINTR)
+		if (errno != EAGAIN && errno != EINTR)
 		{
 			m_error = errno;
 			return false;

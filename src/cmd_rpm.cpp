@@ -31,13 +31,16 @@ bool DiskRpm (const std::string &path)
 		auto time_us = track.tracktime;
 		auto rpm = 60'000'000.0f / track.tracktime;
 
-		if (!forever)
-			util::cout << util::fmt("%6d us = %3.2f rpm\n", time_us, rpm);
+		std::stringstream ss;
+		ss << std::setw(6) << time_us << " = " <<
+			std::setw(6) << std::setprecision(6) << rpm << " rpm";
+
+		if (forever)
+			util::cout << "\r" << ss.str() << "  (Ctrl-C to stop";
 		else
-		{
-			util::cout << util::fmt("\r%6d us = %3.2f rpm  (Ctrl-C to stop)", time_us, rpm);
-			util::cout.screen->flush();
-		}
+			util::cout << ss.str() << "\n";
+
+		util::cout.screen->flush();
 
 		// Discard source data for a fresh read
 		disk->unload();

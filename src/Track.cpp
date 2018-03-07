@@ -223,10 +223,7 @@ Track::AddResult Track::add (Sector &&sector)
 
 			// Limit the number of data copies kept for each sector.
 			if (data_overlap(*it) && !is_8k_sector())
-			{
-				util::cout << "limiting to 1 copy\n";
 				it->limit_copies(1);
-			}
 
 			return AddResult::Merge;
 		}

@@ -118,7 +118,12 @@ bool ReadCWTOOL (MemFile &file, std::shared_ptr<Disk> &disk)
 	}
 
 	if (clock_khz > 0)
-		disk->metadata["clock"] = util::fmt("%.3fMHz", static_cast<float>(clock_khz) / 1000.0);
+	{
+		auto clock_mhz = static_cast<float>(clock_khz) / 1000.0f;
+		std::stringstream ss;
+		ss << std::setprecision(3) << clock_mhz << "MHz";
+		disk->metadata["clock"] = ss.str();
+	}
 
 	if (num_tracks != (max_track + 1))
 		disk->metadata["revolutions"] = std::to_string(num_tracks / (max_track + 1));
