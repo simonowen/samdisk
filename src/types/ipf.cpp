@@ -22,7 +22,7 @@ typedef struct
 #include "caps/CapsLibAll.h"
 
 #ifdef __APPLE__
-extern "C" CapsLong CAPSGetVersionInfo(void *pversioninfo, CapsULong flag) __attribute__((weak_import));
+extern "C" SDWORD __cdecl CAPSGetVersionInfo(PVOID pversioninfo, UDWORD flag) __attribute__((weak_import));
 #endif
 
 static std::string error_string (SDWORD ret_code)
