@@ -19,8 +19,8 @@ void ScanTrack (const CylHead &cylhead, const Track &track, ScanContext &context
 		// Example disk: Anaconda (TR-DOS)
 		if (!context.warned && track.tracklen && track[0].encoding == Encoding::MFM)
 		{
-			auto &first_sector = *(track.sectors().begin());
-			auto &last_sector = *(track.sectors().rbegin());
+			auto &first_sector = *(track.begin());
+			auto &last_sector = *(track.rbegin());
 
 			// Calculate the offset needed to hide a 256-byte sector using the current encoding and
 			// data rate.  If the first sector offset exceeds that then there could be a problem.

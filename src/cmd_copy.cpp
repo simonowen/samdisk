@@ -54,8 +54,8 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 			auto dst_track = dst_disk->read_track(cylhead);
 			NormaliseTrack(cylhead, dst_track);
 
-			// Merge the source into the destination to perform the repair
-			dst_track.add(std::move(src_track));
+			// Repair the target track using the source track.
+			RepairTrack(cylhead, dst_track, src_track);
 
 			dst_disk->write_track(cylhead, std::move(dst_track));
 		}

@@ -465,6 +465,66 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 	}
 }
 
+// Attempt to repair a track, given another copy of the same track.
+bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track)
+{
+	bool changed = false;
+
+	// Loop over all source sectors available.
+	for (auto &src_sector : src_track)
+	{
+		// Skip repeated source sectors, as the data source is ambiguous.
+		if (src_track.is_repeated(src_sector))
+			continue;
+
+		// Find a target sector with the same CHRN, datarate, and encoding.
+		auto it = track.find(src_sector.header, src_sector.datarate, src_sector.encoding);
+		if (it != track.end())
+		{
+			// Skip repeated target sectors, as the repair target is ambiguous.
+			if (track.is_repeated(*it))
+				continue;
+
+			// Merge the two sectors to give the best version.
+			if (it->merge(Sector(src_sector)) == Sector::Merge::Improved)
+			{
+				if (it->has_good_data())
+					Message(msgFix, "repaired %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+				else
+					Message(msgFix, "improved %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+				changed = true;
+			}
+		}
+		else
+		{
+			// Default to adding to the end of the track.
+			auto insert_idx = track.size();
+
+			// Loop over sectors appearing after the current sector on the source track.
+			auto idx_src = src_track.index_of(src_sector);
+			for (int i = idx_src + 1; i < src_track.size(); ++i)
+			{
+				auto &s = src_track[i];
+
+				// Attempt to find the same sector on the target track.
+				it = track.find(s.header, s.datarate, s.encoding);
+				if (it != track.end())
+				{
+					// The missing sector must appear before the match we just found.
+					insert_idx = track.index_of(*it);
+					break;
+				}
+			}
+
+			track.insert(insert_idx, Sector(src_sector));
+			Message(msgFix, "added missing %s", CHR(cylhead.cyl, cylhead.head, src_sector.header.sector));
+			changed = true;
+		}
+	}
+
+	return changed;
+}
+
 
 std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector)
 {

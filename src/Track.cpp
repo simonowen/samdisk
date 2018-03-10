@@ -123,7 +123,7 @@ bool Track::is_8k_sector () const
 
 bool Track::is_repeated (const Sector &sector) const
 {
-	for (const auto &s : sectors())
+	for (const auto &s : m_sectors)
 	{
 		// Ignore ourselves in the list
 		if (&s == &sector)
@@ -270,6 +270,14 @@ Data::const_iterator Track::populate (Data::const_iterator it, Data::const_itera
 	return it;
 }
 
+void Track::insert(int index, Sector &&sector)
+{
+	assert(index <= static_cast<int>(m_sectors.size()));
+
+	auto it = m_sectors.begin() + index;
+	m_sectors.insert(it, std::move(sector));
+}
+
 Sector Track::remove (int index)
 {
 	assert(index < static_cast<int>(m_sectors.size()));
@@ -294,6 +302,13 @@ std::vector<Sector>::iterator Track::find (const Header &header)
 	});
 }
 
+std::vector<Sector>::iterator Track::find(const Header &header, const DataRate datarate, const Encoding encoding)
+{
+	return std::find_if(begin(), end(), [&](const Sector &s) {
+		return header == s.header && datarate == s.datarate && encoding == s.encoding;
+	});
+}
+
 std::vector<Sector>::const_iterator Track::find (const Sector &sector) const
 {
 	return std::find_if(begin(), end(), [&] (const Sector &s) {
@@ -305,6 +320,13 @@ std::vector<Sector>::const_iterator Track::find (const Header &header) const
 {
 	return std::find_if(begin(), end(), [&] (const Sector &s) {
 		return header == s.header;
+	});
+}
+
+std::vector<Sector>::const_iterator Track::find(const Header &header, const DataRate datarate, const Encoding encoding) const
+{
+	return std::find_if(begin(), end(), [&](const Sector &s) {
+		return header == s.header && datarate == s.datarate && encoding == s.encoding;
 	});
 }
 
