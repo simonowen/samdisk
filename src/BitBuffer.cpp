@@ -204,8 +204,9 @@ uint8_t BitBuffer::read_byte ()
 {
 	uint8_t data = 0;
 
-	if (encoding == Encoding::FM)
+	switch (encoding)
 	{
+	case Encoding::FM:
 		for (auto i = 0; i < 8; ++i)
 		{
 			read1();
@@ -213,14 +214,34 @@ uint8_t BitBuffer::read_byte ()
 			data = (data << 1) | read1();
 			read1();
 		}
-	}
-	else
-	{
+		break;
+
+	case Encoding::MFM:
 		for (auto i = 0; i < 8; ++i)
 		{
 			read1();
 			data = (data << 1) | read1();
 		}
+		break;
+
+	case Encoding::Apple:
+		for (auto i = 0; i < 8; ++i)
+		{
+			data = (data << 1) | read1();
+		}
+		// Disk ][ keeps reading until bit 7 is 1
+		for (;(data & 0x80) == 0;)
+		{
+			data = (data << 1) | read1();
+		}
+		break;
+
+	default:
+		for (auto i = 0; i < 8; ++i)
+		{
+			data = (data << 1) | read1();
+		}
+		break;
 	}
 
 	return data;

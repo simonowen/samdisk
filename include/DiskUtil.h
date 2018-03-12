@@ -33,6 +33,7 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector);
 Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Sector &last);
 
 bool WriteRegularDisk (FILE *f_, Disk &disk, const Format &format);
+bool WriteAppleDODisk (FILE *f_, Disk &disk, const Format &format);
 
 bool test_remove_gap2(const Data &data, int offset);
 bool test_remove_gap3(const Data &data, int offset, int &gap3);

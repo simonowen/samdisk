@@ -26,6 +26,7 @@ std::string to_string (const Encoding &encoding)
 		case Encoding::Ace:		return "Ace";			break;
 		case Encoding::MX:		return "MX";			break;
 		case Encoding::Agat:	return "Agat";			break;
+		case Encoding::Apple:	return "Apple";		    break;
 		case Encoding::Unknown:	break;
 	}
 	return "Unknown";
@@ -43,6 +44,7 @@ std::string short_name (const Encoding &encoding)
 		case Encoding::Ace:		return "ace";			break;
 		case Encoding::MX:		return "mx";			break;
 		case Encoding::Agat:	return "agat";			break;
+		case Encoding::Apple:	return "a2";			break;
 		case Encoding::Unknown:	break;
 	}
 	return "unk";

@@ -377,6 +377,16 @@ Format Format::GetFormat (RegularFormat reg_fmt)
 			fmt.heads = 1;
 			fmt.size = 0;
 			fmt.encoding = Encoding::FM;
+
+		case RegularFormat::DO:
+			fmt.fdc = FdcType::Apple;
+			fmt.datarate = DataRate::_250K;
+			fmt.encoding = Encoding::Apple;
+			fmt.cyls = 35;
+			fmt.heads = 1;
+			fmt.sectors = 16;
+			fmt.base = 0;
+			fmt.size = 1;
 			break;
 
 		default:
@@ -392,6 +402,10 @@ bool Format::FromSize (int64_t size, Format &fmt)
 {
 	switch (size)
 	{
+		case 143360:	// Apple ][
+			fmt = RegularFormat::DO;
+			break;
+
 		case 163840:	// 5.25" SSSD (160K)
 			fmt = RegularFormat::PC320;
 			fmt.heads = 1;

@@ -3,7 +3,7 @@
 
 #include "Range.h"
 
-enum class FdcType { None, PC, WD, Amiga };
+enum class FdcType { None, PC, WD, Amiga, Apple };
 enum class RegularFormat {
 	MGT, ProDos,
 	TRDOS, QDOS, OPD, D80,
@@ -12,7 +12,7 @@ enum class RegularFormat {
 	AmigaDOS, AmigaDOSHD,
 	MBD820, MBD1804,
 	D2M, D4M,
-	_2D, D81, LIF, AtariST,
+	_2D, D81, LIF, AtariST, DO
 };
 
 struct Format

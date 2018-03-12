@@ -808,6 +808,42 @@ bool WriteRegularDisk (FILE *f_, Disk &disk, const Format &fmt)
 	return true;
 }
 
+bool WriteAppleDODisk (FILE *f_, Disk &disk, const Format &fmt)
+{
+	auto missing = 0;
+	static const int map[16] = { 0, 13, 11, 9, 7, 5, 3, 1, 14, 12, 10, 8, 6, 4, 2, 15 };
+
+	fmt.range().each([&] (const CylHead &cylhead) {
+		const auto &track = disk.read_track(cylhead);
+		Header header(cylhead, 0, fmt.size);
+
+		for (int sector = fmt.base; sector < fmt.base + fmt.sectors; ++sector)
+		{
+			Data buf(fmt.sector_size(), fmt.fill);
+			header.sector = map[sector];
+
+			auto it = track.find(header);
+			if (it != track.end() && (*it).has_data())
+			{
+				const auto &data = (*it).data_copy();
+				std::copy(data.begin(), data.begin() + std::min(data.size(), buf.size()), buf.begin());
+			}
+			else
+			{
+				missing++;
+			}
+
+			if (!fwrite(buf.data(), buf.size(), 1, f_))
+				throw util::exception("write error, disk full?");
+		}
+	}, fmt.cyls_first);
+
+	if (missing && !opt.minimal)
+		Message(msgWarning, "source missing %u sectors from %u/%u/%u/%u regular format", missing, fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
+
+	return true;
+}
+
 
 bool test_remove_gap2(const Data &data, int offset)
 {

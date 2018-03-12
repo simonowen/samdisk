@@ -42,7 +42,7 @@ void scan_flux (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -62,6 +62,10 @@ void scan_flux (TrackData &trackdata)
 
 			case Encoding::Amiga:
 				scan_flux_amiga(trackdata);
+				break;
+
+			case Encoding::Apple:
+				scan_flux_apple(trackdata);
 				break;
 
 			case Encoding::GCR:
@@ -117,7 +121,7 @@ void scan_bitstream (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -139,6 +143,12 @@ void scan_bitstream (TrackData &trackdata)
 				scan_bitstream_amiga(trackdata);
 				break;
 
+			// Apple Disk ][ GCR
+			case Encoding::Apple:
+				scan_bitstream_apple(trackdata);
+				break;
+
+			// Commodore 64 GCR
 			case Encoding::GCR:
 				scan_bitstream_gcr(trackdata);
 				break;
@@ -193,41 +203,259 @@ Physical to Apple DOS 3.3 logical sector mapping:
 0xb, 0x3, 0xa, 0x2, 0x9, 0x1, 0x8, 0xf
 
 http://www.scribd.com/doc/200679/Beneath-Apple-DOS-By-Don-Worth-and-Pieter-Lechner
+
+gap1 = 128 sync (1280 bits), gap2 = 5-10 sync, gap3 = 14-24 sync
 */
 
-void scan_bitstream_gcr (TrackData &trackdata)
+#define XX 128
+static const uint8_t gcr6and2[256] =
 {
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
+	XX, XX, XX, XX, XX, XX,  0,  1, XX, XX,  2,  3, XX,  4,  5,  6, // 0x90
+	XX, XX, XX, XX, XX, XX,  7,  8, XX, XX,  8,  9, 10, 11, 12, 13, // 0xA0
+	XX, XX, 14, 15, 16, 17, 18, 19, XX, 20, 21, 22, 23, 24, 25, 26, // 0xB0
+	XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, 27, XX, 28, 29, 30, // 0xC0
+	XX, XX, XX, 31, XX, XX, 32, 33, XX, 34, 35, 36, 37, 38, 39, 40, // 0xD0
+	XX, XX, XX, XX, XX, 41, 42, 43, XX, 44, 45, 46, 47, 48, 49, 50, // 0xE0
+	XX, XX, 51, 52, 53, 54, 55, 56, XX, 57, 58, 59, 60, 61, 62, 63  // 0xF0
+};
+#undef XX
+
+
+void scan_bitstream_apple (TrackData &trackdata)
+{
+	Track track;
+	Data block;
+	uint32_t dword = 0;
+	uint8_t cksum = 0, invalid = 0;
+	std::vector<std::pair<int, Encoding>> data_fields;
+
 	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
-
-	Track track;
+	bitbuf.encoding = Encoding::Apple;
 	track.tracklen = bitbuf.track_bitsize();
-	trackdata.add(std::move(track));
 
-	uint32_t dword = 0;
-	size_t marks = 0;
-
-	// ToDo: finish GCR - for now we just count known marks
 	while (!bitbuf.wrapped())
 	{
-		dword = (dword << 1) | bitbuf.read1();
+		// Give up if no headers were found in the first revolution
+		if (!track.size() && bitbuf.tell() > track.tracklen)
+			break;
 
-		if ((dword & 0xffffff) == 0xd5aa96 ||	// address prologue			D5 AA 96 volume track sector checksum DE AA EB
-			(dword & 0xffffff) == 0xd5aaad ||	// data prologue			D5 AA AD [342 bytes 6/2 encoded] checksum DE AA EB
-			(dword & 0xffffff) == 0xdeaaeb)		// address/data epilogue
+		dword = (dword << 1) | bitbuf.read1();
+		if (opt.debug && 0)
 		{
-			++marks;
+			auto o = bitbuf.tell();
+			Data x(4);
+
+			if (o>64)
+			{
+				bitbuf.read(x);
+				bitbuf.seek(o);
+			}
+
+			util::cout << util::fmt ("  s_b_apple %016lx (%02x %02x %02x %02x) c:h %d:%d at %d\n",
+				dword, x[0], x[1], x[2], x[3], trackdata.cylhead.cyl, trackdata.cylhead.head, o);
 		}
-		else if ((dword & 0x3ff) == 0x3fb)		// sync
+
+		switch (dword & 0xffffff)
 		{
+			case 0xd5aa96:
+			{
+				auto am_offset = bitbuf.tell() - 24;
+
+				// volume, track, sector, checksum, epilogue
+				std::array<uint8_t, 11> idraw;
+				std::array<uint8_t, 4> id;
+				bitbuf.read(idraw);
+
+				// 4-and-4 encoding
+				for (int m = 0; m < 4; m++)
+				{
+					id[m] = ((idraw[m << 1] & 0x55) << 1) | (idraw[1 + (m << 1)] & 0x55);
+				}
+
+				if (opt.debug && 1) util::cout << util::fmt ("  s_b_apple id (%02x %02x %02x %02x) [%02x %02x  %02x %02x  %02x %02x  %02x %02x  %02x %02x %02x] c %d\n",
+					id[0], id[1], id[2], id[3],
+					idraw[0], idraw[1], idraw[2], idraw[3], idraw[4], idraw[5], idraw[6], idraw[7], idraw[8], idraw[9], idraw[10],
+					trackdata.cylhead.cyl);
+
+				// stadard epilogue is DE AA EB, but third byte is not validated by RWTS routine
+				if (idraw[8] == 0xde && (idraw[9] == 0xaa || idraw[9] == 0xab))
+				{
+
+					if ((id[0] ^ id[1] ^ id[2]) == id[3] || (opt.idcrc == 1))
+					{
+						Sector s(bitbuf.datarate, Encoding::Apple, Header(id[1], 0, id[2], SizeToCode(256)));
+						s.offset = bitbuf.track_offset(am_offset);
+
+						if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+						track.add(std::move(s));
+					}
+				}
+				else
+				{
+					Message(msgWarning, "unknown %s address mark epilogue (%02X%02X%02X) at offset %u on %s",
+						to_string(bitbuf.encoding).c_str(), idraw[8], idraw[9], idraw[10], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				}
+				break;
+			}
+
+			case 0xd5aaad:
+			{
+				auto am_offset = bitbuf.tell() - 24;
+				if (opt.debug) util::cout << "* DAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
+				break;
+			}
 		}
 	}
 
-	// Fail if we found enough marks to suggest GCR content
-	if (marks > 10)
-		throw std::logic_error("GCR format is not currently supported");
+	// Process each sector header to look for an associated data field
+	for (auto it = track.begin(); it != track.end(); ++it)
+	{
+		auto &sector = *it;
+		auto final_sector = std::next(it) == track.end();
+
+		auto shift = 3;
+		auto gap2_size = 3;	// gap2 size in sync bytes (5 per Beneath Apple DOS)
+		auto min_distance = ((3 + 8 + 3) << shift) + (gap2_size * 10);
+		auto max_distance = ((3 + 8 + 3) << shift) + ((gap2_size + 25) * 10);	// 25 is a guesstimate
+
+		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+
+		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
+		{
+			const auto &dam_offset = itData->first;
+			auto itDataNext = (std::next(itData) == data_fields.end()) ? data_fields.begin() : std::next(itData);
+
+			// Determine distance from header to data field, taking care of track wrapping
+			auto dam_track_offset = bitbuf.track_offset(dam_offset);
+			auto distance = ((dam_track_offset < sector.offset) ? track.tracklen : 0) + dam_track_offset - sector.offset;
+
+			// Reject if the data field is too close or too far away
+			if (distance < min_distance || distance > max_distance)
+				continue;
+
+			bitbuf.seek(dam_offset);
+			bitbuf.read_byte();
+			bitbuf.read_byte();
+			bitbuf.read_byte();
+
+			// magic
+			if (1 == bitbuf.read1()) bitbuf.seek(bitbuf.tell()-1);
+
+			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
+			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
+			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_bytes = (next_idam_distance >> shift) - 3;	// -3 due to DAM being read above
+
+			// Determine the bit offset and distance to the next DAM
+			auto next_dam_offset = itDataNext->first;
+			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_bytes = (next_dam_distance >> shift) - 3;		// -3 due to DAM being read above
+
+			// Attempt to read gap2, unless we're asked not to
+			auto read_gap2 = (opt.gap2 != 0);
+
+			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
+			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
+
+			auto normal_bytes = 343;								// data size + checksum byte
+			auto data_bytes = std::max(normal_bytes, extent_bytes);	// data size needed to verify checksum
+
+			// Calculate bytes remaining in the data in current data encoding
+			auto avail_bytes = bitbuf.remaining() >> shift;
+
+			// Ignore truncated copies, unless it's the only copy we have
+			if (avail_bytes < normal_bytes)
+			{
+				// If we've already got a copy, ignore the truncated version
+				if (sector.copies())
+				{
+					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					continue;
+				}
+
+				if (opt.debug)
+				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+			}
+
+			// Read the full data field and verify its checksum
+			Data gcrdata(data_bytes);
+			Data decdata(data_bytes);
+			Data outdata(sector.size());
+
+			bitbuf.read(gcrdata);
+			cksum = 0;
+			invalid = 0;
+
+			// GCR decoding and checksumming.  Invalid GCR encodings are reported via 'deleted data' address mark.
+			for (auto byte = 0; byte < 343; byte++)
+			{
+				auto x = gcr6and2[gcrdata[byte]];
+				cksum ^= x;
+				decdata[byte] = cksum;
+				invalid += (x >> 7);
+				if (0 && x >> 7)
+					util::cout << trackdata.cylhead << util::fmt (" sec %u: invalid gcr at %03X: %02X\n",
+						sector.header.sector, byte, gcrdata[byte]);
+			}
+
+			// 6-and-2 de-nibblizing
+			for (auto byte = 0; byte < 256; byte++)
+			{
+				auto bits = 0;
+
+				if (byte < 86)
+					bits = decdata[byte] & 3;
+				else if (byte < 172)
+					bits = (decdata[byte - 86] >> 2) & 3;
+				else
+					bits = (decdata[byte - 172] >> 4) & 3;
+
+				outdata[byte] = (decdata[byte + 86] << 2) | ((bits & 2) >> 1) | ((bits & 1) << 1);
+			}
+
+			if (opt.debug) util::cout << util::fmt ("  cksum s %2d calc %02x  bytes %02x %02x (%02x %02x)  ep [%02x %02x %02x] invalid %d  distance %d (min %d max %d) extent %d\n",
+				sector.header.sector, cksum,
+				gcrdata[0], gcrdata[1], decdata[0], decdata[1],
+				gcrdata[343], gcrdata[344], gcrdata[345],
+				invalid, distance, min_distance, max_distance, extent_bytes);
+			bool bad_crc = (0 != cksum);
+
+			sector.add(std::move(outdata), bad_crc, invalid ? 0xf8 : 0xfb);
+
+			// If the data is good there's no need to search for more data fields
+			if (!bad_crc)
+				break;
+		}
+	}
+
+	trackdata.add(std::move(track));
 }
 
+void scan_flux_apple (TrackData &trackdata)
+{
+	FluxDecoder decoder(trackdata.flux(), 4000, opt.scale);
+	BitBuffer bitbuf(DataRate::_250K, decoder);
+
+	trackdata.add(std::move(bitbuf));
+	scan_bitstream_apple(trackdata);
+}
+
+
+void scan_bitstream_gcr (TrackData &trackdata)
+{
+	throw std::logic_error("C64 GCR format is not currently supported");
+}
 
 // ToDo: finish GCR support
 void scan_flux_gcr (TrackData &trackdata)
