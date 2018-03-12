@@ -81,6 +81,7 @@ protected:
 	virtual int Read (void *buf, int len) = 0;
 	virtual int Write (const void *buf, int len) = 0;
 	virtual int ReadAsync (void *buf, int len) = 0;
+	virtual void StartAsyncRead () = 0;
 	virtual void StopAsyncRead () = 0;
 };
 

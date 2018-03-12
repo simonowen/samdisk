@@ -230,11 +230,9 @@ void KF_libusb::StopAsyncRead()
 
 int KF_libusb::ReadAsync (void *buf, int len)
 {
-	StartAsyncRead();
-
 	struct timeval tv{KF_TIMEOUT_MS / 1000, (KF_TIMEOUT_MS % 1000) * 1000};
 	auto ret = libusb_handle_events_timeout(m_ctx, &tv);
-	if (ret == LIBUSB_SUCCESS)
+	if (ret == LIBUSB_SUCCESS || ret == LIBUSB_ERROR_INTERRUPTED)
 		ret = m_readret;
 
 	if (ret != LIBUSB_SUCCESS)

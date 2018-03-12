@@ -23,7 +23,7 @@ private:
 	int Write (const void *buf, int len) override;
 
 	int ReadAsync(void *buf, int len) override;
-	void StartAsyncRead();
+	void StartAsyncRead() override;
 	void StopAsyncRead() override;
 
 	HANDLE m_hdev = NULL;

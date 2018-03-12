@@ -180,6 +180,9 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 	track_data.reserve(1'000'000);
 	Data chunk(0x10000);
 
+	// Start reading before we ask for the bulk data.
+	StartAsyncRead();
+
 	// Start stream, for 1 more index hole than we require revolutions
 	Control(REQ_STREAM, ((revs + 1) << 8) | 0x01);
 
