@@ -66,12 +66,7 @@ void Disk::unload ()
 }
 
 
-void Disk::add (TrackData &&trackdata)
-{
-	m_trackdata[trackdata.cylhead] = std::move(trackdata);
-}
-
-TrackData &Disk::trackdata (const CylHead &cylhead)
+const TrackData &Disk::read (const CylHead &cylhead)
 {
 	// Safe look-up requires mutex ownership, in case of call from preload()
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
@@ -80,34 +75,55 @@ TrackData &Disk::trackdata (const CylHead &cylhead)
 
 const Track &Disk::read_track (const CylHead &cylhead)
 {
-	return trackdata(cylhead).track();
+	read(cylhead);
+	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
+	return m_trackdata[cylhead].track();
 }
 
 const BitBuffer &Disk::read_bitstream (const CylHead &cylhead)
 {
-	return trackdata(cylhead).bitstream();
+	read(cylhead);
+	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
+	return m_trackdata[cylhead].bitstream();
 }
 
 const FluxData &Disk::read_flux (const CylHead &cylhead)
 {
-	return trackdata(cylhead).flux();
+	read(cylhead);
+	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
+	return m_trackdata[cylhead].flux();
 }
 
-const Track &Disk::write_track (const CylHead &cylhead, const Track &track)
-{
-	// Move a temporary copy of the const source track
-	return write_track(cylhead, Track(track));
-}
 
-const Track &Disk::write_track (const CylHead &cylhead, Track &&track)
+const TrackData &Disk::write (TrackData &&trackdata)
 {
 	// Invalidate stored format, since we can no longer guarantee a match
 	fmt.sectors = 0;
 
-	// Move supplied track into disk
-	m_trackdata[cylhead] = TrackData(cylhead, std::move(track));
-	return m_trackdata[cylhead].track();
+	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
+	auto cylhead = trackdata.cylhead;
+	m_trackdata[cylhead] = std::move(trackdata);
+	return m_trackdata[cylhead];
 }
+
+const Track &Disk::write (const CylHead &cylhead, Track &&track)
+{
+	write(TrackData(cylhead, std::move(track)));
+	return read_track(cylhead);
+}
+
+const BitBuffer &Disk::write(const CylHead &cylhead, BitBuffer &&bitbuf)
+{
+	write(TrackData(cylhead, std::move(bitbuf)));
+	return read_bitstream(cylhead);
+}
+
+const FluxData &Disk::write(const CylHead &cylhead, FluxData &&flux_revs)
+{
+	write(TrackData(cylhead, std::move(flux_revs)));
+	return read_flux(cylhead);
+}
+
 
 void Disk::each (const std::function<void (const CylHead &cylhead, const Track &track)> &func, bool cyls_first)
 {
@@ -132,7 +148,7 @@ void Disk::format (const Format &new_fmt, const Data &data, bool cyls_first)
 		Track track;
 		track.format(cylhead, new_fmt);
 		it = track.populate(it, itEnd);
-		write_track(cylhead, std::move(track));
+		write(cylhead, std::move(track));
 	}, cyls_first);
 
 	// Assign format after formatting as it's cleared by formatting

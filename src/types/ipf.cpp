@@ -219,9 +219,9 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 
 			// Add flux or bitstream data, depending on which we generated
 			if (!flux_revs.empty())
-				disk->add(TrackData(CylHead(cyl, head), std::move(flux_revs)));
+				disk->write(CylHead(cyl, head), std::move(flux_revs));
 			else
-				disk->add(TrackData(CylHead(cyl, head), std::move(bitbuf)));
+				disk->write(CylHead(cyl, head), std::move(bitbuf));
 		}
 	}
 

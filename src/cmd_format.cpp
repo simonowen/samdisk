@@ -51,7 +51,7 @@ bool UnformatImage (const std::string &path, Range range)
 
 	range.each([&] (const CylHead &cylhead) {
 		if (!g_fAbort)
-			disk->write_track(cylhead, Track());
+			disk->write(cylhead, Track());
 	});
 
 	return WriteImage(path, disk);

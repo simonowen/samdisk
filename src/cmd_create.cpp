@@ -21,7 +21,7 @@ bool CreateImage (const std::string &path, Range range)
 
 	// Extend or format the disk
 	if (opt.noformat)
-		disk->write_track(CylHead(range.cyl_end - 1, range.head_end - 1), Track());
+		disk->write(CylHead(range.cyl_end - 1, range.head_end - 1), Track());
 	else
 		disk->format(fmt);
 

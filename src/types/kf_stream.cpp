@@ -53,7 +53,7 @@ bool ReadSTREAM (MemFile &file, std::shared_ptr<Disk> &disk)
 			for (auto &w : warnings)
 				Message(msgWarning, "%s on %s", w.c_str(), CH(cylhead.cyl, cylhead.head));
 
-			disk->add(TrackData(cylhead, std::move(flux_revs)));
+			disk->write(cylhead, std::move(flux_revs));
 		}
 	});
 

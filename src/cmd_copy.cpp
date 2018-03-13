@@ -57,11 +57,11 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 			// Repair the target track using the source track.
 			RepairTrack(cylhead, dst_track, src_track);
 
-			dst_disk->write_track(cylhead, std::move(dst_track));
+			dst_disk->write(cylhead, std::move(dst_track));
 		}
 		else
 		{
-			dst_disk->write_track(cylhead, src_track);
+			dst_disk->write(cylhead, std::move(src_track));
 		}
 	}, opt.verbose != 0);
 

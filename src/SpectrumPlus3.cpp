@@ -222,7 +222,7 @@ bool FixPlus3BootLoader (std::shared_ptr<Disk> &disk)
 		CylHead cylhead(0, 0);
 		auto t = disk->read_track(cylhead);
 		t.find(sector->header)->datas().assign({ std::move(data) });
-		disk->write_track(cylhead, std::move(t));
+		disk->write(cylhead, std::move(t));
 
 		return true;
 	}
@@ -244,7 +244,7 @@ bool FixPlus3BootLoader (std::shared_ptr<Disk> &disk)
 		CylHead cylhead(1, 0);
 		auto t = disk->read_track(cylhead);
 		t.find(sector->header)->datas().assign({ std::move(data) });
-		disk->write_track(cylhead, std::move(t));
+		disk->write(cylhead, std::move(t));
 
 		Message(msgFix, "corrected motor issue in Shadow Warriors second-stage loader");
 		return true;

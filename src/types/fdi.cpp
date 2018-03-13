@@ -158,7 +158,7 @@ bool ReadFDI (MemFile &file, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead, std::move(track));
+			disk->write(cylhead, std::move(track));
 		}
 	}
 

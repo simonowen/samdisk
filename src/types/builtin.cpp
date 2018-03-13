@@ -110,7 +110,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Data CRC errors
@@ -124,7 +124,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// 65 x 128-byte sectors
@@ -137,7 +137,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		break;
@@ -158,7 +158,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -210,7 +210,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			iota(data0, 2);
 			track[1].add(Data(data0), true);
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 
@@ -245,7 +245,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			fill(data1, 256 + 32, 256 + 32 + 48, 1);
 			track[1].add(Data(data1), true);
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// CPC Speedlock sector (partially weak)
@@ -275,7 +275,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			fill(data7, 256 + 40, 256 + 40 + 40, 1);
 			track[7].add(Data(data7), true);
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Rainbow Arts partially weak sector
@@ -311,7 +311,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			std::copy(codesig.begin(), codesig.end(), data3.begin());
 			track[3].add(std::move(data3));
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// KBI-10 weak sector
@@ -337,7 +337,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			iota(data9, 4 + 4 + 124, 4 + 4 + 124 + 4, 124);
 			track[9].add(Data(data9), true);
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Missing data fields
@@ -351,7 +351,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// ID field CRC error
@@ -365,7 +365,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Data CRC error
@@ -379,7 +379,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 
@@ -405,7 +405,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			data0.insert(data0.end(), 9, 0xf7);
 			track[0].add(std::move(data0));
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Single sector with gap data
@@ -426,7 +426,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			data0[sector.size() + 1] = crc & 0xff;
 			track[0].add(std::move(data0));
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Le Necromancien typical track, with gap data conflicting with EDSK multiple copies extension
@@ -443,7 +443,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Defenders of the Earth (+3)
@@ -457,7 +457,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// World Games (CPC)
@@ -472,7 +472,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// SP6
@@ -488,7 +488,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Tomahawk (track 3)
@@ -502,7 +502,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// 8K sector
@@ -513,7 +513,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			sector.add(Data(sector.size(), i), true, 0xf8);
 			track.add(std::move(sector));
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Logo Professor (overformatted track, with offsets)
@@ -528,7 +528,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Edd the Duck (track 7)
@@ -543,7 +543,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Alternative for KBI-10 weak sector
@@ -563,7 +563,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			std::copy(sig.begin(), sig.end(), data3.begin());
 			track[3].add(std::move(data3));
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// KBI-19: CPC Titan (cyl 14) and Mach 3 (cyl 40)
@@ -577,7 +577,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// CAL2BOOT.DMK (track 9)
@@ -594,7 +594,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Prehistoric 2 (track 30)
@@ -609,7 +609,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Tetris
@@ -623,7 +623,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Terre et Conquerants
@@ -637,7 +637,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// 19 x 256-byte sectors
@@ -650,7 +650,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Opera Soft 32K sector
@@ -664,7 +664,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Sports Hero + Mugsy (+3)
@@ -679,7 +679,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Mirage (5*1024 + 1*512)
@@ -692,7 +692,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Prophet 2000 (5*1024 + 1*256)
@@ -706,7 +706,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Lemmings (SAM)
@@ -719,7 +719,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// Puffy's Saga (CPC)
@@ -732,7 +732,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 		// 32 x 128-byte sectors
@@ -745,7 +745,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
 #if 1
@@ -759,7 +759,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 #endif
 		break;
@@ -780,7 +780,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			// 130 x 128-byte sectors
@@ -793,7 +793,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			// GPT (Siemens) exchange format
@@ -806,7 +806,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -828,7 +828,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -850,7 +850,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -873,7 +873,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -896,7 +896,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->write_track(cylhead.next_cyl(), std::move(complete(track)));
+				disk->write(cylhead.next_cyl(), std::move(complete(track)));
 			}
 
 			break;
@@ -914,7 +914,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 18; i++)
 				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
 		}
 
@@ -932,12 +932,12 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				for (i = 0; i < 9; i++)
 					bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-				disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			}
 
 			// Empty track.
 			{
-				disk->add(GenerateEmptyTrack(cylhead.next_cyl(), Track()));
+				disk->write(GenerateEmptyTrack(cylhead.next_cyl(), Track()));
 			}
 
 			// KBI-19 format.
@@ -953,7 +953,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				}
 
 				// Generate the full track from it.
-				disk->add(GenerateKBI19Track(cylhead.next_cyl(), complete(track)));
+				disk->write(GenerateKBI19Track(cylhead.next_cyl(), complete(track)));
 			}
 
 			// OperaSoft format with 32K sector.
@@ -969,7 +969,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				}
 
 				// Generate the full track from it.
-				disk->add(GenerateOperaSoftTrack(cylhead.next_cyl(), complete(track)));
+				disk->write(GenerateOperaSoftTrack(cylhead.next_cyl(), complete(track)));
 			}
 			break;
 		}
@@ -986,8 +986,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 18; i++)
 				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-			TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
-			disk->add(std::move(trackdata));
+			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
 			break;
 		}
 
@@ -1005,8 +1004,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				for (i = 0; i < 9; i++)
 					fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-				TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
-				disk->add(std::move(trackdata));
+				disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
 			}
 
 			// Spectrum +3 Speedlock weak sectors (part and full).
@@ -1033,8 +1031,10 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				track[1].add(Data(512, 0), true);
 
 				complete(track);
-				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256, 32).keep_flux()));
-				disk->add(TrackData(GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512).keep_flux()));
+				auto trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256, 32);
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
 			}
 
 			// Amstrad CPC Speedlock weak sectors (part and full).
@@ -1056,8 +1056,10 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				// Data error for weak sector.
 				track[7].add(Data(512, 0), true);
 
-				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256, 32).keep_flux()));
-				disk->add(TrackData(GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 0, 512).keep_flux()));
+				auto trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256, 32);
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 0, 512);
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
 			}
 
 			// Rainbow Arts weak sector.
@@ -1081,7 +1083,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				std::copy(sig.begin(), sig.end(), data3.begin());
 				track[3].add(std::move(data3));
 
-				disk->add(TrackData(GenerateRainbowArtsTrack(cylhead.next_cyl(), complete(track), 100, 256)));
+				disk->write(GenerateRainbowArtsTrack(cylhead.next_cyl(), complete(track), 100, 256));
 			}
 
 			// KBI-10 weak sector.
@@ -1101,7 +1103,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				std::copy(sig.begin(), sig.end(), data9.begin());
 				track[9].add(std::move(data9), true);
 
-				disk->add(TrackData(GenerateKBI10Track(cylhead.next_cyl(), complete(track), 4, 4)));
+				disk->write(GenerateKBI10Track(cylhead.next_cyl(), complete(track), 4, 4));
 			}
 
 			// Logo Professor (overformatted track).
@@ -1116,7 +1118,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->add(TrackData(GenerateLogoProfTrack(cylhead.next_cyl(), complete(track))));
+				disk->write(GenerateLogoProfTrack(cylhead.next_cyl(), complete(track)));
 			}
 
 			// Sega System 24 (0x2f00 size)
@@ -1130,7 +1132,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 					track.add(std::move(sector));
 				}
 
-				disk->add(TrackData(GenerateSystem24Track(cylhead.next_cyl(), complete(track))));
+				disk->write(GenerateSystem24Track(cylhead.next_cyl(), complete(track)));
 			}
 
 			break;
@@ -1148,8 +1150,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 9; i++)
 				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-			TrackData trackdata(cylhead.next_cyl(), FluxData({std::move(fluxbuf.buffer())}));
-			disk->add(std::move(trackdata));
+			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
 			break;
 		}
 
@@ -1165,7 +1166,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 22; i++)
 				bitbuf.addAmigaSector(cylhead.cyl, cylhead.head, i, (22 - i), data.data());
 
-			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
 		}
 
@@ -1181,7 +1182,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 11; i++)
 				bitbuf.addAmigaSector(cylhead, i, (11 - i), data.data());
 
-			disk->add(TrackData(cylhead.next_cyl(), std::move(bitbuf.buffer())));
+			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
 		}
 
@@ -1190,7 +1191,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 	}
 
 	// Append a blank track
-	disk->write_track(cylhead, Track());
+	disk->write(cylhead, Track());
 
 	disk->strType = "<builtin>";
 	return true;

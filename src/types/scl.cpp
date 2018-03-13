@@ -124,7 +124,7 @@ bool ReadSCL (MemFile &file, std::shared_ptr<Disk> &disk)
 			Track track;
 			track.format(cylhead, fmt);
 			track.populate(mem.begin(), mem.end());
-			disk->write_track(cylhead, std::move(track));
+			disk->write(cylhead, std::move(track));
 		}
 	}
 

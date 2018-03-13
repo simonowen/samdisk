@@ -327,7 +327,7 @@ bool ReadTD0 (MemFile &file, std::shared_ptr<Disk> &disk)
 				Message(msgFix, "ignored %u duplicate sectors on oversized %s", dups_removed, CH(cylhead.cyl, cylhead.head));
 		}
 
-		disk->write_track(cylhead, std::move(track));
+		disk->write(cylhead, std::move(track));
 	}
 
 	if (no_id_sectors)

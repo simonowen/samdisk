@@ -30,19 +30,15 @@ public:
 	void add (BitBuffer &&bitstream);
 	void add (FluxData &&flux);
 
-	TrackData &keep_track ();
-	TrackData &keep_bitstream ();
-	TrackData &keep_flux ();
-
 	CylHead cylhead {};
 
 private:
 	TrackDataType m_type{ TrackDataType::None };
 	int m_flags{ TD_NONE };
 
-	mutable Track m_track {};
-	mutable BitBuffer m_bitstream {};
-	mutable FluxData m_flux {};
+	Track m_track {};
+	BitBuffer m_bitstream {};
+	FluxData m_flux {};
 };
 
 #endif // TRACKDATA_H

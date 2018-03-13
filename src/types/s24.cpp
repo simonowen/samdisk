@@ -50,7 +50,7 @@ bool ReadS24 (MemFile &file, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write_track(CylHead(cyl, head), std::move(track));
+			disk->write(CylHead(cyl, head), std::move(track));
 		}
 	}
 

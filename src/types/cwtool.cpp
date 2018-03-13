@@ -114,7 +114,7 @@ bool ReadCWTOOL (MemFile &file, std::shared_ptr<Disk> &disk)
 		if (!flux.empty())
 			flux_revs.push_back(std::move(flux));
 
-		disk->add(TrackData(cylhead, std::move(flux_revs)));
+		disk->write(cylhead, std::move(flux_revs));
 	}
 
 	if (clock_khz > 0)

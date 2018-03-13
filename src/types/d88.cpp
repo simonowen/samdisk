@@ -191,7 +191,7 @@ bool ReadD88 (MemFile &file, std::shared_ptr<Disk> &disk)
 			} while (track.size() < d88s.bSectorsLow);
 
 			// Add the track to the disk
-			disk->write_track(cylhead, track);
+			disk->write(cylhead, std::move(track));
 		}
 	}
 

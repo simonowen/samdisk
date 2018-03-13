@@ -131,27 +131,3 @@ void TrackData::add (FluxData &&flux)
 	m_flux = std::move(flux);
 	m_flags |= TD_FLUX;
 }
-
-TrackData &TrackData::keep_track ()
-{
-	m_bitstream.clear();
-	m_flux.clear();
-	m_flags &= TD_TRACK;
-	return *this;
-}
-
-TrackData &TrackData::keep_bitstream()
-{
-	m_track.clear();
-	m_flux.clear();
-	m_flags &= TD_BITSTREAM;
-	return *this;
-}
-
-TrackData &TrackData::keep_flux()
-{
-	m_track.clear();
-	m_bitstream.clear();
-	m_flags &= TD_FLUX;
-	return *this;
-}

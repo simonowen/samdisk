@@ -130,7 +130,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 			}
 
 			BitBuffer bitbuf(datarate, pbTrack, uTrackDataLen * 8);
-			disk->add(TrackData(CylHead(cyl, head), std::move(bitbuf)));
+			disk->write(CylHead(cyl, head), std::move(bitbuf));
 
 			// ToDo: save more track metadata?
 		}

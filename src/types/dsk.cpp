@@ -130,7 +130,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 			// EDSK doesn't store blank tracks, as indicated by zero size in the index
 			if (fEDSK && !uTrackSize)
 			{
-				disk->write_track(cylhead, Track());
+				disk->write(cylhead, Track());
 				continue;
 			}
 
@@ -138,7 +138,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 			if (cyl >= 40 && file.tell() == file.size())
 			{
 				Message(msgWarning, "%s track header is missing, assuming blank track", CH(cyl, head));
-				disk->write_track(cylhead, Track());
+				disk->write(cylhead, Track());
 				continue;
 			}
 
@@ -355,7 +355,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 				fWarned6K = true;
 			}
 
-			disk->write_track(cylhead, std::move(track));
+			disk->write(cylhead, std::move(track));
 		}
 	}
 
@@ -378,7 +378,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 						sector.offset = util::letoh(val) * 16;	// convert to bitstream bits
 				}
 
-				disk->write_track(cylhead, std::move(track));
+				disk->write(cylhead, std::move(track));
 			});
 		}
 		else

@@ -14,7 +14,7 @@ void DemandDisk::extend (const CylHead &cylhead)
 	m_trackdata[cylhead].cylhead = cylhead;
 }
 
-const Track &DemandDisk::read_track (const CylHead &cylhead)
+const TrackData &DemandDisk::read (const CylHead &cylhead)
 {
 	if (!m_loaded[cylhead])
 	{
@@ -41,7 +41,18 @@ const Track &DemandDisk::read_track (const CylHead &cylhead)
 		m_loaded[cylhead] = true;
 	}
 
-	return Disk::read_track(cylhead);
+	return Disk::read(cylhead);
+}
+
+const TrackData &DemandDisk::write (TrackData &&/*trackdata*/)
+{
+#if 1
+	throw util::exception("writing not currently supported");
+#else
+	//save(trackdata);
+	m_loaded[trackdata.cylhead] = true;
+	return Disk::write(std::move(trackdata));
+#endif
 }
 
 void DemandDisk::unload ()
