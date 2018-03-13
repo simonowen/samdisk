@@ -24,7 +24,7 @@ const int DUMP_OFFSETS = 1;
 const int DUMP_DIFF = 2;
 
 void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &context, int flags = 0);
-void NormaliseTrack (const CylHead &cylhead, Track &track);
+bool NormaliseTrack (const CylHead &cylhead, Track &track);
 bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track);
 
 std::vector<std::pair<char, size_t>> DiffSectorCopies (const Sector &sector);

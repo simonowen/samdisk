@@ -42,8 +42,9 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 		if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
 			return;
 
-		auto src_track = src_disk->read_track(cylhead * opt.step);
-		NormaliseTrack(cylhead, src_track);
+		auto src_data = src_disk->read(cylhead * opt.step);
+		auto src_track = src_data.track();
+		bool changed = NormaliseTrack(cylhead, src_track);
 
 		if (opt.verbose)
 			ScanTrack(cylhead, src_track, context);
@@ -61,7 +62,15 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 		}
 		else
 		{
-			dst_disk->write(cylhead, std::move(src_track));
+			// If the source track was modified it becomes the only track data.
+			if (changed)
+				dst_disk->write(cylhead, std::move(src_track));
+			else
+			{
+				// Preserve any source data.
+				src_data.cylhead = cylhead;
+				dst_disk->write(std::move(src_data));
+			}
 		}
 	}, opt.verbose != 0);
 

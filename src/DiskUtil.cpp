@@ -199,12 +199,13 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 }
 
 
-// Normalise track contents, optionally applying load-time change filters
-void NormaliseTrack (const CylHead &cylhead, Track &track)
+// Normalise track contents, performing overrides and applying fixes as requested.
+bool NormaliseTrack (const CylHead &cylhead, Track &track)
 {
+	bool changed = false;
 	int i;
 
-	// Clear the track length if offsets are disabled
+	// Clear the track length if offsets are disabled (cosmetic: no changed flag).
 	if (opt.offsets == 0)
 		track.tracklen = 0;
 
@@ -221,18 +222,22 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 			{
 				auto &s = track[j];
 				if (s.header.compare_chrn(sector.header) && s.encoding == sector.encoding)
+				{
 					track.remove(j--);
+					changed = true;
+				}
 			}
 		}
 
 		// Clear all data, for privacy during diagnostics?
-		if (opt.nodata)
+		if (opt.nodata && sector.has_data())
 		{
 			sector.remove_data();
 			sector.add(Data());		// empty data rather than no data
+			changed = true;
 		}
 
-		// Track offsets disabled?
+		// Track offsets disabled? (cosmetic: no changed flag)
 		if (opt.offsets == 0)
 			sector.offset = 0;
 #if 0
@@ -251,7 +256,10 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 		{
 			// Remove gap data if disabled, or the gap mask doesn't allow it
 			if (opt.gaps == GAPS_NONE || !(opt.gapmask & (1 << i)))
+			{
 				sector.remove_gapdata();
+				changed = true;
+			}
 			// Remove normal gaps unless we're asked to keep them.
 			else if (opt.gaps != GAPS_ALL && sector.encoding == Encoding::MFM)
 			{
@@ -259,6 +267,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				if (test_remove_gap3(sector.data_copy(), sector.size(), gap3))
 				{
 					sector.remove_gapdata();
+					changed = true;
 
 					if (!sector.gap3)
 						sector.gap3 = gap3;
@@ -286,18 +295,28 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 
 		// Remove only the final gap if --no-gap4b was used
 		if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
+		{
 			sector.remove_gapdata();
+			changed = true;
+		}
 
-		// Allow override for sector datarate and encoding.
+		// Allow override for sector datarate.
 		if (opt.datarate != DataRate::Unknown)
+		{
 			sector.datarate = opt.datarate;
+			changed = true;
+		}
+
+		// Allow override for sector encoding.
 		if (opt.encoding != Encoding::Unknown)
+		{
 			sector.encoding = opt.encoding;
+			changed = true;
+		}
 
-		// Allow overrides for track gap3 and sector size
-		if (opt.gap3 != -1) sector.gap3 = static_cast<uint8_t>(opt.gap3);
-		// if (opt.size != -1) size = opt.size;	// ToDo: remove?
-
+		// Allow overrides for track gap3 (cosmetic: no changed flag)
+		if (opt.gap3 != -1)
+			sector.gap3 = static_cast<uint8_t>(opt.gap3);
 #if 0
 		// ToDo: move this to fdrawcmd disk type
 		// Check for the ASRock FDC problem that corrupts sector data with format headers (unless comparison block is all one byte)
@@ -329,6 +348,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				sector1.add(std::move(data), true);
 
 				Message(msgFix, "added suitable second copy of +3 Speedlock weak sector");
+				changed = true;
 			}
 			else
 				Message(msgWarning, "missing multiple copies of +3 Speedlock weak sector");
@@ -347,6 +367,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				sector7.add(std::move(data), true);
 
 				Message(msgFix, "added suitable second copy of CPC Speedlock weak sector");
+				changed = true;
 			}
 			else
 				Message(msgWarning, "missing multiple copies of CPC Speedlock weak sector");
@@ -378,6 +399,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				sector1.add(std::move(data), true);
 
 				Message(msgFix, "added suitable second copy of Rainbow Arts weak sector");
+				changed = true;
 			}
 			else
 				Message(msgWarning, "missing multiple copies of Rainbow Arts weak sector");
@@ -412,6 +434,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				sector8.add(std::move(data8), true);
 
 				Message(msgFix, "added missing data to OperaSoft 32K sector");
+				changed = true;
 			}
 			else
 				Message(msgWarning, "missing data in OperaSoft 32K sector");
@@ -424,8 +447,8 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 		static auto chk8k_disk = CHK8K_UNKNOWN;
 		static int chk8k_id = -1;
 
-		Sector &sector = track[0];
-		Data &data = sector.data_copy(0);
+		const auto &sector = track[0];
+		const auto &data = sector.data_copy();
 
 		// If the sector ID has changed, so might the checksum method, so start over.
 		// This is used by Fun Radio [2B] (CPC).
@@ -444,7 +467,7 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 
 		// Determine the checksum method name and the checksum length
 		int checksum_len = 0;
-		const char *pcszMethod = Get8KChecksumMethodName(chk8k_disk, checksum_len);
+		auto pcszMethod = Get8KChecksumMethodName(chk8k_disk, checksum_len);
 
 		// If what we've found doesn't match the disk checksum method, report it
 		if (chk8k_disk >= CHK8K_FOUND && chk8k != chk8k_disk && chk8k != CHK8K_VALID)
@@ -463,6 +486,9 @@ void NormaliseTrack (const CylHead &cylhead, Track &track)
 				Message(msgWarning, "unrecognised or invalid 6K checksum [%02X] on %s", data[0x1800], CH(cylhead.cyl, cylhead.head));
 		}
 	}
+
+	// Return whether the supplied track was modified.
+	return changed;
 }
 
 // Attempt to repair a track, given another copy of the same track.
