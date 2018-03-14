@@ -835,13 +835,13 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 
 			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
 			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
-			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_distance = ((next_idam_offset <= dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
 			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
 			auto next_idam_align = next_idam_distance & ((1 << shift) - 1);
 
 			// Determine the bit offset and distance to the next DAM
 			auto next_dam_offset = itDataNext->first;
-			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_distance = ((next_dam_offset <= dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
 			auto next_dam_bytes = (next_dam_distance >> shift) - 1;		// -1 due to DAM being read above
 
 			// Attempt to read gap2 from non-final sectors, unless we're asked not to
@@ -1187,12 +1187,12 @@ void scan_bitstream_agat (TrackData &trackdata)
 
 			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
 			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
-			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_distance = ((next_idam_offset <= dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
 			auto next_idam_bytes = (next_idam_distance >> shift) - 2;	// -2 due to DAM being read above
 
 			// Determine the bit offset and distance to the next DAM
 			auto next_dam_offset = itDataNext->first;
-			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_distance = ((next_dam_offset <= dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
 			auto next_dam_bytes = (next_dam_distance >> shift) - 2;		// -2 due to DAM being read above
 
 			// Attempt to read gap2, unless we're asked not to
