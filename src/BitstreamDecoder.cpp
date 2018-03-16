@@ -838,6 +838,18 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			crc.init((data_encoding == Encoding::MFM) ? CRC16::A1A1A1 : CRC16::INIT_CRC);
 			crc.add(dam);
 
+			// RX02 modified MFM uses an FM DAM followed by MFM data and CRC.
+			if (data_encoding == Encoding::FM && dam == 0xfd)
+			{
+				// Convert the sector to RX02, its size to match the data.
+				sector.encoding = Encoding::RX02;
+				++sector.header.size;
+
+				// Switch to decoding the data as MFM.
+				bitbuf.encoding = Encoding::MFM;
+				shift = 4;
+			}
+
 			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
 			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
 			auto next_idam_distance = ((next_idam_offset <= dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;

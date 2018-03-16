@@ -1192,19 +1192,39 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			break;
 		}
 
-		// 250Kbps Amiga bitstream
+		// 250Kbps bitstreams
 		case 32 + 2:
 		{
-			disk->metadata["comment"] = "250Kbps Amiga bitstream";
+			disk->metadata["comment"] = "250Kbps bitstreams";
 
-			const Data data(512, 0x00);
-			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::Amiga);
+			// AmigaDOS
+			{
+				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::Amiga);
 
-			bitbuf.addAmigaTrackStart();
-			for (i = 0; i < 11; i++)
-				bitbuf.addAmigaSector(cylhead, i, (11 - i), data.data());
+				bitbuf.addAmigaTrackStart();
+				for (i = 0; i < 11; i++)
+				{
+					const Data data(512, static_cast<uint8_t>(i));
+					bitbuf.addAmigaSector(cylhead, i, (11 - i), data.data());
+				}
 
-			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
+				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
+			}
+
+			// RX02
+			{
+				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::RX02);
+
+				bitbuf.addRX02TrackStart();
+				for (i = 0; i < 26; i++)
+				{
+					const Data data(256, static_cast<uint8_t>(i));
+					bitbuf.addRX02Sector(cylhead, i + 1, 0, data, 0x38);
+				}
+
+				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
+			}
+
 			break;
 		}
 

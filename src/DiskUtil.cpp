@@ -42,7 +42,7 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				util::cout << colour::green << "d" << colour::none;
 			else if (sector.is_altdam())
 				util::cout << colour::YELLOW << "a" << colour::none;
-			else if (sector.is_rx02dam())
+			else if (sector.is_rx02dam() && sector.encoding != Encoding::RX02)
 				util::cout << colour::YELLOW << "x" << colour::none;
 
 			auto items = 0;

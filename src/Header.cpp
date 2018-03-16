@@ -20,8 +20,9 @@ std::string to_string (const Encoding &encoding)
 	{
 		case Encoding::MFM:		return "MFM";			break;
 		case Encoding::FM:		return "FM";			break;
-		case Encoding::GCR:		return "GCR";			break;
+		case Encoding::RX02:	return "RX02";			break;
 		case Encoding::Amiga:	return "Amiga";			break;
+		case Encoding::GCR:		return "GCR";			break;
 		case Encoding::Ace:		return "Ace";			break;
 		case Encoding::MX:		return "MX";			break;
 		case Encoding::Agat:	return "Agat";			break;
@@ -36,8 +37,9 @@ std::string short_name (const Encoding &encoding)
 	{
 		case Encoding::MFM:		return "mfm";			break;
 		case Encoding::FM:		return "fm";			break;
-		case Encoding::GCR:		return "gcr";			break;
+		case Encoding::RX02:	return "rx";			break;
 		case Encoding::Amiga:	return "ami";			break;
+		case Encoding::GCR:		return "gcr";			break;
 		case Encoding::Ace:		return "ace";			break;
 		case Encoding::MX:		return "mx";			break;
 		case Encoding::Agat:	return "agat";			break;

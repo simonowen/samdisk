@@ -10,6 +10,7 @@ void TrackBuffer::setEncoding (Encoding encoding)
 	{
 	case Encoding::MFM:
 	case Encoding::FM:
+	case Encoding::RX02:
 	case Encoding::Amiga:
 		m_encoding = encoding;
 		break;
@@ -345,4 +346,33 @@ void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, con
 void TrackBuffer::addAmigaSector(const CylHead &cylhead, int sector, int remain, const void *buf)
 {
 	addAmigaSector(cylhead.cyl, cylhead.head, sector, remain, buf);
+}
+
+
+
+void TrackBuffer::addRX02TrackStart()
+{
+	setEncoding(Encoding::FM);
+
+	addGap(32);	// gap 4a
+	addSync();
+	addIAM();
+	addGap(27);	// gap 1
+}
+
+void TrackBuffer::addRX02Sector(const CylHead &cylhead, int sector, int size, const Data &data, int gap3)
+{
+	setEncoding(Encoding::FM);
+
+	addSync();
+	addSectorHeader(cylhead.cyl, cylhead.head, sector, size);
+	addGap(11);		// gap 2
+	addSync();
+	addAM(0xfd);	// RX02 DAM
+
+	setEncoding(Encoding::MFM);
+
+	addBlockUpdateCrc(data);
+	addCRC();
+	addGap(gap3);	// gap 3
 }

@@ -49,6 +49,9 @@ public:
 	void addAmigaSector (int cyl, int head, int sector, int remain, const void *buf);
 	void addAmigaSector (const CylHead &cylhead, int sector, int remain, const void *buf);
 
+	void addRX02TrackStart ();
+	void addRX02Sector (const CylHead &cylhead, int sector, int size, const Data &data, int gap3);
+
 protected:
 	Encoding m_encoding{Encoding::MFM};
 	bool m_onelast{false};
