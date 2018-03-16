@@ -4,17 +4,9 @@
 #include "FluxTrackBuffer.h"
 
 FluxTrackBuffer::FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding)
-	: TrackBuffer(encoding), m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate))
+	: m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate))
 {
-	switch (encoding)
-	{
-	case Encoding::MFM:
-	case Encoding::FM:
-	case Encoding::Amiga:
-		break;
-	default:
-		throw util::exception("unsupported flux track encoding (", encoding, ")");
-	}
+	setEncoding(encoding);
 }
 
 void FluxTrackBuffer::addBit (bool next_bit)

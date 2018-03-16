@@ -270,9 +270,9 @@ typedef struct
 	int quick = 0, blind = -1, calibrate = 0, newdrive = 0, noweak = 0;
 	int minimal = 0, nozip = 0, fix = -1, legacy = 0, datacopy = 0, bytes = -1;
 	int offsets = -1, absoffsets = 0, nowrite = 0, nodiff = 0, noformat = 0, nodups = 0, rpm = 0, flip = 0;
-	int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1, nofm = -1, head0 = -1, head1 = -1;
+	int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1, head0 = -1, head1 = -1;
 	int rescans = 0, maxcopies = 3, retries = maxcopies, fmoverlap = 0, multiformat = 0, cylsfirst = -1;
-	int bdos = 0, atom = 0, hdf = 0, cpm = 0, resize = 0, nocfa = 0, noidentify = 0, ace = 0, mx = 0, agat = 0;
+	int bdos = 0, atom = 0, hdf = 0, cpm = 0, resize = 0, nocfa = 0, noidentify = 0, nofm = 0, ace = 0, mx = 0, agat = 0;
 	int force = 0, nosig = 0, check8k = -1, tty = 0, nodata = 0, noflux = 0;
 	int nowobble = 0, scale = 100, plladjust = 5, pllphase = 60;
 	int time = 0, mt = -1;

@@ -676,7 +676,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 	std::vector<std::pair<int, Encoding>> data_fields;
 
 	uint32_t dword = 0;
-	bool seen_fm_sector = false;
+	uint8_t last_fm_am = 0;
 
 	while (!bitbuf.wrapped())
 	{
@@ -742,11 +742,11 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 					s.set_badidcrc(crc != 0);
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					if (opt.debug) util::cout << "* " << bitbuf.encoding << " IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 
-					// Track good FM sector headers
-					seen_fm_sector |= (bitbuf.encoding == Encoding::FM && !crc);
+					if (bitbuf.encoding == Encoding::FM)
+						last_fm_am = am;
 				}
 				break;
 			}
@@ -755,18 +755,23 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			case 0xf8: case 0xf9:	// deleted data (+alt)
 			case 0xfd:				// RX02
 			{
-				// FM address marks are short, so false positives are likely. There's no way to validate
-				// DAMs without knowing the size, so we ignore them if we've not seen a valid FM header.
-				if (bitbuf.encoding == Encoding::FM && !seen_fm_sector)
-					break;
+				// FM address marks are short, so false positives are likely.
+				if (bitbuf.encoding == Encoding::FM)
+				{
+					// Require a valid FM IDAM before we accept an FM DAM.
+					if (last_fm_am != 0xfe)
+						break;
 
-				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+					last_fm_am = am;
+				}
+
+				if (opt.debug) util::cout << "* " << bitbuf.encoding << " DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
 
 			case 0xfc:	// IAM
-				if (opt.debug) util::cout << "* IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug) util::cout << "* " << bitbuf.encoding << " IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				break;
 
 			// This isn't a valid AM type, but Skate or Die [+3] and Les Dieux

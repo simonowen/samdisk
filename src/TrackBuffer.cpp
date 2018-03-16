@@ -4,14 +4,14 @@
 #include "TrackBuffer.h"
 #include "IBMPC.h"
 
-TrackBuffer::TrackBuffer (Encoding encoding)
-	: m_encoding(encoding)
+void TrackBuffer::setEncoding (Encoding encoding)
 {
 	switch (encoding)
 	{
 	case Encoding::MFM:
 	case Encoding::FM:
 	case Encoding::Amiga:
+		m_encoding = encoding;
 		break;
 	default:
 		throw util::exception("unsupported bitstream encoding (", encoding, ")");

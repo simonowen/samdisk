@@ -8,12 +8,9 @@ class TrackBuffer
 	static const int GAP_FILL_BYTE = 0x4e;	// IBM System 34 gap filler
 
 public:
-	explicit TrackBuffer (Encoding encoding = Encoding::MFM);
 	virtual ~TrackBuffer () = default;
 
-	void setFM () { m_encoding = Encoding::FM; }
-	void setMFM () { m_encoding = Encoding::MFM; }
-
+	virtual void setEncoding (Encoding encoding);
 	virtual void addBit (bool one) = 0;
 
 	void addDataBit (bool one);

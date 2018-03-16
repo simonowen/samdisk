@@ -6,22 +6,23 @@
 #define INIT_BITSIZE   5000000
 
 BitstreamTrackBuffer::BitstreamTrackBuffer (DataRate datarate, Encoding encoding)
-	: TrackBuffer(encoding), m_buffer(datarate, encoding)
+	: m_buffer(datarate, encoding)
 {
-	switch (encoding)
-	{
-	case Encoding::MFM:
-	case Encoding::FM:
-	case Encoding::Amiga:
-		break;
-	default:
-		throw util::exception("unsupported bitstream encoding (", encoding, ")");
-	}
+	setEncoding(encoding);
+}
+
+void BitstreamTrackBuffer::setEncoding(Encoding encoding)
+{
+	TrackBuffer::setEncoding(encoding);
+	m_buffer.encoding = encoding;
 }
 
 void BitstreamTrackBuffer::addBit (bool one)
 {
 	m_buffer.add(one);
+
+	if (m_buffer.encoding == Encoding::FM)
+		m_buffer.add(false);
 }
 
 void BitstreamTrackBuffer::addCrc (int size)

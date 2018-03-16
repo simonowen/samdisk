@@ -907,12 +907,14 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		{
 			disk->metadata["comment"] = "500Kbps MFM bitstream";
 
-			const Data data(512, 0x00);
 			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::MFM);
 
 			bitbuf.addTrackStart();
 			for (i = 0; i < 18; i++)
+			{
+				const Data data(512, static_cast<uint8_t>(i));
 				bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+			}
 
 			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
@@ -925,12 +927,14 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Simple 9-sector format.
 			{
-				const Data data(512, 0x00);
 				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
 
 				bitbuf.addTrackStart();
 				for (i = 0; i < 9; i++)
+				{
+					const Data data(512, static_cast<uint8_t>(i));
 					bitbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+				}
 
 				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			}
@@ -971,6 +975,24 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				// Generate the full track from it.
 				disk->write(GenerateOperaSoftTrack(cylhead.next_cyl(), complete(track)));
 			}
+			break;
+		}
+
+		// 250Kbps FM bitstream
+		case 20 + 2:
+		{
+			disk->metadata["comment"] = "250Kbps FM bitstream";
+
+			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::FM);
+
+			bitbuf.addTrackStart();
+			for (i = 0; i < 8; i++)
+			{
+				const Data data(256, static_cast<uint8_t>(i));
+				bitbuf.addSector(Header(cylhead, i + 1, 1), data, 0x4e);
+			}
+
+			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
 		}
 
@@ -1143,12 +1165,12 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 		{
 			disk->metadata["comment"] = "250Kbps FM flux";
 
-			const Data data(512, 0x00);
+			const Data data(256, 0x00);
 			FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::FM);
 
 			fluxbuf.addTrackStart();
-			for (i = 0; i < 9; i++)
-				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
+			for (i = 0; i < 8; i++)
+				fluxbuf.addSector(Header(cylhead, i + 1, 1), data, 0x4e);
 
 			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
 			break;
