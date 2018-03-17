@@ -123,17 +123,19 @@ bool Track::is_8k_sector () const
 
 bool Track::is_repeated (const Sector &sector) const
 {
+	auto count = 0;
+
 	for (const auto &s : m_sectors)
 	{
-		// Ignore ourselves in the list
-		if (&s == &sector)
-			continue;
-
-		// Stop if we find match for data rate, encoding, and CHRN
+		// Check for data rate, encoding, and CHRN match
 		if (s.datarate == sector.datarate &&
 			s.encoding == sector.encoding &&
 			s.header == sector.header)
-			return true;
+		{
+			// Stop if we see more than one match.
+			if (++count > 1)
+				return true;
+		}
 	}
 
 	return false;
@@ -183,6 +185,10 @@ void Track::add (Track &&track)
 
 Track::AddResult Track::add (Sector &&sector)
 {
+	// Check the new datarate against any existing sector.
+	if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
+		throw util::exception("can't mix datarates on a track");
+
 	// If there's no positional information, simply append
 	if (sector.offset == 0)
 	{
@@ -273,6 +279,9 @@ Data::const_iterator Track::populate (Data::const_iterator it, Data::const_itera
 void Track::insert(int index, Sector &&sector)
 {
 	assert(index <= static_cast<int>(m_sectors.size()));
+
+	if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
+		throw util::exception("can't mix datarates on a track");
 
 	auto it = m_sectors.begin() + index;
 	m_sectors.insert(it, std::move(sector));

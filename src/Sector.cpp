@@ -141,8 +141,8 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	// Remove the inferior copy
 	if (it != m_data.end())
 	{
+		ret = (it->size() < size()) ? Merge::Improved : Merge::NewData;
 		m_data.erase(it);
-		ret = Merge::Improved;
 	}
 
 	// DD 8K sectors are considered complete at 6K, everything else at natural size
@@ -225,8 +225,9 @@ Sector::Merge Sector::merge (Sector &&sector)
 	for (Data &data : sector.m_data)
 	{
 		// Move the data into place, passing on the existing data CRC status and DAM
-		if (add(std::move(data), sector.has_baddatacrc(), sector.dam) != Merge::Unchanged)
-			ret = Merge::Improved;	// ToDo: detect NewData return?
+		auto add_ret = add(std::move(data), sector.has_baddatacrc(), sector.dam);
+		if (add_ret == Merge::Improved || (ret == Merge::Unchanged))
+			ret = add_ret;
 	}
 	sector.m_data.clear();
 

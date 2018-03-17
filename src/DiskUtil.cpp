@@ -497,11 +497,20 @@ bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track)
 	bool changed = false;
 
 	// Loop over all source sectors available.
-	for (auto &src_sector : src_track)
+	for (auto src_sector : src_track)
 	{
 		// Skip repeated source sectors, as the data source is ambiguous.
 		if (src_track.is_repeated(src_sector))
 			continue;
+
+		// In real-world use 250Kbps/300Kbps are interchangable due to 300rpm/360rpm.
+		if (!track.empty() &&
+			(track[0].datarate == DataRate::_250K || track[0].datarate == DataRate::_300K) &&
+			(src_sector.datarate == DataRate::_250K || src_sector.datarate == DataRate::_300K))
+		{
+			// Convert source to target data rate.
+			src_sector.datarate = track[0].datarate;
+		}
 
 		// Find a target sector with the same CHRN, datarate, and encoding.
 		auto it = track.find(src_sector.header, src_sector.datarate, src_sector.encoding);
@@ -512,7 +521,7 @@ bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track)
 				continue;
 
 			// Merge the two sectors to give the best version.
-			if (it->merge(Sector(src_sector)) == Sector::Merge::Improved)
+			if (it->merge(std::move(src_sector)) == Sector::Merge::Improved)
 			{
 				if (it->has_good_data())
 					Message(msgFix, "repaired %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
@@ -542,8 +551,8 @@ bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track)
 				}
 			}
 
-			track.insert(insert_idx, Sector(src_sector));
 			Message(msgFix, "added missing %s", CHR(cylhead.cyl, cylhead.head, src_sector.header.sector));
+			track.insert(insert_idx, std::move(src_sector));
 			changed = true;
 		}
 	}
