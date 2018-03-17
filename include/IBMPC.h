@@ -1,6 +1,14 @@
 #ifndef IBM_PC_H
 #define IBM_PC_H
 
+const uint8_t IBM_DAM_DELETED = 0xf8;
+const uint8_t IBM_DAM_DELETED_ALT = 0xf9;
+const uint8_t IBM_DAM_ALT = 0xfa;
+const uint8_t IBM_DAM = 0xfb;
+const uint8_t IBM_IAM = 0xfc;
+const uint8_t IBM_DAM_RX02 = 0xfd;
+const uint8_t IBM_IDAM = 0xfe;
+
 const int GAP2_MFM_ED = 41;	// gap2 for MFM 1Mbps (ED)
 const int GAP2_MFM_DDHD = 22;	// gap2 for MFM, except 1Mbps (ED)
 const int GAP2_FM = 11;	// gap2 for FM (same bit size as MFM due to encoding)
@@ -21,9 +29,6 @@ const int SYNC_OVERHEAD_FM = 6/*x0x00=sync*/;
 
 const int MIN_GAP3 = 1;
 const int MAX_GAP3 = 82;	// arbitrary size, to leave a bit more space at the track end
-
-//#define SAFE_TRACKS_80		83		// Safe seek for 80-track drives
-//#define SAFE_TRACKS_40		42		// Safe seek for 40-track drives
 
 const int RPM_TIME_200 = 300000;
 const int RPM_TIME_300 = 200000;
