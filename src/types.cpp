@@ -45,6 +45,7 @@ ADD_TYPE_RO(DFI)
 ADD_TYPE_RO(SCP)
 ADD_TYPE_RO(STREAM)
 ADD_TYPE_RO(HFE)
+ADD_TYPE_RO(MFI)
 
 // Types with distinctive fields
 ADD_TYPE_RO(D80)
