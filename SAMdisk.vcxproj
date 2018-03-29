@@ -149,6 +149,7 @@
     <ClCompile Include="src\types\kf_stream.cpp" />
     <ClCompile Include="src\types\lif.cpp" />
     <ClCompile Include="src\types\mbd.cpp" />
+    <ClCompile Include="src\types\mfi.cpp" />
     <ClCompile Include="src\types\mgt.cpp" />
     <ClCompile Include="src\types\msa.cpp" />
     <ClCompile Include="src\types\opd.cpp" />

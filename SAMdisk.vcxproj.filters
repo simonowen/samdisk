@@ -333,6 +333,9 @@
     <ClCompile Include="src\types\fdrawsys_dev.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\mfi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
