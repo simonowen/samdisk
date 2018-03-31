@@ -76,7 +76,7 @@ uint8_t TrackDataParser::ReadPrevByte ()
 	return b;
 }
 
-int TrackDataParser::GetGapRun (int *out_len, uint8_t *out_fill)
+int TrackDataParser::GetGapRun (int &out_len, uint8_t &out_fill, bool *unshifted)
 {
 	auto len = 0, min_run = 0, max_run = 0;
 	uint8_t run_byte = 0xff;
@@ -86,7 +86,7 @@ int TrackDataParser::GetGapRun (int *out_len, uint8_t *out_fill)
 	// End of buffer?
 	if (IsWrapped())
 	{
-		*out_len = -1;
+		out_len = -1;
 		return false;
 	}
 
@@ -106,19 +106,22 @@ int TrackDataParser::GetGapRun (int *out_len, uint8_t *out_fill)
 				// 4E or clock
 				case 0x4e: case 0x21:
 					min_run = 4;
-					*out_fill = 0x4e;
+					out_fill = 0x4e;
+					if (unshifted) *unshifted &= (run_byte == out_fill);
 					continue;
 
 				// 00 or clock
 				case 0x00: case 0xff:
 					min_run = 6;
-					*out_fill = 0x00;
+					out_fill = 0x00;
+					if (unshifted) *unshifted &= (run_byte == out_fill);
 					continue;
 
 				// A1 or clock, with C2 (IAM) equivalent enough
 				case 0xa1: case 0x14: case 0xc2:
 					min_run = max_run = 3;
-					*out_fill = 0xa1;
+					out_fill = 0xa1;
+					if (unshifted) *unshifted &= (run_byte == out_fill);
 					continue;
 			}
 
@@ -138,7 +141,7 @@ int TrackDataParser::GetGapRun (int *out_len, uint8_t *out_fill)
 	// Is it a run within the required length range?
 	if (len && (!min_run || len >= min_run) && (!max_run || len <= max_run))
 	{
-		*out_len = len;
+		out_len = len;
 		return true;
 	}
 
@@ -148,14 +151,13 @@ int TrackDataParser::GetGapRun (int *out_len, uint8_t *out_fill)
 	// Ignore splice caused by a partial byte at the end of the stream
 	if (IsWrapped())
 	{
-		*out_len = -1;
+		out_len = -1;
 		return false;
 	}
 
 	// Return the byte containing the splice bit
-	*out_fill = run_byte;
-	*out_len = 0;
-
+	out_fill = run_byte;
+	out_len = 0;
 	return true;
 }
 

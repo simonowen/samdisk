@@ -690,7 +690,7 @@ Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Secto
 
 	// Use the previous values if the typical values are no better,
 	// except for cyl and head where we favour the physical position
-	// and prevent a single different sector changing the values..
+	// and prevent a single different sector changing the values.
 
 	if (datarates[typical.datarate] == datarates[last.datarate])
 		typical.datarate = last.datarate;
@@ -715,9 +715,9 @@ Sector GetTypicalSector (const CylHead &cylhead, const Track &track, const Secto
 	if (sizes[typical.header.size] == sizes[last.header.size])
 		typical.header.size = last.header.size;
 
-	// Clear the gap3 value unless ALL gaps are the same size or undefined
-	if ((gap3s[typical.gap3] + gap3s[0]) != track.size())
-		typical.gap3 = 0;
+	// Use previous gap3 if still present, or if no new gap3 was found.
+	if (last.gap3 && (gap3s[last.gap3] || !typical.gap3))
+		typical.gap3 = last.gap3;
 
 	return typical;
 }
@@ -770,12 +770,12 @@ bool test_remove_gap2(const Data &data, int offset)
 
 	if (opt.debug) util::cout << "----gap2----:\n";
 
-	parser.GetGapRun(&len, &fill);
+	parser.GetGapRun(len, fill);
 
 	if (!len)
 	{
 		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		for (; parser.GetGapRun(len, fill) && !len; ++splice);
 
 		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
 		if (splice > max_splice)
@@ -788,13 +788,13 @@ bool test_remove_gap2(const Data &data, int offset)
 	if (len > 0 && fill == 0x4e)
 	{
 		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		parser.GetGapRun(&len, &fill);
+		parser.GetGapRun(len, fill);
 	}
 
 	if (!len)
 	{
 		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		for (; parser.GetGapRun(len, fill) && !len; ++splice);
 
 		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
 		if (splice > max_splice)
@@ -807,13 +807,13 @@ bool test_remove_gap2(const Data &data, int offset)
 	if (len > 0 && fill == 0x00)
 	{
 		if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
-		parser.GetGapRun(&len, &fill);
+		parser.GetGapRun(len, fill);
 	}
 
 	if (!len)
 	{
 		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		for (; parser.GetGapRun(len, fill) && !len; ++splice);
 		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
 		if (splice > max_splice)
 			return false;
@@ -843,16 +843,17 @@ bool test_remove_gap3(const Data &data, int offset, int &gap3)
 	auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
 	auto splice = 0, len = 0;
 	uint8_t fill = 0x00;
+	bool unshifted = true;
 
 	if (opt.debug) util::cout << "----gap3----:\n";
 	while (!parser.IsWrapped())
 	{
-		parser.GetGapRun(&len, &fill);
+		parser.GetGapRun(len, fill, &unshifted);
 
 		if (!len)
 		{
 			splice = 1;
-			for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+			for (; parser.GetGapRun(len, fill) && !len; ++splice);
 			if (opt.debug) util::cout << "found " << splice << " splice bits\n";
 			if (splice > max_splice)
 			{
@@ -885,6 +886,10 @@ bool test_remove_gap3(const Data &data, int offset, int &gap3)
 		}
 	}
 
+	// Ignore the detected gap3 if it's not naturally aligned in the bitstream.
+	if (gap3 && !unshifted)
+		gap3 = 0;
+
 	if (opt.debug) util::cout << "gap3 can be removed\n";
 	return true;
 }
@@ -900,12 +905,12 @@ bool test_remove_gap4b(const Data &data, int offset)
 
 	if (opt.debug) util::cout << "----gap4b----:\n";
 
-	parser.GetGapRun(&len, &fill);
+	parser.GetGapRun(len, fill);
 
 	if (!len)
 	{
 		splice = 1;
-		for (; parser.GetGapRun(&len, &fill) && !len; ++splice);
+		for (; parser.GetGapRun(len, fill) && !len; ++splice);
 		if (opt.debug) util::cout << "found " << splice << " splice bits\n";
 		/*
 		auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;

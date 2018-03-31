@@ -18,7 +18,7 @@ public:
 	uint8_t ReadByte ();
 	uint8_t ReadPrevByte ();
 
-	int GetGapRun (int *out_len, uint8_t *out_fill);
+	int GetGapRun (int &out_len, uint8_t &out_fill, bool *unshifted = nullptr);
 	uint8_t FindAM (int limit);
 
 private:
