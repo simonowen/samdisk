@@ -136,6 +136,22 @@ T letoh (T x)
 	return x;
 }
 
+template <int N, std::enable_if_t<N == 2>* = nullptr>
+uint16_t le_value(uint8_t (&arr)[N])
+{
+	return (arr[1] << 8) | arr[0];
+}
+
+template <int N, std::enable_if_t<N == 3 || N == 4>* = nullptr>
+auto le_value(uint8_t (&arr)[N])
+{
+	uint32_t value = 0, i = 0;
+	for (auto x : arr)
+		value |= (x << (8 * i++));
+	return value;
+}
+
+
 class exception : public std::runtime_error
 {
 public:

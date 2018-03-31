@@ -43,7 +43,7 @@ std::vector<std::string> split (const std::string &str, char delim, bool skip_em
 
 std::string trim (const std::string &str)
 {
-	std::string s(str);
+	std::string s(str.c_str());
 	s.erase(0, s.find_first_not_of(" \t\r\n"));
 	s.erase(s.find_last_not_of(" \t\r\n") + 1);
 	return s;
