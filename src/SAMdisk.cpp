@@ -133,7 +133,10 @@ extern "C" {
 #include "getopt_long.h"
 }
 
-enum { OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES, OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST, OPT_PLLPHASE };
+enum {
+	OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
+	OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
+	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM };
 
 struct option long_options[] =
 {
@@ -202,14 +205,14 @@ struct option long_options[] =
 	{ "no-identify",	  no_argument, &opt.noidentify, 1 },
 	{ "byte-swap",		  no_argument, &opt.byteswap, 1 },
 	{ "atom",			  no_argument, &opt.byteswap, 1 },
-	{ "ace",			  no_argument, &opt.ace, 1 },
-	{ "mx",				  no_argument, &opt.mx, 1 },
-	{ "agat",			  no_argument, &opt.agat, 1 },
+	{ "ace",			  no_argument, nullptr, OPT_ACE },
+	{ "mx",				  no_argument, nullptr, OPT_MX },
+	{ "agat",			  no_argument, nullptr, OPT_AGAT },
 	{ "quick",			  no_argument, &opt.quick, 1 },
 	{ "repair",			  no_argument, &opt.repair, 1},
 	{ "fix",			  no_argument, &opt.fix, 1 },
 	{ "no-fix",			  no_argument, &opt.fix, 0 },
-	{ "no-fm",			  no_argument, &opt.nofm, 1 },
+	{ "no-fm",			  no_argument, nullptr, OPT_NOFM },
 	{ "blind",			  no_argument, &opt.blind, 1 },
 //	{ "regular",		  no_argument, &opt.blind, 0 },			ToDo: restore?
 	{ "no-weak",		  no_argument, &opt.noweak, 1 },
@@ -353,6 +356,11 @@ bool ParseCommandLine (int argc_, char *argv_[])
 					return BadValue("order");
 				break;
 			}
+
+			case OPT_ACE:	opt.encoding = Encoding::Ace;	break;
+			case OPT_MX:	opt.encoding = Encoding::MX;	break;
+			case OPT_AGAT:	opt.encoding = Encoding::Agat;	break;
+			case OPT_NOFM:	opt.encoding = Encoding::MFM;	break;
 
 			case OPT_GAPMASK: if (!GetInt(optarg, opt.gapmask)) return BadValue("gap-mask"); break;
 			case OPT_MAXCOPIES: if (!GetInt(optarg, opt.maxcopies) || opt.maxcopies < 1) return BadValue("max-copies"); break;

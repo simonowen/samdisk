@@ -131,8 +131,8 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 	{
 		for (auto datarate : {DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K})
 		{
-			// Skip FM if disabled or the data rate is 1Mbps (not worth checking).
-			if (encoding == Encoding::FM && (opt.nofm || datarate == DataRate::_1M))
+			// Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
+			if (encoding == Encoding::FM && (opt.encoding == Encoding::MFM || datarate == DataRate::_1M))
 				continue;
 
 			// Skip rates not matching user selection.

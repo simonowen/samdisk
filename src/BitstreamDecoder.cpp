@@ -15,6 +15,7 @@
 
 void scan_flux (TrackData &trackdata)
 {
+	static DataRate last_datarate = DataRate::_250K;
 	static Encoding last_encoding = Encoding::MFM;
 
 	// Return an empty track if we have no data
@@ -31,45 +32,23 @@ void scan_flux (TrackData &trackdata)
 	track.tracktime = static_cast<int>(total_time / 1000);
 	trackdata.add(std::move(track));
 
-	// Jupiter Ace scanning must be explicitly requested, as the end of tracks
-	// aren't wiped and often contain MFM sectors from previous disk use.
-	if (opt.ace)
+
+	std::vector<Encoding> encodings;
+	if (opt.encoding != Encoding::Unknown)
 	{
-		scan_flux_ace(trackdata);
-		return;
+		// Just the one requested format.
+		encodings = { opt.encoding };
 	}
-
-	if (opt.mx)
+	else
 	{
-		// Try 300K first (5.25" HD drive)
-		scan_flux_mx(trackdata, DataRate::_300K);
+		// Scan for formats, starting with the last successful encoding.
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga };
+		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
-		// If that fails, fall back on 250K (5.25" DD drive)
-		if (trackdata.track().empty())
-			scan_flux_mx(trackdata, DataRate::_250K);
-
-		return;
+		// MFM and FM use the same scanner, so remove the duplicate
+		if (last_encoding == Encoding::FM)
+			encodings.erase(std::find(encodings.rbegin(), encodings.rend(), Encoding::MFM).base());
 	}
-
-	if (opt.agat)
-	{
-		// Try 300K first (5.25" HD drive)
-		scan_flux_agat(trackdata, DataRate::_300K);
-
-		// If that fails, fall back on 250K (5.25" DD drive)
-		if (trackdata.track().empty())
-			scan_flux_agat(trackdata, DataRate::_250K);
-
-		return;
-	}
-
-	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
-	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
-	encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
-
-	// MFM and FM use the same scanner, so remove the duplicate
-	if (last_encoding == Encoding::FM)
-		encodings.erase(std::find(encodings.rbegin(), encodings.rend(), Encoding::MFM).base());
 
 	for (auto encoding : encodings)
 	{
@@ -77,26 +56,28 @@ void scan_flux (TrackData &trackdata)
 		{
 			case Encoding::MFM:
 			case Encoding::FM:
-			{
-				static DataRate last_datarate = DataRate::_250K;
-
+			case Encoding::RX02:
 				scan_flux_mfm_fm(trackdata, last_datarate);
-
-				// If we found something, remember the successful data rate
-				if (!trackdata.track().empty())
-					last_datarate = trackdata.bitstream().datarate;
-
 				break;
-			}
 
 			case Encoding::Amiga:
-			{
 				scan_flux_amiga(trackdata);
 				break;
-			}
 
 			case Encoding::GCR:
 				scan_flux_gcr(trackdata);
+				break;
+
+			case Encoding::Ace:
+				scan_flux_ace(trackdata);
+				break;
+
+			case Encoding::MX:
+				scan_flux_mx(trackdata, last_datarate);
+				break;
+
+			case Encoding::Agat:
+				scan_flux_agat(trackdata, last_datarate);
 				break;
 
 			default:
@@ -104,16 +85,19 @@ void scan_flux (TrackData &trackdata)
 				break;
 		}
 
-		// Continue scanning formats in multi-format mode
-		if (opt.multiformat)
-			continue;
-
 		// Something found?
 		if (!trackdata.track().empty())
 		{
-			// Remember the encoding so we try it first next time
-			last_encoding = encoding;
-			break;
+			// Remember the successful data rate for next time.
+			last_datarate = trackdata.track()[0].datarate;
+
+			// If we're not scanning multiple formats, store the match and finish.
+			if (!opt.multiformat)
+			{
+				// Remember the encoding so we try it first next time
+				last_encoding = encoding;
+				break;
+			}
 		}
 	}
 }
@@ -124,33 +108,22 @@ void scan_bitstream (TrackData &trackdata)
 {
 	static Encoding last_encoding = Encoding::MFM;
 
-	// Jupiter Ace scanning must be explicitly requested, as the end of tracks aren't wiped
-	// and often contain MFM sectors from the previous disk use.
-	if (opt.ace)
+	std::vector<Encoding> encodings;
+	if (opt.encoding != Encoding::Unknown)
 	{
-		scan_bitstream_ace(trackdata);
-		return;
+		// Just the one requested format.
+		encodings = { opt.encoding };
 	}
-
-	if (opt.mx)
+	else
 	{
-		scan_bitstream_mx(trackdata);
-		return;
+		// Scan for formats, starting with the last successful encoding.
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga };
+		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
+
+		// MFM and FM use the same scanner, so remove the duplicate
+		if (last_encoding == Encoding::FM)
+			encodings.erase(std::find(encodings.rbegin(), encodings.rend(), Encoding::MFM).base());
 	}
-
-	if (opt.agat)
-	{
-		scan_bitstream_agat(trackdata);
-		return;
-	}
-
-	// Set the encoding scanning order, with the last successful encoding first (and its duplicate removed)
-	std::vector<Encoding> encodings = { last_encoding, Encoding::MFM, Encoding::Amiga/*, Encoding::GCR*/ };
-	encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
-
-	// MFM and FM use the same scanner, so remove the duplicate
-	if (last_encoding == Encoding::FM)
-		encodings.erase(std::find(encodings.rbegin(), encodings.rend(), Encoding::MFM).base());
 
 	for (auto encoding : encodings)
 	{
@@ -158,19 +131,28 @@ void scan_bitstream (TrackData &trackdata)
 		{
 			case Encoding::MFM:
 			case Encoding::FM:
-			{
+			case Encoding::RX02:
 				scan_bitstream_mfm_fm(trackdata);
 				break;
-			}
 
 			case Encoding::Amiga:
-			{
 				scan_bitstream_amiga(trackdata);
 				break;
-			}
 
 			case Encoding::GCR:
 				scan_bitstream_gcr(trackdata);
+				break;
+
+			case Encoding::Ace:
+				scan_bitstream_ace(trackdata);
+				break;
+
+			case Encoding::MX:
+				scan_bitstream_mx(trackdata);
+				break;
+
+			case Encoding::Agat:
+				scan_bitstream_agat(trackdata);
 				break;
 
 			default:
@@ -178,8 +160,8 @@ void scan_bitstream (TrackData &trackdata)
 				break;
 		}
 
-		// Something found?
-		if (!trackdata.track().empty())
+		// Stop if we found something and we're not scanning multiple formats.
+		if (!trackdata.track().empty() && !opt.multiformat)
 		{
 			// Remember the encoding so we try it first next time
 			last_encoding = encoding;
@@ -524,13 +506,23 @@ void scan_bitstream_mx (TrackData &trackdata)
 	trackdata.add(std::move(track));
 }
 
-void scan_flux_mx (TrackData &trackdata, DataRate datarate)
+void scan_flux_mx (TrackData &trackdata, DataRate last_datarate)
 {
-	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
-	BitBuffer bitbuf(datarate, decoder);
+	std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
+	datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
-	trackdata.add(std::move(bitbuf));
-	scan_bitstream_mx(trackdata);
+	for (auto datarate : datarates)
+	{
+		FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
+		BitBuffer bitbuf(datarate, decoder);
+
+		trackdata.add(std::move(bitbuf));
+		scan_bitstream_mx(trackdata);
+
+		// If we found something there's no need to check other data rates
+		if (!trackdata.track().empty())
+			break;
+	}
 }
 
 
@@ -693,7 +685,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			bitbuf.encoding = Encoding::MFM;
 			crc.init(CRC16::A1A1A1);
 		}
-		else if (opt.nofm)
+		else if (opt.encoding == Encoding::MFM)	// FM disabled?
 			continue;
 		else
 		{
@@ -988,7 +980,7 @@ void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate)
 				break;
 		}
 
-		// If we found something there's no need to check other densities
+		// If we found something there's no need to check other data rates.
 		if (!trackdata.track().empty())
 			break;
 	}
@@ -1270,11 +1262,21 @@ void scan_bitstream_agat (TrackData &trackdata)
 	trackdata.add(std::move(track));
 }
 
-void scan_flux_agat (TrackData &trackdata, DataRate datarate)
+void scan_flux_agat (TrackData &trackdata, DataRate last_datarate)
 {
-	FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
-	BitBuffer bitbuf(datarate, decoder);
+	std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
+	datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
-	trackdata.add(std::move(bitbuf));
-	scan_bitstream_agat(trackdata);
+	for (auto datarate : datarates)
+	{
+		FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), opt.scale);
+		BitBuffer bitbuf(datarate, decoder);
+
+		trackdata.add(std::move(bitbuf));
+		scan_bitstream_agat(trackdata);
+
+		// If we found something there's no need to check other data rates.
+		if (!trackdata.track().empty())
+			break;
+	}
 }

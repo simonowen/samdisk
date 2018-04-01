@@ -12,10 +12,10 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 
 	// Force Jupiter Ace reading mode if the output file extension is .dti
 	// ToDo: add mechanism for target to hint how source should be read?
-	if (!opt.ace && IsFileExt(dst_path, "dti"))
+	if (opt.encoding != Encoding::Ace && IsFileExt(dst_path, "dti"))
 	{
-		opt.ace = 1;
-		Message(msgWarning, "assuming --ace due to .dti output image");
+		opt.encoding = Encoding::Ace;
+		Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
 	}
 
 	// Read the source image
