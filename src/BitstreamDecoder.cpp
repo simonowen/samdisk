@@ -269,6 +269,7 @@ void scan_bitstream_ace (TrackData &trackdata)
 	int idle = 0;
 	bool dataerror = false;
 	int bit;
+	int data_offset = 0;
 
 	while (!bitbuf.wrapped())
 	{
@@ -347,7 +348,10 @@ void scan_bitstream_ace (TrackData &trackdata)
 
 				case stateWant42:
 					if (data == 42)
+					{
 						state = stateData;
+						data_offset = bitbuf.track_offset(bitbuf.tell());
+					}
 					else if (data != 255)
 					{
 						state = stateWant255;
@@ -368,6 +372,7 @@ void scan_bitstream_ace (TrackData &trackdata)
 	if (state == stateData)
 	{
 		Sector sector(DataRate::_250K, Encoding::Ace, Header(trackdata.cylhead, 0, SizeToCode(4096)));
+		sector.offset = data_offset;
 
 		// Skip header bytes
 		if (!IsValidDeepThoughtData(block))
