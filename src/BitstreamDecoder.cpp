@@ -771,19 +771,8 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 				if (opt.debug) util::cout << "* " << bitbuf.encoding << " IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				break;
 
-			// This isn't a valid AM type, but Skate or Die [+3] and Les Dieux
-			// du Ciel [CPC] use this on unused 8K sectors (script bug?), so
-			// we now silently ignore it.
-			case 0xe5:
-				break;
-
-			// Another invalid AM type to ignore, as found on cyls 40+41 of
-			// International 3D Tennis [+3].
-			case 0x80:
-				break;
-
 			default:
-				Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				if (opt.debug) util::cout << "Unknown " << bitbuf.encoding << " address mark (" << std::hex << am << std::dec << ") at offset " << am_offset  << " on " << trackdata.cylhead << "\n";
 				break;
 		}
 	}
