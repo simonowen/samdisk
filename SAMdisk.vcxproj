@@ -155,6 +155,7 @@
     <ClCompile Include="src\types\mgt.cpp" />
     <ClCompile Include="src\types\msa.cpp" />
     <ClCompile Include="src\types\opd.cpp" />
+    <ClCompile Include="src\types\qdos.cpp" />
     <ClCompile Include="src\types\raw.cpp" />
     <ClCompile Include="src\types\record.cpp" />
     <ClCompile Include="src\types\s24.cpp" />
@@ -235,6 +236,7 @@
     <ClInclude Include="include\KF_WinUsb.h" />
     <ClInclude Include="include\KryoFlux.h" />
     <ClInclude Include="include\MemFile.h" />
+    <ClInclude Include="include\qdos.h" />
     <ClInclude Include="include\Range.h" />
     <ClInclude Include="include\SCP_FTD2XX.h" />
     <ClInclude Include="include\Sector.h" />

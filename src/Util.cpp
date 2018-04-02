@@ -393,7 +393,7 @@ int GetFileType (const char *pcsz_)
 
 	// Order must match enum in Image.h -- this doesn't belong here
 	static const char *output_types[] =
-		{ "", "", "raw", "dsk", "mgt", "sad", "trd", "ssd", "d2m", "d81", "d88", "imd", "mbd", "opd", "s24", "fdi", "cpm", "lif", "ds2", "", nullptr };
+		{ "", "", "raw", "dsk", "mgt", "sad", "trd", "ssd", "d2m", "d81", "d88", "imd", "mbd", "opd", "s24", "fdi", "cpm", "lif", "ds2", "qdos", "", nullptr };
 
 	// Compare it to the output types we support
 	for (int i = 1; output_types[i]; ++i)
