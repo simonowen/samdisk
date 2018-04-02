@@ -2,6 +2,7 @@
 #include "TrackData.h"
 
 #include "BitstreamDecoder.h"
+#include "BitstreamEncoder.h"
 
 TrackData::TrackData (const CylHead &cylhead_)
 	: cylhead(cylhead_)

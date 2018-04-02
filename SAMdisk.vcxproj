@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\BitstreamEncoder.cpp" />
     <ClCompile Include="src\FdrawcmdSys.cpp" />
     <ClCompile Include="src\Format.cpp" />
     <ClCompile Include="src\Header.cpp" />
@@ -208,6 +209,7 @@
     <ClCompile Include="src\win32_error.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\BitstreamEncoder.h" />
     <ClInclude Include="include\CrashDump.h" />
     <ClInclude Include="include\FdrawcmdSys.h" />
     <ClInclude Include="include\Format.h" />

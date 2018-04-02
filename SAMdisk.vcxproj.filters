@@ -339,6 +339,9 @@
     <ClCompile Include="src\types\cqm.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\BitstreamEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
@@ -492,6 +495,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\FdrawcmdSys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BitstreamEncoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
