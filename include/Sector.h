@@ -38,7 +38,7 @@ public:
 	void set_badidcrc (bool bad = true);
 	void set_baddatacrc (bool bad = true);
 	void remove_data ();
-	void remove_gapdata ();
+	void remove_gapdata (bool keep_crc=false);
 	void limit_copies(int max_copies);
 
 	int size () const;

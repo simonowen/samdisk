@@ -330,13 +330,19 @@ void Sector::limit_copies (int max_copies)
 		m_data.resize(max_copies);
 }
 
-void Sector::remove_gapdata ()
+void Sector::remove_gapdata (bool keep_crc/*=false*/)
 {
 	if (!has_gapdata())
 		return;
 
 	for (auto &data : m_data)
-		data.resize(size());
+	{
+		// If requested, attempt to preserve CRC bytes on bad sectors.
+		if (keep_crc && has_baddatacrc() && data.size() >= (size() + 2))
+			data.resize(size() + 2);
+		else
+			data.resize(size());
+	}
 }
 
 // Map a size code to how it's treated by the uPD765 FDC on the PC

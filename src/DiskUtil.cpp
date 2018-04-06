@@ -266,7 +266,7 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 				int gap3 = 0;
 				if (test_remove_gap3(sector.data_copy(), sector.size(), gap3))
 				{
-					sector.remove_gapdata();
+					sector.remove_gapdata(true);
 					changed = true;
 
 					if (!sector.gap3)
@@ -296,7 +296,7 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 		// Remove only the final gap if --no-gap4b was used
 		if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
 		{
-			sector.remove_gapdata();
+			sector.remove_gapdata(true);
 			changed = true;
 		}
 
