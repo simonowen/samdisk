@@ -334,6 +334,51 @@ Format Format::GetFormat (RegularFormat reg_fmt)
 			fmt.fill = 0x00;
 			break;
 
+		case RegularFormat::TO_640K_MFM:
+			fmt.cyls = 80;
+			fmt.heads = 2;
+			fmt.datarate = DataRate::_250K;
+			fmt.encoding = Encoding::MFM;
+			fmt.sectors = 16;
+			fmt.size = 1;
+			fmt.interleave = 7;
+			fmt.gap3 = 50;
+			fmt.fill = 0xe5;
+			fmt.cyls_first = true;
+			break;
+
+		case RegularFormat::TO_320K_MFM:
+			fmt = GetFormat(RegularFormat::TO_640K_MFM);
+			fmt.cyls = 80;
+			fmt.heads = 1;
+			fmt.size = 1;
+			fmt.encoding = Encoding::MFM;
+			break;
+
+		case RegularFormat::TO_160K_MFM:
+			fmt = GetFormat(RegularFormat::TO_320K_MFM);
+			fmt.cyls = 40;
+			fmt.heads = 1;
+			fmt.size = 1;
+			fmt.encoding = Encoding::MFM;
+			break;
+
+		case RegularFormat::TO_160K_FM:
+			fmt = GetFormat(RegularFormat::TO_320K_MFM);
+			fmt.cyls = 80;
+			fmt.heads = 1;
+			fmt.size = 0;
+			fmt.encoding = Encoding::FM;
+			break;
+
+		case RegularFormat::TO_80K_FM:
+			fmt = GetFormat(RegularFormat::TO_160K_FM);
+			fmt.cyls = 40;
+			fmt.heads = 1;
+			fmt.size = 0;
+			fmt.encoding = Encoding::FM;
+			break;
+
 		default:
 			assert(false);
 			break;

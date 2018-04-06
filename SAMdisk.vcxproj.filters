@@ -345,6 +345,9 @@
     <ClCompile Include="src\types\qdos.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\fd.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">

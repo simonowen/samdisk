@@ -142,6 +142,7 @@
     <ClCompile Include="src\types\dsc.cpp" />
     <ClCompile Include="src\types\dsk.cpp" />
     <ClCompile Include="src\types\dti.cpp" />
+    <ClCompile Include="src\types\fd.cpp" />
     <ClCompile Include="src\types\fdi.cpp" />
     <ClCompile Include="src\types\fdrawsys_dev.cpp" />
     <ClCompile Include="src\types\hfe.cpp" />

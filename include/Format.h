@@ -4,7 +4,16 @@
 #include "Range.h"
 
 enum class FdcType { None, PC, WD, Amiga };
-enum class RegularFormat { MGT, ProDos, PC320, PC360, PC640, PC720, PC1200, PC1232, PC1440, PC2880, D80, OPD, MBD820, MBD1804, TRDOS, QDOS, D2M, D4M, D81, _2D, AmigaDOS, AmigaDOSHD, LIF, AtariST };
+enum class RegularFormat {
+	MGT, ProDos,
+	TRDOS, QDOS, OPD, D80,
+	PC320, PC360, PC640, PC720, PC1200, PC1232, PC1440, PC2880,
+	TO_640K_MFM, TO_320K_MFM, TO_160K_MFM, TO_160K_FM, TO_80K_FM,
+	AmigaDOS, AmigaDOSHD,
+	MBD820, MBD1804,
+	D2M, D4M,
+	_2D, D81, LIF, AtariST,
+};
 
 struct Format
 {
