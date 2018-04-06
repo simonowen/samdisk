@@ -184,7 +184,7 @@ bool ReadFDI (MemFile &file, std::shared_ptr<Disk> &disk)
 
 bool WriteFDI (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("FDI writing not implemented");
 #if 0
 	FDI_HEADER fh = {};
 

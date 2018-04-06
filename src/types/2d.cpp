@@ -18,5 +18,5 @@ bool Read2D (MemFile &file, std::shared_ptr<Disk> &disk)
 
 bool Write2D (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("2D writing not implemented");
 }

@@ -148,7 +148,7 @@ bool ReadIMD (MemFile &file, std::shared_ptr<Disk> &disk)
 
 bool WriteIMD (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("IMD writing not implemented");
 #if 0
 	time_t now = time(NULL);
 	struct tm *tm = localtime(&now);

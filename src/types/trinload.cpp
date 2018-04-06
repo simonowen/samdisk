@@ -63,6 +63,6 @@ bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
 #if 0
 bool WriteTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
 {
-	throw util::exception("not implemented");
+	throw util::exception("Trinity writing not implemented");
 }
 #endif

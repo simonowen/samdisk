@@ -100,7 +100,7 @@ bool ReadRecord (HDD &hdd, int record, std::shared_ptr<Disk> &disk)
 
 bool WriteRecord (HDD &/*hdd*/, int /*record*/, std::shared_ptr<Disk> &/*disk*/, bool /*format*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("BDOS record writing not implemented");
 
 #if 0 // ToDo!
 	bool f = false;
@@ -204,7 +204,7 @@ bool UnwrapCPM (std::shared_ptr<Disk> &/*olddisk*/, std::shared_ptr<Disk> &/*new
 	if (!opt.cpm)
 		return false;
 
-	throw std::logic_error("not implemented");
+	throw std::logic_error("CPM unwrapping not implemented");
 
 // ToDo!
 #if 0
@@ -254,7 +254,7 @@ bool UnwrapCPM (std::shared_ptr<Disk> &/*olddisk*/, std::shared_ptr<Disk> &/*new
 
 bool WrapCPM (std::shared_ptr<Disk> &/*disk*/, std::shared_ptr<Disk> &/*cpm_disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("CPM wrapping not implemented");
 // ToDo!
 #if 0
 	MEMORY memcpm(DOS_DISK_SIZE), memblank(MGT_TRACK_SIZE);

@@ -89,7 +89,7 @@ bool ReadTRD (MemFile &file, std::shared_ptr<Disk> &disk)
 
 bool WriteTRD (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("TRD writing not implemented");
 #if 0
 	FORMAT fmt = fmtTRDOS, *pf_ = &fmt;
 	unsigned uMissing = 0;

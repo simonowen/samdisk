@@ -40,7 +40,7 @@ bool ReadD81 (MemFile &file, std::shared_ptr<Disk> &disk)
 
 bool WriteD81 (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("D81 writing not implemented");
 #if 0
 	auto missing = 0;
 	bool f = true;

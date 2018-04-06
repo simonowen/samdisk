@@ -136,7 +136,7 @@ static bool UnpackSDF (const uint8_t *ps_, uint8_t *pd_, int /*len*/)	// ToDo: u
 
 bool UnwrapSDF (std::shared_ptr<Disk> &/*src_disk*/, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw std::logic_error("not implemented");
+	throw std::logic_error("SDF unwrapping not implemented");
 #if 0
 	// Unpacking nested files is effectively a fix
 	if (opt.fix == 0)

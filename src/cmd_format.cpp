@@ -182,7 +182,7 @@ bool FormatRecord (const std::string &path)
 	if (!IsRecord(path, &record))
 		throw util::exception("invalid record path");
 
-	throw std::logic_error("not implemented");
+	throw std::logic_error("BDOS record formatting not implemented");
 #if 0
 	auto hdd_path = path.substr(0, path.rfind(':'));
 	auto hdd = HDD::OpenDisk(hdd_path);
