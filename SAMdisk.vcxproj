@@ -161,6 +161,7 @@
     <ClCompile Include="src\types\record.cpp" />
     <ClCompile Include="src\types\s24.cpp" />
     <ClCompile Include="src\types\sad.cpp" />
+    <ClCompile Include="src\types\sap.cpp" />
     <ClCompile Include="src\types\sbt.cpp" />
     <ClCompile Include="src\types\scl.cpp" />
     <ClCompile Include="src\types\scp.cpp" />
