@@ -261,7 +261,7 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 				changed = true;
 			}
 			// Remove normal gaps unless we're asked to keep them.
-			else if (opt.gaps != GAPS_ALL && sector.encoding == Encoding::MFM)
+			else if (opt.gaps == GAPS_CLEAN && sector.encoding == Encoding::MFM)
 			{
 				int gap3 = 0;
 				if (test_remove_gap3(sector.data_copy(), sector.size(), gap3))
