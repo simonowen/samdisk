@@ -26,6 +26,8 @@ public:
 	void add (uint8_t bit);
 
 	uint8_t read1 ();
+	uint8_t read8_msb ();
+	uint8_t read8_lsb();
 	uint16_t read16 ();
 	uint32_t read32 ();
 	uint8_t read_byte ();

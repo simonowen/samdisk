@@ -147,6 +147,26 @@ uint8_t BitBuffer::read1 ()
 	return bit;
 }
 
+uint8_t BitBuffer::read8_msb()
+{
+	uint8_t byte = 0;
+
+	for (auto i = 0; i < 8; ++i)
+		byte = (byte << 1) | read1();
+
+	return byte;
+}
+
+uint8_t BitBuffer::read8_lsb()
+{
+	uint8_t byte = 0;
+
+	for (auto i = 0; i < 8; ++i)
+		byte |= (read1() << i);
+
+	return byte;
+}
+
 uint16_t BitBuffer::read16 ()
 {
 	uint16_t word = 0;
