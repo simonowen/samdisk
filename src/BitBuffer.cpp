@@ -9,14 +9,15 @@ BitBuffer::BitBuffer (DataRate datarate_, Encoding encoding_, int revs)
 	// Estimate size from double the data bitrate @300rpm, plus 20%.
 	// This should be enough for most FM/MFM tracks.
 	auto bitlen = bits_per_second(datarate) * revs * 60/300 * 2 * 120/100;
-	m_data.resize((bitlen + 31) / 32);
+	m_data.resize((bitlen + 7) / 8);
 }
 
 BitBuffer::BitBuffer (DataRate datarate_, const uint8_t *pb, int bitlen)
 	: datarate(datarate_)
 {
-	m_data.resize((bitlen + 31) / 32);
-	std::memcpy(m_data.data(), pb, (bitlen + 7) / 8);
+	auto bytelen = (bitlen + 7) / 8;
+	m_data.resize(bytelen);
+	std::memcpy(m_data.data(), pb, bytelen);
 	m_bitsize = bitlen;
 }
 
@@ -24,7 +25,7 @@ BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
 	: datarate(datarate_), m_data(decoder.flux_count())
 {
 	auto bitlen{bits_per_second(datarate) * decoder.flux_revs() * 60/300 * 2 * 120/100};
-	m_data.resize((bitlen + 31) / 32);
+	m_data.resize((bitlen + 7) / 8);
 
 	for (;;)
 	{
@@ -43,6 +44,11 @@ BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
 		if (decoder.index())
 			index();
 	}
+}
+
+const std::vector<uint8_t> &BitBuffer::data () const
+{
+	return m_data;
 }
 
 bool BitBuffer::wrapped () const
@@ -115,8 +121,8 @@ void BitBuffer::clear ()
 
 void BitBuffer::add (uint8_t bit)
 {
-	size_t offset = m_bitpos / 32;
-	uint32_t bit_value = 1 << (m_bitpos & 31);
+	size_t offset = m_bitpos / 8;
+	uint32_t bit_value = 1 << (m_bitpos & 7);
 
 	// Double the size if we run out of space
 	if (offset >= m_data.size())
@@ -134,9 +140,16 @@ void BitBuffer::add (uint8_t bit)
 	m_bitsize = std::max(m_bitsize, ++m_bitpos);
 }
 
+void BitBuffer::remove (int num_bits)
+{
+	assert(m_bitpos >= num_bits);
+	m_bitpos -= std::min(num_bits, m_bitpos);
+	m_bitsize = m_bitpos;
+}
+
 uint8_t BitBuffer::read1 ()
 {
-	uint8_t bit = (m_data[m_bitpos / 32] >> (m_bitpos & 31)) & 1;
+	uint8_t bit = (m_data[m_bitpos / 8] >> (m_bitpos & 7)) & 1;
 
 	if (++m_bitpos == m_bitsize)
 	{
@@ -229,7 +242,80 @@ int BitBuffer::track_offset (int bitpos) const
 	return bitpos;
 }
 
-bool BitBuffer::sync_lost (int begin, int end) const
+BitBuffer BitBuffer::track_bitstream () const
+{
+	BitBuffer newbuf(datarate, encoding);
+	auto track_bits = track_bitsize();
+	auto track_bytes = (track_bits + 7) / 8;
+
+	newbuf.m_data.insert(newbuf.m_data.begin(), m_data.begin(), m_data.begin() + track_bytes);
+	newbuf.m_bitsize = track_bits;
+	return newbuf;
+}
+
+bool BitBuffer::align ()
+{
+	bool modified = false;
+	auto bits_per_byte = (encoding == Encoding::FM) ? 32 : 16;
+	uint32_t dword = 0;
+	int i;
+
+	BitBuffer newbuf(datarate, encoding);
+	newbuf.m_indexes = m_indexes;
+
+	seek(0);
+	while (!wrapped())
+	{
+		bool found_am = false;
+		for (i = 0; !found_am && i < bits_per_byte; ++i)
+		{
+			dword = (dword << 1) | read1();
+
+			if (encoding == Encoding::MFM && (dword & 0xffff) == 0x4489)
+			{
+				found_am = true;
+			}
+			else if (encoding == Encoding::FM)
+			{
+				switch (dword)
+				{
+				case 0xaa222888:	// F8/C7 DDAM
+				case 0xaa22288a:	// F9/C7 Alt-DDAM
+				case 0xaa2228a8:	// FA/C7 Alt-DAM
+				case 0xaa2228aa:	// FB/C7 DAM
+				case 0xaa222a88:	// FC/C7 IAM
+				case 0xaa222a8a:	// FD/C7 RX02 DAM
+				case 0xaa222aa8:	// FE/C7 IDAM
+					found_am = true;
+					break;
+				}
+			}
+		}
+
+		if (i != bits_per_byte)
+		{
+			// Adjust index positions beyond removal point.
+			for (auto &idx_pos : m_indexes)
+				if (idx_pos >= m_bitpos)
+					idx_pos -= bits_per_byte;
+
+			// Remove the last encoding unit, ready to add the aligned sync.
+			newbuf.remove(bits_per_byte);
+			i = bits_per_byte;
+			modified = true;
+		}
+
+		while (--i >= 0)
+			newbuf.add(static_cast<uint8_t>((dword >> i) & 1));
+	}
+
+	if (modified)
+		std::swap(*this, newbuf);
+
+	return modified;
+}
+
+bool BitBuffer::sync_lost(int begin, int end) const
 {
 	for (auto pos : m_sync_losses)
 		if (begin < pos && end >= pos)

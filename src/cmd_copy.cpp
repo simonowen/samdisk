@@ -44,6 +44,17 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 
 		auto src_data = src_disk->read(cylhead * opt.step);
 		auto src_track = src_data.track();
+
+		if (src_data.has_bitstream())
+		{
+			auto bitstream = src_data.bitstream();
+			if (NormaliseBitstream(bitstream))
+			{
+				src_data = TrackData(src_data.cylhead, std::move(bitstream));
+				src_track = src_data.track();
+			}
+		}
+
 		bool changed = NormaliseTrack(cylhead, src_track);
 
 		if (opt.verbose)

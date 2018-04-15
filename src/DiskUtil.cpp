@@ -491,6 +491,17 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 	return changed;
 }
 
+bool NormaliseBitstream (BitBuffer &bitbuf)
+{
+	bool modified = false;
+
+	// Align sync marks to byte boundaries?
+	if (opt.align)
+		modified |= bitbuf.align();
+
+	return modified;
+}
+
 // Attempt to repair a track, given another copy of the same track.
 bool RepairTrack (const CylHead &cylhead, Track &track, const Track &src_track)
 {

@@ -191,7 +191,7 @@ void ViewTrack_MFM_FM (Encoding encoding, BitBuffer &bitbuf)
 	auto show = (opt.bytes < 0) ? track_data.size() : std::min(track_data.size(), opt.bytes);
 	if (show)
 	{
-		util::cout << encoding << " Decode:\n";
+		util::cout << encoding << " Decode (" << bitbuf.track_bitsize() << " bits):\n";
 		util::hex_dump(track_data.begin(), track_data.begin() + show, colours.data());
 	}
 }
@@ -215,6 +215,7 @@ bool ViewImage (const std::string &path, Range range)
 				if (opt.verbose)
 				{
 					auto bitbuf = disk->read_bitstream(cylhead * opt.step);
+					NormaliseBitstream(bitbuf);
 					auto encoding = (opt.encoding == Encoding::Unknown) ?
 						bitbuf.encoding : opt.encoding;
 

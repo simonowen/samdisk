@@ -211,6 +211,7 @@ struct option long_options[] =
 	{ "quick",			  no_argument, &opt.quick, 1 },
 	{ "repair",			  no_argument, &opt.repair, 1},
 	{ "fix",			  no_argument, &opt.fix, 1 },
+	{ "align",			  no_argument, &opt.align, 1 },
 	{ "no-fix",			  no_argument, &opt.fix, 0 },
 	{ "no-fm",			  no_argument, nullptr, OPT_NOFM },
 	{ "blind",			  no_argument, &opt.blind, 1 },
