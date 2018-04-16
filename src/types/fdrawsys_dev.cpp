@@ -211,18 +211,21 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead &cylhead, int &firstSector
 
 	firstSectorSeen = scan_result->firstseen;
 
-	auto bit_us{GetDataTime(m_lastDataRate, m_lastEncoding) / 16};
-	track.tracktime = scan_result->tracktime;
-	track.tracklen = track.tracktime / bit_us;
-
-	for (int i = 0; i < scan_result->count; ++i)
+	if (scan_result->count > 0)
 	{
-		const auto &scan_header{scan_result->Header[i]};
-		Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
-		Sector sector(m_lastDataRate, m_lastEncoding, header);
+		auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
+		track.tracktime = scan_result->tracktime;
+		track.tracklen = track.tracktime / bit_us;
 
-		sector.offset = scan_header.reltime / bit_us;
-		track.add(std::move(sector));
+		for (int i = 0; i < scan_result->count; ++i)
+		{
+			const auto &scan_header = scan_result->Header[i];
+			Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
+			Sector sector(m_lastDataRate, m_lastEncoding, header);
+
+			sector.offset = scan_header.reltime / bit_us;
+			track.add(std::move(sector));
+		}
 	}
 
 	return track;
