@@ -90,6 +90,8 @@ std::string make_string (Args&& ... args)
 	return ss.str();
 }
 
+void bit_reverse (uint8_t *pb, int len);
+
 template <typename T> T byteswap (T x);
 
 template<>

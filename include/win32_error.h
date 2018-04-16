@@ -22,7 +22,7 @@ inline const std::error_category & win32_category ()
 class win32_error : public std::system_error
 {
 public:
-	win32_error (DWORD error_code, const char* message = nullptr)
+	win32_error (DWORD error_code, const char* message)
 		: std::system_error(error_code, win32_category(), message) {}
 };
 

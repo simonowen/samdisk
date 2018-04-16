@@ -267,6 +267,18 @@ bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT &result)
 		&result, sizeof(result));
 }
 
+bool FdrawcmdSys::FdRawReadTrack(int head, int size, MEMORY &mem)
+{
+	FD_RAW_READ_PARAMS rrp{};
+	rrp.flags = FD_OPTION_MFM;
+	rrp.head = static_cast<uint8_t>(head);
+	rrp.size = static_cast<uint8_t>(size);
+
+	return Ioctl(IOCTL_FD_RAW_READ_TRACK,
+		&rrp, sizeof(rrp),
+		mem.pb, mem.size);
+}
+
 bool FdrawcmdSys::FdSetSectorOffset(int index)
 {
 	FD_SECTOR_OFFSET_PARAMS sop{};

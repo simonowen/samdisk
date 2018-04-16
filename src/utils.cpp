@@ -49,6 +49,22 @@ std::string trim (const std::string &str)
 	return s;
 }
 
+void bit_reverse(uint8_t *pb, int len)
+{
+	while (len-- > 0)
+	{
+		auto &b = *pb++;
+		b = ((b & 1) << 7) |
+			((b & 2) << 5) |
+			((b & 4) << 3) |
+			((b & 8) << 1) |
+			((b & 16) >> 1) |
+			((b & 32) >> 3) |
+			((b & 64) >> 5) |
+			((b & 128) >> 7);
+	}
+}
+
 std::string resource_dir ()
 {
 #ifdef RESOURCE_DIR

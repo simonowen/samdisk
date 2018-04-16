@@ -144,6 +144,7 @@
     <ClCompile Include="src\types\dti.cpp" />
     <ClCompile Include="src\types\fd.cpp" />
     <ClCompile Include="src\types\fdi.cpp" />
+    <ClCompile Include="src\types\fdrawsys_ab_dev.cpp" />
     <ClCompile Include="src\types\fdrawsys_dev.cpp" />
     <ClCompile Include="src\types\hfe.cpp" />
     <ClCompile Include="src\types\imd.cpp" />

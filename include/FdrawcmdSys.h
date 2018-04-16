@@ -42,6 +42,7 @@ public:
 	bool CmdScan(int head, FD_SCAN_RESULT *scan, int size);
 	bool CmdTimedScan(int head, FD_TIMED_SCAN_RESULT *timed_scan, int size);
 	bool CmdReadId(int head, FD_CMD_RESULT &result);
+	bool FdRawReadTrack(int head, int size, MEMORY &mem);
 	bool FdSetSectorOffset(int index);
 	bool FdSetShortWrite(int length, int finetune);
 	bool FdGetRemainCount(int &remain);

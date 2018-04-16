@@ -15,6 +15,7 @@ bool ReadKFDev (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk);
 bool ReadFdrawSysDev (const std::string &path, std::shared_ptr<Disk> &disk);
+bool ReadFdrawSysABDev (const std::string &path, std::shared_ptr<Disk> &disk);
 
 bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool normalise)
 {
@@ -26,6 +27,8 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 #ifdef HAVE_FDRAWCMD_H
 	else if (IsFloppyDevice(path))
 		f = ReadFdrawSysDev(path, disk);
+	else if (util::lowercase(path) == "ab:")
+		f = ReadFdrawSysABDev(path, disk);
 #endif
 	else if (IsDir(path))
 		throw util::exception("path is a directory");
