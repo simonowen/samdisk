@@ -244,7 +244,7 @@ struct option long_options[] =
 	{ 0, 0, 0, 0 }
 };
 
-static char short_options[] = "?nmdvfLRxb:c:h:s:r:R:g:i:k:z:0:1:D:";
+static char short_options[] = "?nmdvfLxb:c:h:s:r:R:g:i:k:z:0:1:D:";
 
 bool BadValue (const char *pcszName_)
 {

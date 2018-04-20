@@ -16,6 +16,7 @@ public:
 	void extend (const CylHead &cylhead);
 
 protected:
+	virtual bool supports_retries () const;
 	virtual TrackData load (const CylHead &cylhead, bool first_read=false) = 0;
 	//virtual void save (TrackData &trackdata) = 0;
 

@@ -26,7 +26,7 @@
 #ifdef HAVE_FDRAWCMD_H
 #include "fdrawcmd.h"
 
-#define RAW_READ_ATTEMPTS			10
+#define RAW_READ_ATTEMPTS			10		// Default reads per track
 #define RAW_READ_SIZE_CODE			7		// 16K
 
 class FdrawSysDevABDisk final : public DemandDisk
@@ -49,7 +49,11 @@ protected:
 		m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
 		Track track;
 
-		for (auto attempt = 0; attempt < RAW_READ_ATTEMPTS + opt.rescans; )
+		auto total_scans = 1 + opt.retries;
+		if (total_scans <= 0)
+			total_scans = RAW_READ_ATTEMPTS;
+
+		for (auto scan = 0; scan < total_scans; )
 		{
 			MEMORY mem(Sector::SizeCodeToLength(RAW_READ_SIZE_CODE));
 			if (!m_fdrawcmd->FdRawReadTrack(cylhead.head, RAW_READ_SIZE_CODE, mem))
@@ -84,7 +88,7 @@ protected:
 
 			// If no new sectors were found count an attempt.
 			if (!modified)
-				++attempt;
+				++scan;
 		}
 
 		return TrackData(cylhead, std::move(track));

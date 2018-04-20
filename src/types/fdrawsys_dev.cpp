@@ -32,6 +32,11 @@ public:
 	}
 
 protected:
+	bool supports_retries() const override
+	{
+		return true;
+	}
+
 	TrackData load(const CylHead &cylhead, bool /*first_read*/) override
 	{
 		m_fdrawcmd->Seek(cylhead.cyl);

@@ -14,6 +14,12 @@ void DemandDisk::extend (const CylHead &cylhead)
 	m_trackdata[cylhead].cylhead = cylhead;
 }
 
+bool DemandDisk::supports_retries () const
+{
+	// We only support full track rescans rather than individual sector retries.
+	return false;
+}
+
 const TrackData &DemandDisk::read (const CylHead &cylhead)
 {
 	if (!m_loaded[cylhead])
@@ -22,18 +28,28 @@ const TrackData &DemandDisk::read (const CylHead &cylhead)
 		auto trackdata = load(cylhead, true);
 		auto &track = trackdata.track();
 
-		// Consider error retries
-		for (auto attempt = 1; attempt < opt.rescans; )
+		// If the disk supports sector-level retries we won't duplicate them.
+		auto retries = supports_retries() ? 0 : opt.retries;
+		auto rescans = opt.rescans;
+
+		// Consider rescans and error retries.
+		while (rescans > 0 || retries > 0)
 		{
-			// Stop if there's nothing to fix
-			if (!track.has_data_error())
+			// If no more rescans are required, stop when there's nothing to fix.
+			if (rescans <= 0 && !track.has_data_error())
 				break;
 
-			// Read another track and merge with what we have so far
-			trackdata.add(load(cylhead));
+			auto rescan_trackdata = load(cylhead);
+			auto &rescan_track = rescan_trackdata.track();
+
+			// If the rescan found more sectors, use the new track data.
+			if (rescan_track.size() > track.size())
+				std::swap(trackdata, rescan_trackdata);
 
 			// Flux reads include 5 revolutions, others just 1
-			attempt += (trackdata.has_flux() ? REMAIN_READ_REVS : FIRST_READ_REVS) - 1;
+			auto revs = trackdata.has_flux() ? REMAIN_READ_REVS : 1;
+			rescans -= revs;
+			retries -= revs;
 		}
 
 		std::lock_guard<std::mutex> lock(m_trackdata_mutex);
