@@ -54,7 +54,6 @@ public:
 
 	int tracklen = 0;	// track length in MFM bits
 	int tracktime = 0;	// track time in us
-	bool modified = false;	// signs of data splices?
 
 private:
 	std::vector<Sector> m_sectors {};

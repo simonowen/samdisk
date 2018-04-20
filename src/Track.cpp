@@ -172,9 +172,6 @@ void Track::add (Track &&track)
 	tracklen = std::max(tracklen, track.tracklen);
 	tracktime = std::max(tracktime, track.tracktime);
 
-	// Merge modified status
-	modified |= track.modified;
-
 	// Merge supplied sectors into existing track
 	for (auto &s : track.sectors())
 	{

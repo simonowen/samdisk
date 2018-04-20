@@ -20,14 +20,9 @@ static void item_separator (int items)
 void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &context, int flags)
 {
 	if (opt.hex != 1)
-		util::cout << util::fmt(" %2u.%u", cylhead.cyl, cylhead.head);
+		util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
 	else
-		util::cout << util::fmt(" %s.%u", CylStr(cylhead.cyl), cylhead.head);
-
-	if (track.modified)
-		util::cout << "* ";
-	else
-		util::cout << "  ";
+		util::cout << util::fmt(" %s.%u  ", CylStr(cylhead.cyl), cylhead.head);
 
 	if (track.empty())
 		util::cout << colour::grey << "<blank>" << colour::none;

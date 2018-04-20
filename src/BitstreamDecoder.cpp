@@ -812,11 +812,6 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			if (distance < min_distance || distance > max_distance)
 				continue;
 
-			// If there's a splice between IDAM and DAM the track was probably modified
-#if 0 // disabled until header/data matching enhancements are complete
-			if (bitbuf.sync_lost(sector.offset, dam_offset))
-				track.modified = true;
-#endif
 			bitbuf.seek(dam_offset);
 			bitbuf.encoding = data_encoding;
 
@@ -1092,11 +1087,6 @@ void scan_bitstream_agat (TrackData &trackdata)
 			if (distance < min_distance || distance > max_distance)
 				continue;
 
-			// If there's a splice between IDAM and DAM the track was probably modified
-#if 0 // disabled until header/data matching enhancements are complete
-			if (bitbuf.sync_lost(sector.offset, dam_offset))
-				track.modified = true;
-#endif
 			bitbuf.seek(dam_offset);
 
 			auto dam = bitbuf.read_byte();
