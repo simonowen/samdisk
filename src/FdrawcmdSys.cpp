@@ -113,11 +113,15 @@ bool FdrawcmdSys::Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk)
 	return Ioctl(IOCTL_FDCMD_CONFIGURE, &cp, sizeof(cp));
 }
 
-bool FdrawcmdSys::Specify(uint8_t srt_hut, uint8_t hlt_nd)
+bool FdrawcmdSys::Specify(int step_rate, int head_unload_time, int head_load_time)
 {
+	auto srt = static_cast<uint8_t>(step_rate & 0x0f);
+	auto hut = static_cast<uint8_t>(head_unload_time & 0x0f);
+	auto hlt = static_cast<uint8_t>(head_load_time & 0x7f);
+
 	FD_SPECIFY_PARAMS sp{};
-	sp.srt_hut = srt_hut;
-	sp.hlt_nd = hlt_nd;
+	sp.srt_hut = (srt << 4) | hut;
+	sp.hlt_nd = (hlt << 1) | 0;
 
 	return Ioctl(IOCTL_FDCMD_SPECIFY, &sp, sizeof(sp));
 }

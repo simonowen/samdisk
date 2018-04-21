@@ -136,7 +136,7 @@ extern "C" {
 enum {
 	OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
 	OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
-	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM };
+	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE };
 
 struct option long_options[] =
 {
@@ -236,6 +236,7 @@ struct option long_options[] =
 	{ "bytes",		required_argument, nullptr, OPT_BYTES },
 	{ "hdf",		required_argument, nullptr, OPT_HDF },
 	{ "order",		required_argument, nullptr, OPT_ORDER },
+	{ "step-rate",  required_argument, nullptr, OPT_STEPRATE },
 	{ "version",		  no_argument, nullptr, OPT_VERSION },
 	{ "scale",		required_argument, nullptr, OPT_SCALE },
 	{ "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
@@ -373,6 +374,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_SCALE: if (!GetInt(optarg, opt.scale)) return BadValue("scale"); break;
 			case OPT_PLLADJUST: if (!GetInt(optarg, opt.plladjust) || opt.plladjust <= 0 || opt.plladjust > 50) return BadValue("pll-adjust"); break;
 			case OPT_PLLPHASE: if (!GetInt(optarg, opt.pllphase) || opt.pllphase <= 0 || opt.pllphase > 90) return BadValue("pll-phase"); break;
+			case OPT_STEPRATE: if (!GetInt(optarg, opt.steprate) || opt.steprate > 15) return BadValue("step-rate"); break;
 
 			case OPT_VERSION:
 				LongVersion();

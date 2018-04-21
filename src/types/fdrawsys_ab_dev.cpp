@@ -35,6 +35,11 @@ public:
 	FdrawSysDevABDisk(std::unique_ptr<FdrawcmdSys> fdrawcmd)
 		: m_fdrawcmd(std::move(fdrawcmd))
 	{
+		auto srt = (opt.steprate >= 0) ? opt.steprate : (opt.newdrive ? 0xd : 0x8);
+		auto hut = 0x0f;
+		auto hlt = opt.newdrive ? 0x0f : 0x7f;
+		m_fdrawcmd->Specify(srt, hut, hlt);
+
 		m_fdrawcmd->SetMotorTimeout(0);
 		m_fdrawcmd->Recalibrate();
 

@@ -28,7 +28,7 @@ public:
 	bool SetDiskCheck(bool enable);
 	bool GetFdcInfo(FD_FDC_INFO &info);
 	bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
-	bool Specify(uint8_t srt_hut, uint8_t hlt_nd);
+	bool Specify(int step_rate, int head_unload_time, int head_load_time);
 	bool Recalibrate();
 	bool Seek(int cyl);
 	bool RelativeSeek(int head, int offset);
