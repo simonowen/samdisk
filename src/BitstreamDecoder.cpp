@@ -866,6 +866,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 				}
 
 				if (opt.debug) util::cout << "using truncated sector data as only copy\n";
+				extent_bytes = avail_bytes;
 			}
 
 			// Read the full data field and check its CRC
