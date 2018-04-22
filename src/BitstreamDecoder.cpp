@@ -926,19 +926,17 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			}
 
 			// If it's an 8K sector, attempt to validate any embedded checksum
-			auto chk8k_method = CHK8K_UNKNOWN;
+			std::set<ChecksumType> chk8k_methods;
 			if (sector.is_8k_sector())
 			{
-				chk8k_method = Get8KChecksumMethod(data.data(), data.size());
-
-				int chk_len = 0;
-				if (opt.debug) util::cout << "chk8k_method = " << Get8KChecksumMethodName(chk8k_method, chk_len) << '\n';
+				chk8k_methods = ChecksumMethods(data.data(), data.size());
+				if (opt.debug) util::cout << "chk8k_method = " << ChecksumName(chk8k_methods) << '\n';
 			}
 
 			sector.add(std::move(data), bad_crc, dam);
 
 			// If the data is good there's no need to search for more data fields
-			if (!bad_crc || chk8k_method >= CHK8K_FOUND)
+			if (!bad_crc || !chk8k_methods.empty())
 				break;
 		}
 	}

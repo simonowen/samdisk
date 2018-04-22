@@ -119,6 +119,17 @@ void DumpTrack (const CylHead &cylhead, const Track &track, const ScanContext &c
 				util::cout << colour::CYAN << "+" << (sector.data_size() - sector.size()) << colour::none;	// More data than sector size (crc, gaps, ...)
 			}
 
+			if (opt.verbose > 1 && track.is_8k_sector())
+			{
+				auto &data = track[0].data_copy();
+				auto str_checksum = ChecksumNameShort(ChecksumMethods(data.data(), data.size()));
+				if (!str_checksum.empty())
+				{
+					item_separator(items++);
+					util::cout << colour::GREEN << str_checksum;
+				}
+			}
+
 			if (items)
 				util::cout << colour::grey << ']' << colour::none;
 
@@ -439,46 +450,80 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 	// Single copy of an 8K sector?
 	if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
 	{
-		static auto chk8k_disk = CHK8K_UNKNOWN;
-		static int chk8k_id = -1;
-
 		const auto &sector = track[0];
 		const auto &data = sector.data_copy();
 
-		// If the sector ID has changed, so might the checksum method, so start over.
-		// This is used by Fun Radio [2B] (CPC).
-		if (sector.header.sector != chk8k_id)
+		static std::mutex map_mutex;
+		std::lock_guard<std::mutex> lock(map_mutex);
+
+		// The checksum method can change within a disk, but usually corresponds
+		// to a change in sector id or DAM type. Fun Radio [2B] (CPC) does this.
+		auto key = std::make_pair(sector.header.sector, sector.dam);
+		static std::map<decltype(key), std::set<ChecksumType>> methods_map;
+		auto &disk_methods = methods_map[key];
+
+		// Determine the potential 8K checksum methods, if any.
+		auto sector_methods = ChecksumMethods(data.data(), data.size());
+
+		if (disk_methods.empty())
 		{
-			chk8k_disk = CHK8K_UNKNOWN;
-			chk8k_id = sector.header.sector;
+			// First of key type follows first sector, or None.
+			if (!sector_methods.empty())
+				disk_methods = sector_methods;
+			else
+				disk_methods = { ChecksumType::None };
 		}
 
-		// Attempt to determine the 8K checksum method, if any
-		auto chk8k = Get8KChecksumMethod(data.data(), data.size(), chk8k_disk);
+		// Determine which common methods between disk and sector.
+		std::set<ChecksumType> common_methods{};
+		std::set_intersection(
+			sector_methods.begin(), sector_methods.end(),
+			disk_methods.begin(), disk_methods.end(),
+			std::inserter(common_methods, common_methods.begin()));
 
-		// If we found a positive checksum match, and the disk doesn't already have one, set it
-		if (chk8k >= CHK8K_FOUND && chk8k_disk == CHK8K_UNKNOWN)
-			chk8k_disk = chk8k;
-
-		// Determine the checksum method name and the checksum length
-		int checksum_len = 0;
-		auto pcszMethod = Get8KChecksumMethodName(chk8k_disk, checksum_len);
-
-		// If what we've found doesn't match the disk checksum method, report it
-		if (chk8k_disk >= CHK8K_FOUND && chk8k != chk8k_disk && chk8k != CHK8K_VALID)
+		if (sector_methods.find(ChecksumType::None) != sector_methods.end())
 		{
-			if (checksum_len == 2)
-				Message(msgWarning, "invalid %s checksum [%02X %02X] on %s", pcszMethod, data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
-			else
-				Message(msgWarning, "invalid %s checksum [%02X] on %s", pcszMethod, data[0x1800], CH(cylhead.cyl, cylhead.head));
+			// If None is an option, there's no checksum.
 		}
-		// If we've yet to find a valid disk method, but didn't recognise this track, report that too
-		else if (chk8k == CHK8K_UNKNOWN)
+		else if (common_methods.size() == 1)
 		{
-			if (data.size() >= 0x1802)
-				Message(msgWarning, "unrecognised or invalid 6K checksum [%02X %02X] on %s", data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
-			else
-				Message(msgWarning, "unrecognised or invalid 6K checksum [%02X] on %s", data[0x1800], CH(cylhead.cyl, cylhead.head));
+			// A single match means a good sector, so have the disk follow it.
+			if (disk_methods.size() > 1)
+				disk_methods = common_methods;
+		}
+		else if (disk_methods.empty())
+		{
+			// Unrecognised 8K method, probably the first on track containing one.
+			// Ignore two matching bytes, or a single zero, as likely junk.
+			if (data.size() >= 0x1802 && (data[0x1800] != data[0x1801]))
+			{
+				Message(msgWarning, "unknown or invalid 6K checksum [%02X %02X] on %s",
+					data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
+			}
+			else if (data.size() >= 0x1801 && data[0x1800])
+			{
+				Message(msgWarning, "unknown or invalid 6K checksum [%02X] on %s",
+					data[0x1800], CH(cylhead.cyl, cylhead.head));
+			}
+		}
+		else if (disk_methods.size() == 1 && common_methods.empty() &&
+			disk_methods.find(ChecksumType::None) == disk_methods.end())
+		{
+			// The disk has a method, which the sector lacks. Probably bad.
+			auto str_method = ChecksumName(disk_methods);
+			auto checksum_len = ChecksumLength(*disk_methods.begin());
+
+			if (checksum_len == 1 || data.size() < 0x1802)
+			{
+				Message(msgWarning, "invalid %s checksum [%02X] on %s",
+					str_method.c_str(), data[0x1800], CH(cylhead.cyl, cylhead.head));
+			}
+			else if (checksum_len == 2)
+			{
+				Message(msgWarning, "invalid %s checksum [%02X %02X] on %s",
+					str_method.c_str(), data[0x1800], data[0x1801],
+					CH(cylhead.cyl, cylhead.head));
+			}
 		}
 	}
 
@@ -940,4 +985,141 @@ bool test_remove_gap4b(const Data &data, int offset)
 
 	if (opt.debug) util::cout << "gap4b can be removed\n";
 	return true;
+}
+
+
+// Attempt to determine the 8K checksum method for a given data block
+std::set<ChecksumType> ChecksumMethods (const uint8_t *buf, int len)
+{
+	std::set<ChecksumType> methods;
+
+	// If there's not enough data, there can be no checksum. Return an empty set.
+	if (len <= 0x1800)
+		return methods;
+
+	// Check 6K of filler on unused tracks (Vigilante on CPC)
+	if (!memcmp(buf, buf + 1, 0x17ff))
+		methods.insert(ChecksumType::None);
+
+	// 2-byte CRC
+	{
+		// Check for CRC of 8C 15, which seems to be a strange fixed checksum found on some disks.
+		// This is known to be used by The Cycles (+3), Vigilante (CPC), and Les Hits de Noel (CPC).
+		if (len >= 0x1803 && buf[0x1800] == 0x8c && buf[0x1801] == 0x15)
+			methods.insert(ChecksumType::Constant_8C15);
+
+		// Calculate the CRC-16 of the first 0x1800 bytes, using a custom CRC init of D2F6.
+		// This is known to be used by JPP's Goal Busters (CPC).
+		if (len >= 0x1802)
+		{
+			CRC16 crc(buf, 0x1800 + 2, 0xd2f6);	// include CRC bytes
+			if (!crc)
+				methods.insert(ChecksumType::CRC_D2F6_1800);
+		}
+
+		// Calculate the CRC-16 of the first 0x1802 bytes, using a custom CRC init of D2F6.
+		// This is known to be used by Les Fous du Foot (CPC).
+		if (len >= 0x1804)
+		{
+			CRC16 crc(buf, 0x1802 + 2, 0xd2f6);	// include CRC bytes
+			if (!crc)
+				methods.insert(ChecksumType::CRC_D2F6_1802);
+		}
+	}
+
+	// 1-byte checksum
+	{
+		// Sum the first 6K
+		auto sum = static_cast<uint8_t>(std::accumulate(buf, buf + 0x1800, 0));
+		if (buf[0x1800] == sum)
+			methods.insert(ChecksumType::Sum_1800);
+
+		// XOR together the first 6K
+		auto xor_ = static_cast<uint8_t>(
+			std::accumulate(buf, buf + 0x1800, 0, std::bit_xor<int>()));
+		if (buf[0x1800] == xor_)
+			methods.insert(ChecksumType::XOR_1800);
+
+		if (len >= 0x18a0)
+		{
+			// Extend the XOR to 0x18a0 bytes, as needed for Coin-Op Hits
+			xor_ = static_cast<uint8_t>(
+				std::accumulate(buf + 0x1800, buf + 0x18a0, xor_, std::bit_xor<uint8_t>()));
+			if (buf[0x18a0] == xor_)
+				methods.insert(ChecksumType::XOR_18A0);
+		}
+	}
+
+	return methods;
+}
+
+std::string ChecksumName (std::set<ChecksumType> methods)
+{
+	std::stringstream ss;
+	bool first = true;
+
+	for (auto &m : methods)
+	{
+		if (!first)
+			ss << "|";
+		first = false;
+
+		switch (m)
+		{
+		case ChecksumType::None:			ss << "None"; break;
+		case ChecksumType::Constant_8C15:	ss << "Constant_8C15"; break;
+		case ChecksumType::Sum_1800:		ss << "Sum"; break;
+		case ChecksumType::XOR_1800:		ss << "XOR"; break;
+		case ChecksumType::XOR_18A0:		ss << "XOR_18A0"; break;
+		case ChecksumType::CRC_D2F6_1800:	ss << "CRC_D2F6"; break;
+		case ChecksumType::CRC_D2F6_1802:	ss << "CRC_D2F6_1802"; break;
+		}
+	}
+
+	return ss.str();
+}
+
+std::string ChecksumNameShort (std::set<ChecksumType> methods)
+{
+	std::stringstream ss;
+	bool first = true;
+
+	for (auto &m : methods)
+	{
+		if (!first)
+			ss << "|";
+		first = false;
+
+		switch (m)
+		{
+		case ChecksumType::None:			ss << "none"; break;
+		case ChecksumType::Constant_8C15:	ss << "8C15"; break;
+		case ChecksumType::Sum_1800:		ss << "sum"; break;
+		case ChecksumType::XOR_1800:		ss << "xor"; break;
+		case ChecksumType::XOR_18A0:		ss << "xorA0"; break;
+		case ChecksumType::CRC_D2F6_1800:	ss << "crc0"; break;
+		case ChecksumType::CRC_D2F6_1802:	ss << "crc2"; break;
+		}
+	}
+
+	return ss.str();
+}
+
+int ChecksumLength (ChecksumType method)
+{
+	switch (method)
+	{
+	case ChecksumType::None:
+		break;
+	case ChecksumType::Sum_1800:
+	case ChecksumType::XOR_1800:
+	case ChecksumType::XOR_18A0:
+		return 1;
+	case ChecksumType::Constant_8C15:
+	case ChecksumType::CRC_D2F6_1800:
+	case ChecksumType::CRC_D2F6_1802:
+		return 2;
+	}
+
+	return 0;
 }

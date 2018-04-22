@@ -103,10 +103,8 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	if (is_8k_sector())
 	{
 		// Attempt to identify the 8K checksum method used by the new data
-		auto chk8k_method = Get8KChecksumMethod(data.data(), data.size());
-
 		// If it's recognised, replace any existing data with it
-		if (chk8k_method >= CHK8K_FOUND)
+		if (!ChecksumMethods(data.data(), data.size()).empty())
 		{
 			remove_data();
 			ret = Merge::Improved;
@@ -115,8 +113,7 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		else if (copies() == 1)
 		{
 			// Can we identify the method used by the existing copy?
-			chk8k_method = Get8KChecksumMethod(m_data[0].data(), m_data[0].size());
-			if (chk8k_method >= CHK8K_FOUND)
+			if (!ChecksumMethods(m_data[0].data(), m_data[0].size()).empty())
 			{
 				// Keep the existing, ignoring the new data
 				return Merge::Unchanged;
@@ -283,7 +280,8 @@ bool Sector::is_rx02dam () const
 bool Sector::is_8k_sector () const
 {
 	// +3 and CPC disks treat this as a virtual complete sector
-	return datarate == DataRate::_250K && encoding == Encoding::MFM && header.size == 6;
+	return datarate == DataRate::_250K && encoding == Encoding::MFM &&
+		header.size == 6 && has_data();
 }
 
 void Sector::set_badidcrc (bool bad)

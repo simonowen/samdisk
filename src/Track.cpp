@@ -147,8 +147,7 @@ bool Track::has_data_error () const
 		if (sector.is_8k_sector() && sector.has_data())
 		{
 			const Data &data = sector.data_copy();
-			auto chk8k_method = Get8KChecksumMethod(data.data(), data.size());
-			if (chk8k_method == CHK8K_VALID || chk8k_method >= CHK8K_FOUND)
+			if (!ChecksumMethods(data.data(), data.size()).empty())
 				return false;
 		}
 		return !sector.has_data() || sector.has_baddatacrc();

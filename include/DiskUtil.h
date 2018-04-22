@@ -38,4 +38,21 @@ bool test_remove_gap2(const Data &data, int offset);
 bool test_remove_gap3(const Data &data, int offset, int &gap3);
 bool test_remove_gap4b(const Data &data, int offset);
 
+
+enum class ChecksumType
+{
+	None,			// No checksum, known valid
+	Constant_8C15,	// 8C 15
+	Sum_1800,		// Sum of 0x1800 bytes
+	XOR_1800,		// XOR of 0x1800 bytes
+	XOR_18A0,		// XOR of 0x18a0 bytes
+	CRC_D2F6_1800,	// CRC-16 (init=D2F6) for 0x1800 bytes
+	CRC_D2F6_1802,	// CRC-16 (init=D2F6) for 0x1802 bytes
+};
+
+std::set<ChecksumType> ChecksumMethods (const uint8_t *buf, int len);
+std::string ChecksumName (std::set<ChecksumType> method);
+std::string ChecksumNameShort (std::set<ChecksumType> methods);
+int ChecksumLength (ChecksumType method);
+
 #endif // DISKUTIL_H

@@ -80,6 +80,7 @@ typedef void * HANDLE;
 #include <array>
 #include <vector>
 #include <map>
+#include <set>
 #include <memory>	 // for unique_ptr
 #include <algorithm> // for sort
 #include <functional>

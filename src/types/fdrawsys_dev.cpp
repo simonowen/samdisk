@@ -312,13 +312,8 @@ void FdrawSysDevDisk::ReadSector(const CylHead &cylhead, Track &track, int index
 			break;
 
 		// Accept 8K sectors with a recognised checksum method.
-		if (track.is_8k_sector())
-		{
-			// If the 8K checksum is recognised we're done.
-			auto chk8k_method = Get8KChecksumMethod(mem.pb, size);
-			if (chk8k_method == CHK8K_VALID || chk8k_method >= CHK8K_FOUND)
-				break;
-		}
+		if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
+			break;
 	}
 }
 

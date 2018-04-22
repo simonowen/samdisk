@@ -1,9 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <cstdio>
-#include <cstdint>
-
 #ifndef HIWORD
 #define HIWORD(l)	static_cast<uint16_t>(static_cast<uint32_t>(l) >> 16)
 #define LOWORD(l)	static_cast<uint16_t>(static_cast<uint32_t>(l))
@@ -184,24 +181,6 @@ int SizeToCode (int sector_size);
 bool ReadSector (const HDD &hdd, int sector, MEMORY &pm_);
 bool CheckSig (const HDD &hdd, int sector, int offset, const char *sig, int len = 0);
 bool DiskHasMBR (const HDD &hdd);
-
-typedef enum
-{
-	CHK8K_UNKNOWN,			// Nothing recognised
-	CHK8K_NONE,				// Likely no checksum
-	CHK8K_VALID,			// Guaranteed valid
-	CHK8K_SUM_1800,			// Sum method over 0x1800 bytes
-	CHK8K_XOR_1800,			// XOR method over 0x1800 bytes
-	CHK8K_XOR_18A0,			// XOR method over 0x18a0 bytes
-	CHK8K_CRC_D2F6_1800,	// CRC-16 init with D2F6 over 0x1800 bytes
-	CHK8K_CRC_D2F6_1802,	// CRC-16 init with D2F6 over 0x1802 bytes
-	CHK8K_NUM_METHODS,
-	CHK8K_FOUND = CHK8K_SUM_1800
-} CHK8K_METHOD;
-
-CHK8K_METHOD Get8KChecksumMethod (const uint8_t *pb_, size_t uLen_, CHK8K_METHOD cur_method_ = CHK8K_UNKNOWN);
-const char* Get8KChecksumMethodName (CHK8K_METHOD method, int &checksum_len);
-
 
 #ifndef S_ISDIR
 #define _S_ISTYPE(mode,mask)    (((mode) & _S_IFMT) == (mask))
