@@ -701,7 +701,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 				case 0xaa22288a:	// F9/C7 Alt-DDAM
 				case 0xaa2228a8:	// FA/C7 Alt-DAM
 				case 0xaa2228aa:	// FB/C7 DAM
-				case 0xaa222a88:	// FC/C7 IAM
+				case 0xaa2a2a88:	// FC/D7 IAM
 				case 0xaa222a8a:	// FD/C7 RX02 DAM
 				case 0xaa222aa8:	// FE/C7 IDAM
 					break;
