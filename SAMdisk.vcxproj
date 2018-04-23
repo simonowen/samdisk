@@ -469,7 +469,7 @@
       <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --brute -9 "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f
+      <Command>@if exist C:\Utils\upx.exe C:\Utils\upx.exe --lzma --best "$(TargetPath)" -o "\Shared\$(TargetFileName)" -f
 @if exist C:\Batch\sign.bat call C:\Batch\sign.bat "\Shared\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

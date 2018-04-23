@@ -69,7 +69,7 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 #endif
 
 	if (!f)
-		throw util::exception("unrecognised image format");
+		throw util::exception("unrecognised disk image format");
 
 	if (normalise)
 	{
