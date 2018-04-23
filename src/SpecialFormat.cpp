@@ -303,7 +303,11 @@ bool IsCpcSpeedlockTrack (const Track &track, int &weak_offset, int &weak_size)
 	// If there's no common block at the start, assume fully random
 	// Buggy Boy has only 255, so don't check the full first half!
 	if (memcmp(data7.data(), data7.data() + 1, (sector7.size() / 2) - 1))
-		weak_offset = 5;	// -512
+	{
+		// -512
+		weak_offset = 0;
+		weak_size = 512;
+	}
 	else if (data0[129] == 'S')
 	{
 		// =256 -256
@@ -636,6 +640,49 @@ TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track)
 			bitbuf.addBlock(sector7.data_copy());
 		}
 	}
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// 8K sector track?
+bool Is8KSectorTrack (const Track &track)
+{
+	// There must only be 1 sector.
+	if (track.size() != 1)
+		return false;
+
+	const auto sector{ track[0] };
+	if (sector.datarate != DataRate::_250K || sector.encoding != Encoding::MFM ||
+		sector.size() != 8192 || !sector.has_data())
+		return false;
+
+	if (opt.debug) util::cout << "detected 8K sector track\n";
+	return true;
+}
+
+TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(Is8KSectorTrack(track));
+
+	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addGap(16);	// gap 4a
+	bitbuf.addSync();
+	bitbuf.addIAM();
+	bitbuf.addGap(16);	// gap 1
+
+	const auto &sector{ track[0] };
+	bitbuf.addSectorUpToData(sector.header, sector.is_deleted());
+
+	// Maximum size of long-track version used by Coin-Op Hits
+	static constexpr auto max_size{ 0x18a3 };
+	auto data = sector.data_copy();
+	if (data.size() > max_size)
+		data.resize(max_size);
+
+	bitbuf.addBlock(data);
+	bitbuf.addGap(max_size - data.size());
 
 	return TrackData(cylhead, std::move(bitbuf.buffer()));
 }

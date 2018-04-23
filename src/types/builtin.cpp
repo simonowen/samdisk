@@ -1029,7 +1029,7 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
 			}
 
-			// Spectrum +3 Speedlock weak sectors (part and full).
+			// Spectrum +3 Speedlock weak sectors (full and part).
 			{
 				Track track(9);
 
@@ -1049,17 +1049,27 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				std::copy(sig.begin(), sig.end(), data0.begin() + 304);
 				track[0].add(Data(data0));
 
-				// Data error for weak sector.
-				track[1].add(Data(512, 0), true);
-
 				complete(track);
-				auto trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 256, 32);
+
+				// Full weak sector.
+				track[1].remove_data();
+				Data weak_data(512);
+				iota(weak_data, 0);
+				track[1].add(Data(weak_data), true);
+				auto trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
 				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
-				trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
+
+				// Part weak sector.
+				track[1].remove_data();
+				fill(weak_data, 0, 256, 0xe5);
+				iota(weak_data, 256, 1);
+				fill(weak_data, 256 + 32, 256 + 32 + 48, 2);
+				track[1].add(Data(weak_data), true);
+				trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 336, 32);
 				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
 			}
 
-			// Amstrad CPC Speedlock weak sectors (part and full).
+			// Amstrad CPC Speedlock weak sectors (full, half, and part).
 			{
 				Track track(9);
 
@@ -1075,12 +1085,33 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				std::copy(sig.begin(), sig.end(), data0.begin() + 257);
 				track[0].add(std::move(data0));
 
-				// Data error for weak sector.
-				track[7].add(Data(512, 0), true);
+				complete(track);
 
-				auto trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 256, 32);
+				// Full weak sector.
+				track[7].remove_data();
+				Data weak_data(512);
+				iota(weak_data, 0);
+				track[7].add(Data(weak_data), true);
+				auto trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
 				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
-				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), complete(track), 0, 512);
+
+				// Half weak sector.
+				track[0].datas()[0][129] = 'S';
+				track[7].remove_data();
+				fill(weak_data, 0, 256, 0xe5);
+				iota(weak_data, 256, 1);
+				track[7].add(Data(weak_data), true);
+				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 256, 256);
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+
+				// Part weak sector.
+				track[0].datas()[0][129] = 0;
+				track[7].remove_data();
+				fill(weak_data, 0, 256, 0xe5);
+				iota(weak_data, 256, 1);
+				fill(weak_data, 256 + 32, 256 + 32 + 48, 2);
+				track[7].add(Data(weak_data), true);
+				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 336, 32);
 				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
 			}
 
@@ -1155,6 +1186,17 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 				}
 
 				disk->write(GenerateSystem24Track(cylhead.next_cyl(), complete(track)));
+			}
+
+			// 8K sector track.
+			{
+				Track track(1);
+
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 193, 6));
+				sector.add(Data(sector.size(), i), true, 0xf8);
+				track.add(std::move(sector));
+
+				disk->write(Generate8KSectorTrack(cylhead.next_cyl(), complete(track)));
 			}
 
 			break;
