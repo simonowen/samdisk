@@ -19,22 +19,30 @@ void TrackBuffer::setEncoding (Encoding encoding)
 	}
 }
 
-void TrackBuffer::addDataBit (bool one)
+void TrackBuffer::addBit (bool bit)
+{
+	addRawBit(bit);
+
+	if (m_encoding == Encoding::FM)
+		addRawBit(false);
+}
+
+void TrackBuffer::addDataBit (bool bit)
 {
 	if (m_encoding == Encoding::FM)
 	{
 		// FM has a reversal before every data bit
 		addBit(true);
-		addBit(one);
+		addBit(bit);
 	}
 	else
 	{
 		// MFM has a reversal between consecutive zeros (clock or data)
-		addBit(!m_onelast && !one);
-		addBit(one);
+		addBit(!m_lastbit && !bit);
+		addBit(bit);
 	}
 
-	m_onelast = one;
+	m_lastbit = bit;
 }
 
 void TrackBuffer::addByte (int byte)
@@ -68,7 +76,7 @@ void TrackBuffer::addByteWithClock (int data, int clock)
 		data <<= 1;
 	}
 
-	m_onelast = (data & 0x100) != 0;
+	m_lastbit = (data & 0x100) != 0;
 }
 
 void TrackBuffer::addWord (uint16_t word)

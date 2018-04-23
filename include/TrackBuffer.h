@@ -11,9 +11,10 @@ public:
 	virtual ~TrackBuffer () = default;
 
 	virtual void setEncoding (Encoding encoding);
-	virtual void addBit (bool one) = 0;
+	virtual void addRawBit (bool one) = 0;
 
-	void addDataBit (bool one);
+	void addBit (bool bit);
+	void addDataBit (bool bit);
 	void addByte (int byte);
 	void addByteBits (int byte, int num_bits);
 	void addByteWithClock (int data, int clock);
@@ -54,7 +55,7 @@ public:
 
 protected:
 	Encoding m_encoding{Encoding::MFM};
-	bool m_onelast{false};
+	bool m_lastbit{false};
 	CRC16 m_crc{};
 };
 

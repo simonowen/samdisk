@@ -4,14 +4,18 @@
 #include "FluxTrackBuffer.h"
 
 FluxTrackBuffer::FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding)
-	: m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate))
+	: m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate)),
+	m_flux_time(0U - m_bitcell_ns)
 {
+	// We start with a negative cell time to absorb the first zero m_cur_bit.
+	// This ensures the first reversal exactly matches the added data.
+
 	setEncoding(encoding);
 }
 
-void FluxTrackBuffer::addBit (bool next_bit)
+void FluxTrackBuffer::addRawBit (bool next_bit)
 {
-	m_flux_time += (m_encoding == Encoding::FM) ? (m_bitcell_ns * 2) : m_bitcell_ns;
+	m_flux_time += m_bitcell_ns;
 
 	if (m_curr_bit)
 	{
@@ -37,8 +41,8 @@ void FluxTrackBuffer::addBit (bool next_bit)
 void FluxTrackBuffer::addWeakBlock (int length)
 {
 	// Flush out previous constant block.
-	addBit(1);
-	addBit(1);
+	addRawBit(1);
+	addRawBit(1);
 
 	// Approximately 11 ambigious reversals per weak byte.
 	length = length * 21 / 2;

@@ -17,12 +17,9 @@ void BitstreamTrackBuffer::setEncoding(Encoding encoding)
 	m_buffer.encoding = encoding;
 }
 
-void BitstreamTrackBuffer::addBit (bool one)
+void BitstreamTrackBuffer::addRawBit (bool bit)
 {
-	m_buffer.add(one);
-
-	if (m_buffer.encoding == Encoding::FM)
-		m_buffer.add(false);
+	m_buffer.add(bit);
 }
 
 void BitstreamTrackBuffer::addCrc (int size)
