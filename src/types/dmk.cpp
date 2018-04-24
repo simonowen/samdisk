@@ -31,18 +31,29 @@ bool ReadDMK (MemFile &file, std::shared_ptr<Disk> &disk)
 	bool single_density = (dh.flags & 0x40) != 0;
 	bool single_sided = (dh.flags & 0x10) != 0;
 
-	if (ignore_density)
-		throw util::exception("DMK ignore density flag is not currently supported");
-	else if (util::letoh(dh.realsig) == 0x12345678)
+	if (util::letoh(dh.realsig) == 0x12345678)
 		throw util::exception("DMK real-disk-specification images contain no data");
 
 	auto cyls = dh.cyls;
 	auto heads = single_sided ? 1 : 2;
 	int tracklen = util::letoh(dh.tracklen);
+	if (!cyls || !tracklen || tracklen > DMK_MAX_TRACK_LENGTH)
+		return false;
 
 	auto total_size = static_cast<int>(sizeof(DMK_HEADER) + tracklen * cyls * heads);
-	if (!tracklen || tracklen > DMK_MAX_TRACK_LENGTH || file.size() != total_size)
-		return false;
+	if (file.size() != total_size)
+	{
+		// Accept wrong size only if the extension is recognised.
+		if (!IsFileExt(file.name(), "dmk") && !IsFileExt(file.name(), "dsk"))
+			return false;
+
+		Message(msgWarning, "DMK size (%d) doesn't match calculated size (%d)",
+			file.size(), total_size);
+	}
+
+	if (ignore_density)
+		throw util::exception("DMK ignore density flag is not currently supported");
+
 	tracklen -= DMK_TRACK_INDEX_SIZE;
 
 	for (auto cyl = 0; cyl < cyls; ++cyl)
@@ -53,7 +64,7 @@ bool ReadDMK (MemFile &file, std::shared_ptr<Disk> &disk)
 			std::vector<uint8_t> data(tracklen);
 
 			if (!file.read(index) || !file.read(data))
-				throw util::exception("short file reading ", CH(cyl, head));
+				Message(msgWarning, "short file reading %s", CH(cyl, head));
 
 			std::transform(index.begin(), index.end(), index.begin(),
 				[](uint16_t w) { return util::letoh(w); });
