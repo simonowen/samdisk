@@ -41,6 +41,41 @@ uint8_t abAtomLiteBoot[] =
 };
 */
 
+bool FormatImage (const std::string &path, Range range)
+{
+	auto disk = std::make_shared<Disk>();
+	if (!ReadImage(path, disk))
+		return false;
+
+	ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
+
+	// Start with MGT or ProDos format, but with automatic gap3.
+	Format fmt{ !opt.cpm ? RegularFormat::MGT : RegularFormat::ProDos };
+	fmt.gap3 = 0;
+
+	// Halve the default sector count in FM to ensure it fits.
+	if (opt.encoding == Encoding::FM)
+		fmt.sectors /= 2;
+
+	// Allow everything to be overridden, but check it's sensible.
+	fmt.Override(true);
+	fmt.Validate();
+
+	util::cout <<
+		util::fmt("%s %s, %2u cyls, %u heads, %2u sectors/track, %4u bytes/sector\n",
+			to_string(fmt.datarate).c_str(), to_string(fmt.encoding).c_str(),
+			range.cyls(), range.heads(), fmt.sectors, fmt.sector_size());
+
+	range.each([&](const CylHead &cylhead) {
+		Track track;
+		track.format(cylhead, fmt);
+		Message(msgStatus, "Formatting %s", CH(cylhead.cyl, cylhead.head));
+		disk->write(cylhead, std::move(track));
+	}, fmt.cyls_first);
+
+	return WriteImage(path, disk);
+}
+
 bool UnformatImage (const std::string &path, Range range)
 {
 	auto disk = std::make_shared<Disk>();

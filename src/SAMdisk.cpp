@@ -616,57 +616,24 @@ int main (int argc_, char *argv_[])
 			}
 
 			case cmdFormat:
-			case cmdVerify:
 			{
 				if (nSource == argNone || nTarget != argNone)
 					Usage();
-#if 0
-				if (nSource == argFloppy)
-				{
-					// Set up the format for MGT
-					FORMAT fmt = fmtMGT;
-					fmt.gap3 = 0;	// auto gap3
 
-					// Override some settings in ProDos CP/M mode
-					if (opt.cpm)
-					{
-						fmt.sectors = fmtProDos.sectors;
-						fmt.interleave = fmtProDos.interleave;
-						fmt.skew = fmtProDos.skew;
-						fmt.fill = fmtProDos.fill;
-					}
-
-					// To ensure it fits by default, halve the sector count in FM mode
-					if (opt.encoding == Encoding:FM) fmt.sectors >>= 1;
-
-					// Allow everything about the format to be overridden
-					Format::Override(&fmt, true);
-
-					// Check sector count and size
-					fmt.Validate();
-
-					bool fFormat = opt.command == cmdFormat;
-					bool fVerify = (opt.command == cmdVerify) || opt.verify;
-					f = FormatVerifyFloppy(opt.szSource, opt.range, &fmt, fFormat, fVerify);
-				}
+				if (nSource == argHDD)
+					FormatHdd(opt.szSource);
+				else if (nSource == argBootSector)
+					FormatBoot(opt.szSource);
+				else if (nSource == argDisk)
+					FormatImage(opt.szSource, opt.range);
 				else
-#endif
-					if (opt.command == cmdFormat)
-					{
-						if (nSource == argHDD)
-							FormatHdd(opt.szSource);
-						else if (nSource == argBootSector)
-							FormatBoot(opt.szSource);
-						else if (IsRecord(opt.szSource))
-							FormatRecord(opt.szSource);
-						else
-							Usage();
-					}
-					else
-						Usage();
+					Usage();
 
 				break;
 			}
+
+			case cmdVerify:
+				throw std::logic_error("verify command not yet implemented");
 
 			case cmdCreate:
 			{

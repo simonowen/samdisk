@@ -242,6 +242,7 @@ void ScanTrack (const CylHead &cylhead, const Track &track, ScanContext &context
 bool FormatHdd (const std::string &path);
 bool FormatBoot (const std::string &path);
 bool FormatRecord (const std::string &path);
+bool FormatImage (const std::string &path, Range range);
 bool UnformatImage (const std::string &path, Range range);
 
 // rpm

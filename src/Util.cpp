@@ -4,9 +4,6 @@
 
 static uint32_t adwUsed[2][3];
 
-const char *apcszRates[] = { "500Kbps", "300Kbps", "250Kbps", "1Mbps" };
-
-
 const char *ValStr (int val, const char *pcszDec_, const char *pcszHex_, bool fForceDecimal_)
 {
 	static char strs[8][32];

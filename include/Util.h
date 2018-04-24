@@ -38,8 +38,6 @@ char (&ArraySizeHelper(T (&array)[N]))[N];
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 #endif
 
-extern const char *apcszRates[];
-
 #define DAY ( \
   (__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + \
   (__DATE__[5]-'0') \
