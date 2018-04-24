@@ -203,6 +203,7 @@ struct option long_options[] =
 	{ "no-zip",			  no_argument, &opt.nozip, 1 },
 	{ "no-cfa",			  no_argument, &opt.nocfa, 1 },
 	{ "no-identify",	  no_argument, &opt.noidentify, 1 },
+	{ "no-ttb",			  no_argument, &opt.nottb, 1},			// undocumented
 	{ "byte-swap",		  no_argument, &opt.byteswap, 1 },
 	{ "atom",			  no_argument, &opt.byteswap, 1 },
 	{ "ace",			  no_argument, nullptr, OPT_ACE },

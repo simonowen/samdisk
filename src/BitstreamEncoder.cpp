@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "BitstreamEncoder.h"
+#include "BitstreamTrackBuffer.h"
 #include "SpecialFormat.h"
 
 bool generate_special(TrackData &trackdata)
@@ -34,6 +35,56 @@ bool generate_special(TrackData &trackdata)
 	return true;
 }
 
+bool generate_simple(TrackData &trackdata)
+{
+	bool first_sector = true;
+	auto &track = trackdata.track();
+	BitstreamTrackBuffer bitbuf(track[0].datarate, track[0].encoding);
+
+	for (auto &s : track)
+	{
+		// Take user gap3 over sector gap3, with default of 50 bytes.
+		int gap3 = (opt.gap3 > 0) ? opt.gap3 : s.gap3 ? s.gap3 : 0x32;
+
+		bitbuf.setEncoding(s.encoding);
+
+		switch (s.encoding)
+		{
+		case Encoding::MFM:
+		case Encoding::FM:
+			if (first_sector)
+				bitbuf.addTrackStart();
+			bitbuf.addSector(s, gap3);
+			break;
+		case Encoding::Amiga:
+		{
+			auto sectors = (s.datarate == DataRate::_500K) ? 22 : 11;
+			auto remain = sectors - s.header.sector;
+
+			if (first_sector)
+				bitbuf.addAmigaTrackStart();
+			bitbuf.addAmigaSector(s.header.cyl, s.header.head,
+				s.header.sector, remain, s.data_copy().data());
+			break;
+		}
+		default:
+			throw util::exception("bistream conversion not yet available for ", s.encoding, " sectors");
+		}
+
+		first_sector = false;
+	}
+
+	auto track_time_ns = bitbuf.size() * bitcell_ns(bitbuf.datarate());
+	auto track_time_ms = track_time_ns / 1'000'000;
+
+	// ToDo: caller should supply size limit
+	if (track_time_ms > 205)
+		return false;
+
+	trackdata.add(std::move(bitbuf.buffer()));
+	return true;
+}
+
 void generate_bitstream(TrackData &trackdata)
 {
 	assert(trackdata.has_track());
@@ -46,9 +97,11 @@ void generate_bitstream(TrackData &trackdata)
 		if (!trackdata.has_bitstream())
 			throw util::exception(trackdata.cylhead, " has no suitable bitstream representation");
 	}
-	else
+	else if (opt.nottb)
+		throw util::exception("track to bitstream conversion not permitted");
+	else if (!generate_simple(trackdata))
 	{
-		throw util::exception("track to bitstream conversion not yet implemented for ", trackdata.cylhead);
+		throw util::exception("bitstream conversion not yet implemented for ", trackdata.cylhead);
 	}
 }
 

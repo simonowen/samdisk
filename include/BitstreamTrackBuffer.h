@@ -8,6 +8,7 @@ class BitstreamTrackBuffer final : public TrackBuffer
 public:
 	BitstreamTrackBuffer (DataRate datarate, Encoding encoding);
 
+	int size () const;
 	void setEncoding (Encoding encoding) override;
 	void addRawBit (bool bit) override;
 	void addCrc (int size);

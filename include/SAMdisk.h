@@ -276,7 +276,7 @@ typedef struct
 	int bdos = 0, atom = 0, hdf = 0, cpm = 0, resize = 0, nocfa = 0, noidentify = 0;
 	int force = 0, nosig = 0, check8k = -1, tty = 0, nodata = 0, noflux = 0;
 	int nowobble = 0, scale = 100, plladjust = 5, pllphase = 60;
-	int time = 0, mt = -1;
+	int time = 0, nottb = 0, mt = -1;
 	Encoding encoding{ Encoding::Unknown };
 	DataRate datarate{ DataRate::Unknown };
 	long sectors = -1;

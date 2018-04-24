@@ -11,6 +11,11 @@ BitstreamTrackBuffer::BitstreamTrackBuffer (DataRate datarate, Encoding encoding
 	setEncoding(encoding);
 }
 
+int BitstreamTrackBuffer::size () const
+{
+	return m_buffer.size();
+}
+
 void BitstreamTrackBuffer::setEncoding(Encoding encoding)
 {
 	TrackBuffer::setEncoding(encoding);
