@@ -52,23 +52,14 @@ bool generate_simple(TrackData &trackdata)
 		{
 		case Encoding::MFM:
 		case Encoding::FM:
+		case Encoding::Amiga:
+		case Encoding::RX02:
 			if (first_sector)
 				bitbuf.addTrackStart();
 			bitbuf.addSector(s, gap3);
 			break;
-		case Encoding::Amiga:
-		{
-			auto sectors = (s.datarate == DataRate::_500K) ? 22 : 11;
-			auto remain = sectors - s.header.sector;
-
-			if (first_sector)
-				bitbuf.addAmigaTrackStart();
-			bitbuf.addAmigaSector(s.header.cyl, s.header.head,
-				s.header.sector, remain, s.data_copy().data());
-			break;
-		}
 		default:
-			throw util::exception("bistream conversion not yet available for ", s.encoding, " sectors");
+			throw util::exception("bitstream conversion not yet available for ", s.encoding, " sectors");
 		}
 
 		first_sector = false;

@@ -4,6 +4,12 @@
 #include "TrackBuffer.h"
 #include "IBMPC.h"
 
+TrackBuffer::TrackBuffer (DataRate datarate, Encoding encoding)
+: m_datarate(datarate)
+{
+	setEncoding(encoding);
+}
+
 void TrackBuffer::setEncoding (Encoding encoding)
 {
 	switch (encoding)
@@ -15,7 +21,7 @@ void TrackBuffer::setEncoding (Encoding encoding)
 		m_encoding = encoding;
 		break;
 	default:
-		throw util::exception("unsupported bitstream encoding (", encoding, ")");
+		throw util::exception("unsupported track encoding (", encoding, ")");
 	}
 }
 
@@ -54,16 +60,10 @@ void TrackBuffer::addByte (int byte)
 	}
 }
 
-void TrackBuffer::addByteBits (int byte, int num_bits)
+void TrackBuffer::addByteUpdateCrc (int byte)
 {
-	byte <<= (8 - num_bits);
-
-	for (auto i = 0; i < num_bits; ++i)
-	{
-		// Add bottom 'num_bits' bits, most-significant first.
-		addDataBit((byte & 0x80) != 0);
-		byte <<= 1;
-	}
+	addByte(byte);
+	m_crc.add(byte);
 }
 
 void TrackBuffer::addByteWithClock (int data, int clock)
@@ -77,13 +77,6 @@ void TrackBuffer::addByteWithClock (int data, int clock)
 	}
 
 	m_lastbit = (data & 0x100) != 0;
-}
-
-void TrackBuffer::addWord (uint16_t word)
-{
-	// Note: added MSB first.
-	addByte(word >> 8);
-	addByte(word & 0xff);
 }
 
 void TrackBuffer::addBlock (int byte, int count)
@@ -109,7 +102,17 @@ void TrackBuffer::addBlockUpdateCrc (const Data &data)
 
 void TrackBuffer::addGap (int count, int fill)
 {
+	if (fill < 0)
+		fill = (m_encoding == Encoding::FM) ? 0xff : 0x4e;
+
 	addBlock(fill, count);
+}
+
+void TrackBuffer::addGap2 (int fill)
+{
+	int gap2_bytes = (m_encoding == Encoding::FM) ? 11 :
+		(m_datarate == DataRate::_1M) ? 41 : 22;
+	addGap(gap2_bytes, fill);
 }
 
 void TrackBuffer::addSync ()
@@ -118,12 +121,14 @@ void TrackBuffer::addSync ()
 	addBlock(sync, (m_encoding == Encoding::FM) ? 6 : 12);
 }
 
-void TrackBuffer::addAM (int type)
+void TrackBuffer::addAM (int type, bool omit_sync)
 {
+	if (!omit_sync)
+		addSync();
+
 	if (m_encoding == Encoding::FM)
 	{
-		// FM address marks use clock of C7
-		addByteWithClock(type, 0xc7);
+		addByteWithClock(type, 0xc7);	// FM AM uses C7 clock pattern
 
 		m_crc.init();
 		m_crc.add(type);
@@ -133,19 +138,19 @@ void TrackBuffer::addAM (int type)
 		addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
 		addByteWithClock(0xa1, 0x0a);	// clock: 0 0 0 0 1 X 1 0
 		addByteWithClock(0xa1, 0x0a);	// data:   1 0 1 0 0 0 0 1
-		addByte(type);
 
-		m_crc.init(0xcdb4);		// A1A1A1
-		m_crc.add(type);
+		m_crc.init(0xcdb4);				// A1A1A1
+		addByteUpdateCrc(type);
 	}
 }
 
 void TrackBuffer::addIAM ()
 {
+	addSync();
+
 	if (m_encoding == Encoding::FM)
 	{
-		// FM IAM uses a clock of D7
-		addByteWithClock(0xfc, 0xd7);
+		addByteWithClock(0xfc, 0xd7);	// FM IAM uses D7 clock pattern
 	}
 	else
 	{
@@ -156,32 +161,7 @@ void TrackBuffer::addIAM ()
 	}
 }
 
-void TrackBuffer::addIDAM ()
-{
-	addAM(0xfe);
-}
-
-void TrackBuffer::addDAM ()
-{
-	addAM(0xfb);
-}
-
-void TrackBuffer::addDDAM ()
-{
-	addAM(0xf8);
-}
-
-void TrackBuffer::addAltDAM ()
-{
-	addAM(0xfa);
-}
-
-void TrackBuffer::addAltDDAM ()	// RX02
-{
-	addAM(0xfd);
-}
-
-void TrackBuffer::addCRC (bool bad_crc)
+void TrackBuffer::addCrcBytes (bool bad_crc)
 {
 	uint16_t adjust = bad_crc ? 0x5555 : 0;
 	addByte((m_crc ^ adjust) >> 8);
@@ -190,40 +170,48 @@ void TrackBuffer::addCRC (bool bad_crc)
 
 void TrackBuffer::addTrackStart ()
 {
-	//  System/34 double density
-	addGap(80);	// gap 4a
-	addSync();
-	addIAM();
-	addGap(50);	// gap 1
-}
-
-void TrackBuffer::addSectorHeader (int cyl, int head, int sector, int size, bool crc_error)
-{
-	addIDAM();
-	addByte(cyl);
-	addByte(head);
-	addByte(sector);
-	addByte(size);
-
-	m_crc.add(cyl);
-	m_crc.add(head);
-	m_crc.add(sector);
-	m_crc.add(size);
-	addCRC(crc_error);
+	switch (m_encoding)
+	{
+	case Encoding::MFM:
+	case Encoding::FM:
+		addGap((m_encoding == Encoding::FM) ? 40 : 80);	// gap 4a
+		addIAM();
+		addGap((m_encoding == Encoding::FM) ? 26 : 50);	// gap 1
+		break;
+	case Encoding::Amiga:
+	{
+		auto fill{ 0x00 };
+		addBlock(fill, 60);
+		break;
+	}
+	case Encoding::RX02:
+		setEncoding(Encoding::FM);
+		addGap(32);	// gap 4a
+		addIAM();
+		addGap(27);	// gap 1
+		setEncoding(Encoding::RX02);
+		break;
+	default:
+		throw util::exception("unsupported track start (", m_encoding, ")");
+	}
 }
 
 void TrackBuffer::addSectorHeader(const Header &header, bool crc_error)
 {
-	addSectorHeader(header.cyl, header.head, header.sector, header.size, crc_error);
+	addAM(0xfe);
+	addByteUpdateCrc(header.cyl);
+	addByteUpdateCrc(header.head);
+	addByteUpdateCrc(header.sector);
+	addByteUpdateCrc(header.size);
+	addCrcBytes(crc_error);
 }
 
-void TrackBuffer::addSectorData(const Data &data, int size, bool deleted, bool crc_error)
+void TrackBuffer::addSectorData(const Data &data, int size, uint8_t dam, bool crc_error)
 {
 	// Ensure this isn't used for over-sized protected sectors.
 	assert(Sector::SizeCodeToLength(size) == Sector::SizeCodeToLength(size));
 
-	auto am{deleted ? 0xf8 : 0xfb};
-	addAM(am);
+	addAM(dam);
 
 	// Ensure the written data matches the sector size code.
 	auto len_bytes{ Sector::SizeCodeToLength(size) };
@@ -239,38 +227,52 @@ void TrackBuffer::addSectorData(const Data &data, int size, bool deleted, bool c
 		addBlockUpdateCrc(data_pad);
 	}
 
-	addCRC(crc_error);
+	addCrcBytes(crc_error);
 }
 
-void TrackBuffer::addSector(const Sector &sector, int gap3)
+void TrackBuffer::addSector(const Sector &sector, int gap3_bytes)
 {
-	addSector(sector.header, sector.data_copy(), gap3, sector.is_deleted(), sector.has_baddatacrc());
+	setEncoding(sector.encoding);
+
+	switch (m_encoding)
+	{
+	case Encoding::MFM:
+	case Encoding::FM:
+	{
+		addSectorHeader(sector.header);
+		addGap2();
+		if (sector.has_data())
+			addSectorData(sector.data_copy(), sector.header.size, sector.dam, sector.has_baddatacrc());
+		addGap(gap3_bytes);
+		break;
+	}
+	case Encoding::Amiga:
+		addAmigaSector(sector.header, sector.header.sector, sector.data_copy().data());
+		break;
+	case Encoding::RX02:
+		addRX02Sector(sector.header, sector.data_copy(), gap3_bytes);
+		setEncoding(sector.encoding);
+		break;
+	default:
+		throw util::exception("unsupported sector encoding (", sector.encoding, ")");
+	}
 }
 
-void TrackBuffer::addSector (int cyl, int head, int sector, int size, const Data &data, int gap3, bool deleted, bool crc_error)
+void TrackBuffer::addSector (const Header &header, const Data &data, int gap3_bytes, uint8_t dam, bool crc_error)
 {
-	addSync();
-	addSectorHeader(cyl, head, sector, size);
-	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
-	addSync();
-	addSectorData(data, size, deleted, crc_error);
-	addGap(gap3);	// gap 3
-}
-
-void TrackBuffer::addSector (const Header &header, const Data &data, int gap3, bool deleted, bool crc_error)
-{
-	addSector(header.cyl, header.head, header.sector, header.size, data, gap3, deleted, crc_error);
+	Sector sector(m_datarate, m_encoding, header, gap3_bytes);
+	sector.add(Data(data), crc_error, dam);
+	addSector(sector, sector.gap3);
 }
 
 // Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.
-void TrackBuffer::addSectorUpToData (const Header &header, bool deleted)
+void TrackBuffer::addSectorUpToData (const Header &header, uint8_t dam)
 {
-	addSync();
-	addSectorHeader(header.cyl, header.head, header.sector, header.size);
-	addGap((m_encoding == Encoding::FM) ? 11 : 22);	// gap 2
-	addSync();
-	addAM(deleted ? 0xf8 : 0xfb);
+	addSectorHeader(header);
+	addGap2();
+	addAM(dam);
 }
+
 
 void TrackBuffer::addAmigaTrackStart ()
 {
@@ -329,15 +331,19 @@ std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, int len, uin
 	return odddata;
 }
 
-void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, const void *buf)
+void TrackBuffer::addAmigaSector (const CylHead &cylhead, int sector, const void *buf)
 {
 	addByte(0x00);
 	addByte(0x00);
 	addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
 	addByteWithClock(0xa1, 0x0a);
 
+	auto sectors = (m_datarate == DataRate::_500K) ? 22 : 11;
+	auto remain = sectors - sector;
+
 	uint32_t checksum = 0;
-	uint32_t info = (0xff << 24) | (((cyl << 1) | head) << 16) | (sector << 8) | remain;
+	uint32_t info = (0xff << 24) | (((cylhead.cyl << 1) | cylhead.head) << 16) |
+		(sector << 8) | remain;
 	addAmigaDword(info, checksum);
 
 	uint32_t sector_label[4] = {};
@@ -351,36 +357,18 @@ void TrackBuffer::addAmigaSector (int cyl, int head, int sector, int remain, con
 	addAmigaBits(bits);
 }
 
-void TrackBuffer::addAmigaSector(const CylHead &cylhead, int sector, int remain, const void *buf)
-{
-	addAmigaSector(cylhead.cyl, cylhead.head, sector, remain, buf);
-}
 
-
-
-void TrackBuffer::addRX02TrackStart()
+void TrackBuffer::addRX02Sector(const Header &header, const Data &data, int gap3_bytes)
 {
 	setEncoding(Encoding::FM);
 
-	addGap(32);	// gap 4a
-	addSync();
-	addIAM();
-	addGap(27);	// gap 1
-}
-
-void TrackBuffer::addRX02Sector(const CylHead &cylhead, int sector, int size, const Data &data, int gap3)
-{
-	setEncoding(Encoding::FM);
-
-	addSync();
-	addSectorHeader(cylhead.cyl, cylhead.head, sector, size);
-	addGap(11);		// gap 2
-	addSync();
+	addSectorHeader(header);
+	addGap2();
 	addAM(0xfd);	// RX02 DAM
 
 	setEncoding(Encoding::MFM);
 
 	addBlockUpdateCrc(data);
-	addCRC();
-	addGap(gap3);	// gap 3
+	addCrcBytes();
+	addGap(gap3_bytes);
 }

@@ -154,15 +154,13 @@ bool ReadSAP (MemFile &file, std::shared_ptr<Disk> &disk)
 				bitbuf.setEncoding(encoding);
 
 				if (sec == 0)
-					bitbuf.addBlock(track_fill, 32);
+					bitbuf.addGap(32, track_fill);
 
 				uint8_t gap_fill = (ss.format == 4) ? data[0] :
 					(ss.protection == 7) ? 0xf7 : 0x4e;
 
-				bitbuf.addSync();
-				bitbuf.addSectorHeader({ ss.track, head, ss.sector, size_code });
-				bitbuf.addBlock(gap_fill, (encoding == Encoding::MFM ? 22 : 11));
-				bitbuf.addSync();
+				bitbuf.addSectorHeader(Header(ss.track, head, ss.sector, size_code));
+				bitbuf.addGap((encoding == Encoding::MFM ? 22 : 11), gap_fill);
 				bitbuf.addAM(0xfb);
 				bitbuf.addBlock(data);
 
@@ -177,7 +175,7 @@ bool ReadSAP (MemFile &file, std::shared_ptr<Disk> &disk)
 					bitbuf.addCrc(sync_am + data.size());
 				}
 
-				bitbuf.addBlock(gap_fill, 40);
+				bitbuf.addGap(40, gap_fill);
 			}
 
 			bitbuf.addBlock(track_fill, 492);

@@ -80,15 +80,12 @@ TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 
 	// Track start with slightly shorter gap4a.
 	bitbuf.addGap(64);
-	bitbuf.addSync();
 	bitbuf.addIAM();
 	bitbuf.addGap(50);
 
 	// Initial full-sized sector
-	bitbuf.addSync();
 	bitbuf.addSectorHeader(Header(cylhead, 0, 2));
 	bitbuf.addBlock(gap2_sig);
-	bitbuf.addSync();
 	bitbuf.addAM(0xfb);
 	bitbuf.addBlock(Data(512, 0xf6));
 	bitbuf.addCrc(4 + 512);
@@ -99,20 +96,16 @@ TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 		// Two short headers that overlap the next sector.
 		for (int k = 0; k < 2; ++k)
 		{
-			bitbuf.addSync();
 			bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
 			bitbuf.addBlock(gap2_sig);
-			bitbuf.addSync();
 			bitbuf.addAM(0xfb);
 			bitbuf.addBlock(data_sig);
 			bitbuf.addGap(30);
 		}
 
 		// Full-sized sector with data completing CRCs above.
-		bitbuf.addSync();
 		bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
 		bitbuf.addBlock(gap2_sig);
-		bitbuf.addSync();
 		bitbuf.addAM(0xfb);
 		bitbuf.addBlock(data_sig);
 		bitbuf.addBlock(0xe5, 239);
@@ -241,10 +234,10 @@ TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &t
 		auto is_weak{ &sector == &track[1] };
 
 		if (!is_weak)
-			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.dam);
 		else
 		{
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addSectorUpToData(sector.header, sector.dam);
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
 			fluxbuf.addBlock(Data(
@@ -252,7 +245,7 @@ TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &t
 				data_copy.begin() + sector.size()));
 		}
 
-		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.dam, is_weak);
 
 		// Add duplicate weak sector half way around track.
 		if (&sector == &track[5])
@@ -260,7 +253,7 @@ TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &t
 			auto &sector1{ track[1] };
 			auto data1{ sector1.data_copy() };
 			std::fill(data1.begin() + weak_offset, data1.begin() + weak_offset + weak_size, uint8_t(0xee));
-			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.is_deleted(), true);
+			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.dam, true);
 		}
 	}
 
@@ -345,10 +338,10 @@ TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track,
 		auto is_weak{ &sector == &track[7] };
 
 		if (!is_weak)
-			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.dam);
 		else
 		{
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addSectorUpToData(sector.header, sector.dam);
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
 			fluxbuf.addBlock(Data(
@@ -356,7 +349,7 @@ TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track,
 				data_copy.begin() + sector.size()));
 		}
 
-		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.dam, is_weak);
 
 		// Add duplicate weak sector half way around track.
 		if (&sector == &track[1])
@@ -364,7 +357,7 @@ TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track,
 			auto &sector7{ track[7] };
 			auto data7{ sector7.data_copy() };
 			std::fill(data7.begin() + weak_offset, data7.begin() + weak_offset + weak_size, uint8_t(0xee));
-			bitbuf.addSector(sector7.header, data7, 0x2e, sector7.is_deleted(), true);
+			bitbuf.addSector(sector7.header, data7, 0x2e, sector7.dam, true);
 		}
 	}
 
@@ -426,10 +419,10 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, 
 		auto is_weak{ &sector == &track[1] };
 
 		if (!is_weak)
-			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.dam);
 		else
 		{
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addSectorUpToData(sector.header, sector.dam);
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
 			fluxbuf.addBlock(Data(
@@ -437,7 +430,7 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, 
 				data_copy.begin() + sector.size()));
 		}
 
-		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.is_deleted(), is_weak);
+		bitbuf.addSector(sector.header, data_copy, 0x2e, sector.dam, is_weak);
 
 		// Add duplicate weak sector half way around track.
 		if (&sector == &track[5])
@@ -446,7 +439,7 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, 
 			auto &sector1{ track[1] };
 			auto data1{ sector1.data_copy() };
 			std::fill(data1.begin() + weak_offset, data1.begin() + weak_offset + weak_size, uint8_t(0xee));
-			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.is_deleted(), true);
+			bitbuf.addSector(sector1.header, data1, 0x2e, sector1.dam, true);
 		}
 	}
 
@@ -508,10 +501,10 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int we
 		auto is_weak{ &sector == &track[9] };
 
 		if (!is_weak)
-			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.is_deleted());
+			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.dam);
 		else
 		{
-			fluxbuf.addSectorUpToData(sector.header, sector.is_deleted());
+			fluxbuf.addSectorUpToData(sector.header, sector.dam);
 			fluxbuf.addBlock(Data(data_copy.begin(), data_copy.begin() + weak_offset));
 			fluxbuf.addWeakBlock(weak_size);
 			fluxbuf.addBlock(Data(
@@ -519,14 +512,14 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int we
 				data_copy.begin() + sector.size()));
 		}
 
-		bitbuf.addSector(sector.header, data_copy, 1, sector.is_deleted(), is_weak);
+		bitbuf.addSector(sector.header, data_copy, 1, sector.dam, is_weak);
 
 		if (&sector == &track[3])
 		{
 			auto &sector9{ track[9] };
 			auto data9{ sector9.data_copy() };
 			std::fill(data9.begin() + weak_offset, data9.begin() + weak_offset + weak_size, uint8_t(0xee));
-			bitbuf.addSector(sector9.header, data9, 1, sector9.is_deleted(), true);
+			bitbuf.addSector(sector9.header, data9, 1, sector9.dam, true);
 		}
 	}
 
@@ -633,7 +626,7 @@ TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track)
 			auto &sector7 = track[7];
 			auto &sector8 = track[8];
 
-			bitbuf.addSectorUpToData(sector8.header, sector8.is_deleted());
+			bitbuf.addSectorUpToData(sector8.header, sector8.dam);
 			bitbuf.addBlock(Data(256, 0x55));
 			bitbuf.addCrc(4 + 256);
 			bitbuf.addBlock(Data(0x512 - 256 - 2, 0x4e));
@@ -668,12 +661,11 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
 
 	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addGap(16);	// gap 4a
-	bitbuf.addSync();
 	bitbuf.addIAM();
 	bitbuf.addGap(16);	// gap 1
 
 	const auto &sector{ track[0] };
-	bitbuf.addSectorUpToData(sector.header, sector.is_deleted());
+	bitbuf.addSectorUpToData(sector.header, sector.dam);
 
 	// Maximum size of long-track version used by Coin-Op Hits
 	static constexpr auto max_size{ 0x18a3 };

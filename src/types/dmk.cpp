@@ -144,9 +144,10 @@ bool ReadDMK (MemFile &file, std::shared_ptr<Disk> &disk)
 						last_pos += step;
 					}
 
+					// Rewrite minimal sync and the address mark with missing clock bits
 					bitbuf.setEncoding(am_encoding);
 					bitbuf.addBlock(0x00, (am_encoding == Encoding::MFM) ? 8 : 6);
-					bitbuf.addAM(b);
+					bitbuf.addAM(b, true);
 
 					step = (am_encoding == Encoding::MFM) ? 1 : fm_step;
 					pos += step;

@@ -1226,9 +1226,9 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			const Data data(512, 0x00);
 			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::Amiga);
 
-			bitbuf.addAmigaTrackStart();
+			bitbuf.addTrackStart();
 			for (i = 0; i < 22; i++)
-				bitbuf.addAmigaSector(cylhead.cyl, cylhead.head, i, (22 - i), data.data());
+				bitbuf.addSector(Header(cylhead, i, 2), data);
 
 			disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
 			break;
@@ -1243,11 +1243,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			{
 				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::Amiga);
 
-				bitbuf.addAmigaTrackStart();
+				bitbuf.addTrackStart();
 				for (i = 0; i < 11; i++)
 				{
 					const Data data(512, static_cast<uint8_t>(i));
-					bitbuf.addAmigaSector(cylhead, i, (11 - i), data.data());
+					bitbuf.addSector(Header(cylhead, i, 2), data);
 				}
 
 				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));
@@ -1257,11 +1257,11 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 			{
 				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::RX02);
 
-				bitbuf.addRX02TrackStart();
+				bitbuf.addTrackStart();
 				for (i = 0; i < 26; i++)
 				{
 					const Data data(256, static_cast<uint8_t>(i));
-					bitbuf.addRX02Sector(cylhead, i + 1, 0, data, 0x38);
+					bitbuf.addSector(Header(cylhead, i + 1, 0), data, 0x38);
 				}
 
 				disk->write(cylhead.next_cyl(), std::move(bitbuf.buffer()));

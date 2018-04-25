@@ -4,13 +4,12 @@
 #include "FluxTrackBuffer.h"
 
 FluxTrackBuffer::FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding)
-	: m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate)),
+	: TrackBuffer(datarate, encoding),
+	m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate)),
 	m_flux_time(0U - m_bitcell_ns)
 {
 	// We start with a negative cell time to absorb the first zero m_cur_bit.
 	// This ensures the first reversal exactly matches the added data.
-
-	setEncoding(encoding);
 }
 
 void FluxTrackBuffer::addRawBit (bool next_bit)

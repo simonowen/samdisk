@@ -6,9 +6,8 @@
 #define INIT_BITSIZE   5000000
 
 BitstreamTrackBuffer::BitstreamTrackBuffer (DataRate datarate, Encoding encoding)
-	: m_buffer(datarate, encoding)
+	: TrackBuffer(datarate, encoding), m_buffer(datarate, encoding)
 {
-	setEncoding(encoding);
 }
 
 int BitstreamTrackBuffer::size () const
@@ -40,7 +39,8 @@ void BitstreamTrackBuffer::addCrc (int size)
 
 	// Seek back to the starting position to write the CRC.
 	m_buffer.seek(old_bitpos);
-	addWord(crc);
+	addByte(crc >> 8);
+	addByte(crc & 0xff);
 }
 
 BitBuffer &BitstreamTrackBuffer::buffer()
