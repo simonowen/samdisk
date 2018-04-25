@@ -421,7 +421,7 @@ bool ReadDSK (MemFile &file, std::shared_ptr<Disk> &disk)
 		{
 			// Example: Silva (1985)(Lankhor)(fr)[cr Genesis][t Genesis].zip (TOSEC CPC Games)
 			Message(msgWarning, "%u bytes of unused data found at end of file:", uTail);
-			util::hex_dump(file.data().begin() + file.tell(), file.data().end(), nullptr, file.tell());
+			util::hex_dump(file.data().begin(), file.data().end(), file.tell());
 		}
 	}
 

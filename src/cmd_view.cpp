@@ -32,19 +32,20 @@ void ViewTrack (const CylHead &cylhead, const Track &track)
 			auto copy = std::min(sector.copies(), opt.datacopy);
 			const Data &data = sector.data_copy(copy);
 			auto data_size = data.size();
-			auto show = (opt.bytes < 0) ? data_size : std::min(data_size, opt.bytes);
 
-			if (data_size != show)
-				util::cout << "Sector " << sector.header.sector << " (" << data_size << " bytes, " << show << " shown):\n";
-			else if (data_size != sector.size())
+			auto show_begin = std::max(opt.bytes_begin, 0);
+			auto show_end = (opt.bytes_end < 0) ? data_size :
+				std::min(opt.bytes_end, data_size);
+
+			if (data_size != sector.size())
 				util::cout << "Sector " << sector.header.sector << " (" << sector.size() << " bytes, " << data_size << " stored):\n";
 			else
 				util::cout << "Sector " << sector.header.sector << " (" << data_size << " bytes):\n";
 
-			if (show > 0)
+			if (show_end > show_begin)
 			{
 				if (sector.copies() == 1)
-					util::hex_dump(data.begin(), data.begin() + show);
+					util::hex_dump(data.begin(), data.begin() + show_end, show_begin);
 				else
 				{
 					std::vector<colour> colours;
@@ -66,7 +67,8 @@ void ViewTrack (const CylHead &cylhead, const Track &track)
 					}
 
 					assert(static_cast<int>(colours.size()) == sector.data_size());
-					util::hex_dump(data.begin(), data.begin() + show, colours.data());
+					util::hex_dump(data.begin(), data.begin() + show_end,
+						show_begin, colours.data());
 				}
 			}
 			util::cout << "\n";
@@ -188,11 +190,14 @@ void ViewTrack_MFM_FM (Encoding encoding, BitBuffer &bitbuf)
 		}
 	}
 
-	auto show = (opt.bytes < 0) ? track_data.size() : std::min(track_data.size(), opt.bytes);
-	if (show)
+	auto show_begin = std::max(opt.bytes_begin, 0);
+	auto show_end = (opt.bytes_end < 0) ? track_data.size():
+		std::min(opt.bytes_end, track_data.size());
+	if (show_end > show_begin)
 	{
 		util::cout << encoding << " Decode (" << bitbuf.track_bitsize() << " bits):\n";
-		util::hex_dump(track_data.begin(), track_data.begin() + show, colours.data());
+		util::hex_dump(track_data.begin(), track_data.begin() + show_end,
+			show_begin, colours.data());
 	}
 }
 
@@ -271,11 +276,6 @@ bool ViewHdd (const std::string &path, Range range)
 		lba_sector = (cyl * hdd->heads + head) * hdd->sectors + (sector - 1);
 	}
 
-	// Determine the number of bytes to show
-	auto uShow = mem.size;
-	if (opt.bytes >= 0 && opt.bytes < uShow)
-		uShow = opt.bytes;
-
 	if (lba_sector >= hdd->total_sectors)
 		util::cout << util::fmt("LBA value out of drive range (%u sectors).\n", hdd->total_sectors);
 	else if (!hdd->Seek(lba_sector) || !hdd->Read(mem, 1))
@@ -284,12 +284,13 @@ bool ViewHdd (const std::string &path, Range range)
 	{
 		if (!range.empty())
 			util::cout << util::fmt("Cyl %s Head %s Sector %u (LBA %s):\n", CylStr(cyl), HeadStr(head), sector, lba_sector);
-		else if (mem.size != uShow)
-			util::cout << util::fmt("LBA Sector %u (%u bytes, %u shown):\n\n", lba_sector, mem.size, uShow);
 		else
 			util::cout << util::fmt("LBA Sector %u (%u bytes):\n\n", lba_sector, mem.size);
 
-		util::hex_dump(mem.pb, mem.pb + uShow);
+		auto show_begin = std::max(opt.bytes_begin, 0);
+		auto show_end = (opt.bytes_end < 0) ? mem.size :
+			std::min(opt.bytes_end, mem.size);
+		util::hex_dump(mem.pb, mem.pb + show_end, show_begin);
 		return true;
 	}
 

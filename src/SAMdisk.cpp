@@ -370,12 +370,19 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_MAXSPLICE: if (!GetInt(optarg, opt.maxsplice)) return BadValue("max-splice-bits"); break;
 			case OPT_CHECK8K: if (!optarg) opt.check8k = 1; else if (!GetInt(optarg, opt.check8k)) return BadValue("check8k"); break;
 			case OPT_RPM:	if (!GetInt(optarg, opt.rpm) || (opt.rpm != 300 && opt.rpm != 360)) return BadValue("rpm"); break;
-			case OPT_BYTES: if (!GetInt(optarg, opt.bytes) || !opt.bytes) return BadValue("bytes"); break;
 			case OPT_HDF:	if (!GetInt(optarg, opt.hdf) || (opt.hdf != 10 && opt.hdf != 11)) return BadValue("hdf"); break;
 			case OPT_SCALE: if (!GetInt(optarg, opt.scale)) return BadValue("scale"); break;
 			case OPT_PLLADJUST: if (!GetInt(optarg, opt.plladjust) || opt.plladjust <= 0 || opt.plladjust > 50) return BadValue("pll-adjust"); break;
 			case OPT_PLLPHASE: if (!GetInt(optarg, opt.pllphase) || opt.pllphase <= 0 || opt.pllphase > 90) return BadValue("pll-phase"); break;
 			case OPT_STEPRATE: if (!GetInt(optarg, opt.steprate) || opt.steprate > 15) return BadValue("step-rate"); break;
+
+			case OPT_BYTES:
+				if (!GetRange(optarg, opt.bytes_begin, opt.bytes_end))
+				{
+					util::cout << "Invalid byte count or range\n";
+					return false;
+				}
+				break;
 
 			case OPT_VERSION:
 				LongVersion();

@@ -86,6 +86,7 @@ typedef void * HANDLE;
 #include <functional>
 #include <numeric>
 #include <bitset>
+#include <limits>
 
 #include <cstdio>
 #include <cstddef>
@@ -97,7 +98,6 @@ typedef void * HANDLE;
 #include <sys/stat.h>
 #include <cerrno>
 #include <ctime>
-#include <climits>
 #include <csignal>
 #include <fcntl.h>
 #include <chrono>
@@ -270,7 +270,7 @@ typedef struct
 	int byteswap = 0, merge = 0, trim = 0, repair = 0, verbose = 0, verify = 0, log = 0;
 	int gaps = -1, gap2 = -1, gap4b = -1, idcrc = -1, gapmask = -1, maxsplice = -1, keepoverlap = 0;
 	int quick = 0, blind = -1, calibrate = 0, newdrive = 0, steprate = -1, noweak = 0;
-	int minimal = 0, nozip = 0, fix = -1, legacy = 0, datacopy = 0, bytes = -1, align = 0;
+	int minimal = 0, nozip = 0, fix = -1, legacy = 0, datacopy = 0, align = 0;
 	int offsets = -1, absoffsets = 0, nowrite = 0, nodiff = 0, noformat = 0, nodups = 0, rpm = 0, flip = 0;
 	int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1, head0 = -1, head1 = -1;
 	int rescans = 0, maxcopies = 3, retries = maxcopies, fmoverlap = 0, multiformat = 0, cylsfirst = -1;
@@ -278,10 +278,11 @@ typedef struct
 	int force = 0, nosig = 0, check8k = -1, tty = 0, nodata = 0, noflux = 0;
 	int nowobble = 0, scale = 100, plladjust = 5, pllphase = 60;
 	int time = 0, nottb = 0, mt = -1;
+	int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
 	Encoding encoding{ Encoding::Unknown };
 	DataRate datarate{ DataRate::Unknown };
 	long sectors = -1;
-	std::string label {}, boot {};
+	std::string label{}, boot{};
 
 	char szSource[MAX_PATH], szTarget[MAX_PATH];
 

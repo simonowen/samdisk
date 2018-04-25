@@ -224,13 +224,16 @@ LogHelper& operator<<(LogHelper& h, ttycmd cmd);
 
 
 template <typename ForwardIter>
-void hex_dump (ForwardIter it, ForwardIter itEnd, colour *pColours = nullptr, int start_offset = 0, size_t per_line = 16)
+void hex_dump (ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour *pColours = nullptr, size_t per_line = 16)
 {
 	assert(per_line != 0);
 	static const char hex[] = "0123456789ABCDEF";
 
+	it += start_offset;
+	pColours += start_offset;
+
 	colour c = colour::none;
-	auto base_offset = start_offset - (start_offset % per_line);
+	auto base_offset = -start_offset % per_line;
 	start_offset %= per_line;
 
 	while (it < itEnd)

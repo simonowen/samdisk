@@ -74,7 +74,8 @@ bool HddInfo (const std::string &path, int verbosity)
 		if (verbosity > 0 && hdd->sIdentify.len)
 		{
 			util::cout << '\n';
-			util::hex_dump(hdd->sIdentify.byte, hdd->sIdentify.byte + hdd->sIdentify.len);
+			util::hex_dump(hdd->sIdentify.byte,
+				hdd->sIdentify.byte + hdd->sIdentify.len);
 		}
 
 		return true;
