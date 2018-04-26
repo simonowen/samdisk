@@ -69,7 +69,6 @@ int Sector::copies () const
 Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 {
 	Merge ret = Merge::NewData;
-	assert(!copies() || dam == new_dam);
 
 	// If the sector has a bad header CRC, it can't have any data
 	if (has_badidcrc())
@@ -87,6 +86,10 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		assert(bad_crc == bad_data_crc);
 	}
 #endif
+
+	// If both are bad, ignore additional copies with a different DAM
+	if (bad_crc && has_baddatacrc() && new_dam != dam)
+		return Merge::Unchanged;
 
 	// If the exising sector has good data, ignore supplied data if it's bad
 	if (bad_crc && has_good_data())
