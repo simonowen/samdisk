@@ -138,6 +138,7 @@
     <ClCompile Include="src\types\d88.cpp" />
     <ClCompile Include="src\types\dfi.cpp" />
     <ClCompile Include="src\types\dmk.cpp" />
+    <ClCompile Include="src\types\do.cpp" />
     <ClCompile Include="src\types\ds2.cpp" />
     <ClCompile Include="src\types\dsc.cpp" />
     <ClCompile Include="src\types\dsk.cpp" />

@@ -404,9 +404,11 @@ void scan_bitstream_apple (TrackData &trackdata)
 				cksum ^= x;
 				decdata[byte] = cksum;
 				invalid += (x >> 7);
-				if (0 && x >> 7)
+#if 0
+				if (x >> 7)
 					util::cout << trackdata.cylhead << util::fmt (" sec %u: invalid gcr at %03X: %02X\n",
 						sector.header.sector, byte, gcrdata[byte]);
+#endif
 			}
 
 			// 6-and-2 de-nibblizing
@@ -452,7 +454,7 @@ void scan_flux_apple (TrackData &trackdata)
 }
 
 
-void scan_bitstream_gcr (TrackData &trackdata)
+void scan_bitstream_gcr (TrackData &/*trackdata*/)
 {
 	throw std::logic_error("C64 GCR format is not currently supported");
 }
