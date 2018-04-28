@@ -276,8 +276,7 @@ void TrackBuffer::addSectorUpToData (const Header &header, uint8_t dam)
 
 void TrackBuffer::addAmigaTrackStart ()
 {
-	auto fill{0x00};
-	addBlock(fill, 60);		// Shift the first sector away from the index
+	addBlock(0x00, 60);
 }
 
 void TrackBuffer::addAmigaDword (uint32_t dword, uint32_t &checksum)
@@ -334,7 +333,6 @@ std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, int len, uin
 void TrackBuffer::addAmigaSector (const CylHead &cylhead, int sector, const void *buf)
 {
 	addByte(0x00);
-	addByte(0x00);
 	addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
 	addByteWithClock(0xa1, 0x0a);
 
@@ -355,6 +353,8 @@ void TrackBuffer::addAmigaSector (const CylHead &cylhead, int sector, const void
 	bits = splitAmigaBits(buf, 512, checksum);
 	addAmigaDword(checksum, checksum);
 	addAmigaBits(bits);
+
+	addByte(0x00);
 }
 
 
