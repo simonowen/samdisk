@@ -2,7 +2,7 @@
 
 #include "SAMdisk.h"
 
-bool ReadUnsupp (MemFile &file, std::shared_ptr<Disk> &/*disk*/)
+bool ReadUnsupported (MemFile &file, std::shared_ptr<Disk> &/*disk*/)
 {
 	std::array<char, SECTOR_SIZE> buf;
 	if (!file.rewind() || !file.read(buf))

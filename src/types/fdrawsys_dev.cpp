@@ -375,8 +375,11 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead &cylhead, Track &track)
 	}
 }
 
-bool ReadFdrawSysDev(const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadFdrawcmdSys (const std::string &path, std::shared_ptr<Disk> &disk)
 {
+	if (!IsFloppyDevice(path))
+		return false;
+
 	auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
 	auto fdrawcmd = FdrawcmdSys::Open(devidx);
 	if (!fdrawcmd)
@@ -389,6 +392,14 @@ bool ReadFdrawSysDev(const std::string &path, std::shared_ptr<Disk> &disk)
 	disk = fdrawcmd_dev_disk;
 
 	return true;
+}
+
+bool WriteFdrawcmdSys (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+{
+	if (!IsFloppyDevice(path))
+		return false;
+
+	throw util::exception("fdrawcmd.sys writing not yet implemented");
 }
 
 #endif // HAVE_FDRAWCMD_H

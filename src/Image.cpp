@@ -6,16 +6,8 @@
 #include "types.h"
 #include "BlockDevice.h"
 
-bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk);
 bool UnwrapSDF (std::shared_ptr<Disk> &src_disk, std::shared_ptr<Disk> &disk);
 bool ReadUnsupp (MemFile &file, std::shared_ptr<Disk> &disk);
-bool WriteRecord (FILE* f_, std::shared_ptr<Disk> &disk);
-bool ReadSCPDev (const std::string &path, std::shared_ptr<Disk> &disk);
-bool ReadKFDev (const std::string &path, std::shared_ptr<Disk> &disk);
-bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk);
-bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk);
-bool ReadFdrawSysDev (const std::string &path, std::shared_ptr<Disk> &disk);
-bool ReadFdrawSysABDev (const std::string &path, std::shared_ptr<Disk> &disk);
 
 bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool normalise)
 {
@@ -23,28 +15,16 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 	bool f = false;
 
 	if (path.empty())
-		throw util::exception("invalid path");
-#ifdef HAVE_FDRAWCMD_H
-	else if (IsFloppyDevice(path))
-		f = ReadFdrawSysDev(path, disk);
-	else if (util::lowercase(path) == "ab:")
-		f = ReadFdrawSysABDev(path, disk);
-#endif
-	else if (IsDir(path))
-		throw util::exception("path is a directory");
+		throw util::exception("invalid empty path");
 
-	if (IsBuiltIn(path))
-		f = ReadBuiltin(path, disk);
-	else if (IsTrinity(path))
-		f = ReadTrinLoad(path, disk);
-	else if (IsRecord(path))
-		f = ReadRecord(path, disk);
-	else if (util::lowercase(path) == "scp:")
-		f = ReadSCPDev(path, disk);
-	else if (util::lowercase(path) == "kf:")
-		f = ReadKFDev(path, disk);
-	else if (IsBlockDevice(path))
-		f = ReadBlkDev(path, disk);
+	// Try devices first as the path may use a custom syntax
+	for (auto p = aDeviceTypes; !f && p->pszType; ++p)
+	{
+		if (p->pfnRead) f = p->pfnRead(path, disk);
+	}
+
+	if (!f && IsDir(path))
+		throw util::exception("path is a directory");
 
 	// Next try regular files (and archives)
 	if (!f)
@@ -53,7 +33,7 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 			return false;
 
 		// Present the image to all types with read support
-		for (auto p = aTypes; !f && p->pszType; ++p)
+		for (auto p = aImageTypes; !f && p->pszType; ++p)
 		{
 			if (p->pfnRead) f = p->pfnRead(file, disk);
 		}
@@ -62,6 +42,7 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 		if (f && file.compression() != Compress::None)
 			disk->metadata["archive"] = to_string(file.compression());
 	}
+
 #if 0
 	// Unwrap any sub-containers
 	if (!f) f = UnwrapSDF(olddisk, disk);	// MakeSDF image
@@ -122,27 +103,24 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 bool WriteImage (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	bool f = false;
-	auto cpm_disk = std::make_shared<Disk>();
 
 #if 0
-	// ToDo
-	// Wrap a CP/M image in a BDOS record container?
+	// TODO: Wrap a CP/M image in a BDOS record container
+	auto cpm_disk = std::make_shared<Disk>();
 	if (opt.cpm)
 		f = WrapCPM(disk, cpm_disk);
 #endif
 
-	// BDOS record?
-	if (IsRecord(path))
-		f = WriteRecord(path, cpm_disk ? cpm_disk : disk);
-#ifdef HAVE_FDRAWCMD_H
-	else if (IsFloppyDevice(path))
-		throw util::exception("fdrawcmd.sys writing is not currently supported");
-#endif
+	// Try devices first as the path may use a custom syntax
+	for (auto p = aDeviceTypes; !f && p->pszType; ++p)
+	{
+		if (p->pfnWrite) f = p->pfnWrite(path, disk);
+	}
 
 	// Normal image file
-	else
+	if (!f)
 	{
-		auto p = aTypes;
+		auto p = aImageTypes;
 
 		// Find the type matching the output file extension
 		for (; p->pszType; ++p)
@@ -155,10 +133,8 @@ bool WriteImage (const std::string &path, std::shared_ptr<Disk> &disk)
 		if (!p->pszType)
 			throw util::exception("unknown output file type");
 		else if (!p->pfnWrite)
-			throw util::exception("unsupported output file type");
+			throw util::exception(util::format(p->pszType, " is not supported for output"));
 
-		// Create the output file
-		// ToDo: change to stream or wrap in try-catch so file is closed
 		FILE *file = fopen(path.c_str(), "wb");
 		if (!file)
 			throw posix_error(errno, path.c_str());

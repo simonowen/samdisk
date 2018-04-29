@@ -64,15 +64,17 @@ static std::string VersionString(int version)
 	return ss.str();
 }
 
-bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
+bool ReadSuperCardPro (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	// ToDo: use path to select from multiple devices?
+	if (util::lowercase(path) != "scp:")
+		return false;
 
 	auto supercardpro = SuperCardPro::Open();
 	if (!supercardpro)
 		throw util::exception("failed to open SuperCard Pro device");
 
-	int hw_version{0}, fw_version{0};
+	int hw_version = 0, fw_version = 0;
 	supercardpro->GetInfo(hw_version, fw_version);
 
 	auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
@@ -85,4 +87,12 @@ bool ReadSCPDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 	disk = scp_dev_disk;
 
 	return true;
+}
+
+bool WriteSuperCardPro (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+{
+	if (util::lowercase(path) != "scp:")
+		return false;
+
+	throw std::logic_error("SuperCard Pro writing not yet implemented");
 }

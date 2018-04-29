@@ -108,8 +108,11 @@ private:
 	std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
 };
 
-bool ReadFdrawSysABDev (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadFdrawcmdSysAB (const std::string &path, std::shared_ptr<Disk> &disk)
 {
+	if (util::lowercase(path) != "ab:")
+		return false;
+
 	auto fdrawcmd = FdrawcmdSys::Open(1);
 	if (!fdrawcmd)
 		throw util::exception(path, " requires non-USB drives A: and B:");
@@ -132,6 +135,11 @@ bool ReadFdrawSysABDev (const std::string &path, std::shared_ptr<Disk> &disk)
 	disk = fdrawcmd_dev_disk;
 
 	return true;
+}
+
+bool WriteFdrawcmdSysAB (const std::string &/*path*/, std::shared_ptr<Disk> &/*disk*/)
+{
+	throw util::exception("2-drive writing is impossible");
 }
 
 #endif // HAVE_FDRAWCMD_H

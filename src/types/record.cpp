@@ -5,11 +5,11 @@
 #include "types.h"
 #include "record.h"
 
-bool ReadRecord (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadBDOS (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	auto record = 0;
 	if (!IsRecord(path, &record))
-		throw util::exception("invalid record path");
+		return false;
 
 	auto file = path.substr(0, path.rfind(':'));		// ToDo: check substr is correct segment
 	auto hdd = HDD::OpenDisk(file);
@@ -20,11 +20,11 @@ bool ReadRecord (const std::string &path, std::shared_ptr<Disk> &disk)
 	return ReadRecord(*hdd, record, disk);
 }
 
-bool WriteRecord (const std::string &path, std::shared_ptr<Disk> &disk)
+bool WriteBDOS (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	auto record = 0;
 	if (!IsRecord(path, &record))
-		throw util::exception("invalid record path");
+		return false;
 
 	auto hdd_path = path.substr(0, path.rfind(':'));
 	auto hdd = HDD::OpenDisk(hdd_path);

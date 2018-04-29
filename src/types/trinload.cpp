@@ -39,7 +39,7 @@ private:
 
 bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
 {
-	if (util::lowercase(path).substr(0, 4) != "sam:")
+	if (!IsTrinity(path))
 		return false;
 
 	auto trinity = Trinity::Open();
@@ -60,9 +60,11 @@ bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
 	return true;
 }
 
-#if 0
-bool WriteTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
+
+bool WriteTrinLoad (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
 {
-	throw util::exception("Trinity writing not implemented");
+	if (!IsTrinity(path))
+		return false;
+
+	throw util::exception("TrinLoad writing not implemented");
 }
-#endif

@@ -59,9 +59,11 @@ private:
 };
 
 
-bool ReadKFDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
+bool ReadKryoFlux (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	// ToDo: use path to select from multiple devices?
+	if (util::lowercase(path) != "kf:")
+		return false;
 
 	auto kryoflux = KryoFlux::Open();
 	if (!kryoflux)
@@ -80,4 +82,13 @@ bool ReadKFDev (const std::string &/*path*/, std::shared_ptr<Disk> &disk)
 	disk = kf_dev_disk;
 
 	return true;
+}
+
+bool WriteKryoFlux (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+{
+	// ToDo: use path to select from multiple devices?
+	if (util::lowercase(path) != "kf:")
+		return false;
+
+	throw std::logic_error("KryoFlux writing not implemented");
 }

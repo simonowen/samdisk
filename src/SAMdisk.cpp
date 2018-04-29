@@ -55,7 +55,7 @@ void ReportTypes ()
 	util::cout << "\nSupported image types:\n";
 
 	std::string header = " R/W:";
-	for (auto p = aTypes; p->pszType; ++p)
+	for (auto p = aImageTypes; p->pszType; ++p)
 	{
 		if (p->pfnRead && p->pfnWrite && *p->pszType)
 		{
@@ -65,7 +65,7 @@ void ReportTypes ()
 	}
 
 	header = "\n R/O:";
-	for (auto p = aTypes; p->pszType; ++p)
+	for (auto p = aImageTypes; p->pszType; ++p)
 	{
 		if (p->pfnRead && !p->pfnWrite && *p->pszType)
 		{

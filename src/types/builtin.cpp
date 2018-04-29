@@ -59,8 +59,11 @@ void iota(T &x, size_t from, size_t to, uint8_t first_val) {
 }
 
 
-bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 {
+	if (!IsBuiltIn(path))
+		return false;
+
 	CylHead cylhead(0, 0);
 	uint8_t i;
 
@@ -1279,4 +1282,12 @@ bool ReadBuiltin (const std::string &path, std::shared_ptr<Disk> &disk)
 
 	disk->strType = "<builtin>";
 	return true;
+}
+
+bool WriteBuiltIn (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+{
+	if (!IsBuiltIn(path))
+		return false;
+
+	throw util::exception("built-in disks are read-only");
 }

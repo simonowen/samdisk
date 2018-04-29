@@ -64,8 +64,11 @@ private:
 };
 
 
-bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadBlockDevice (const std::string &path, std::shared_ptr<Disk> &disk)
 {
+	if (!IsBlockDevice(path))
+		return false;
+
 	auto blockdev = std::make_unique<BlockDevice>();
 	if (!blockdev->Open(path, true))
 		return false;
@@ -88,4 +91,12 @@ bool ReadBlkDev (const std::string &path, std::shared_ptr<Disk> &disk)
 	disk = blk_dev_disk;
 
 	return true;
+}
+
+bool WriteBlockDevice (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+{
+	if (!IsBlockDevice(path))
+		return false;
+
+	throw std::logic_error("block device writing not yet implemented");
 }
