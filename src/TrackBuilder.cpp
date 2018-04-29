@@ -1,16 +1,16 @@
-// Bit buffer used for assembling tracks
+// Base class for building track content from scratch
 
 #include "SAMdisk.h"
-#include "TrackBuffer.h"
+#include "TrackBuilder.h"
 #include "IBMPC.h"
 
-TrackBuffer::TrackBuffer (DataRate datarate, Encoding encoding)
+TrackBuilder::TrackBuilder (DataRate datarate, Encoding encoding)
 : m_datarate(datarate)
 {
 	setEncoding(encoding);
 }
 
-void TrackBuffer::setEncoding (Encoding encoding)
+void TrackBuilder::setEncoding (Encoding encoding)
 {
 	switch (encoding)
 	{
@@ -25,7 +25,7 @@ void TrackBuffer::setEncoding (Encoding encoding)
 	}
 }
 
-void TrackBuffer::addBit (bool bit)
+void TrackBuilder::addBit (bool bit)
 {
 	addRawBit(bit);
 
@@ -33,7 +33,7 @@ void TrackBuffer::addBit (bool bit)
 		addRawBit(false);
 }
 
-void TrackBuffer::addDataBit (bool bit)
+void TrackBuilder::addDataBit (bool bit)
 {
 	if (m_encoding == Encoding::FM)
 	{
@@ -51,7 +51,7 @@ void TrackBuffer::addDataBit (bool bit)
 	m_lastbit = bit;
 }
 
-void TrackBuffer::addByte (int byte)
+void TrackBuilder::addByte (int byte)
 {
 	for (auto i = 0; i < 8; ++i)
 	{
@@ -60,13 +60,13 @@ void TrackBuffer::addByte (int byte)
 	}
 }
 
-void TrackBuffer::addByteUpdateCrc (int byte)
+void TrackBuilder::addByteUpdateCrc (int byte)
 {
 	addByte(byte);
 	m_crc.add(byte);
 }
 
-void TrackBuffer::addByteWithClock (int data, int clock)
+void TrackBuilder::addByteWithClock (int data, int clock)
 {
 	for (auto i = 0; i < 8; ++i)
 	{
@@ -79,19 +79,19 @@ void TrackBuffer::addByteWithClock (int data, int clock)
 	m_lastbit = (data & 0x100) != 0;
 }
 
-void TrackBuffer::addBlock (int byte, int count)
+void TrackBuilder::addBlock (int byte, int count)
 {
 	for (int i = 0; i < count; ++i)
 		addByte(byte);
 }
 
-void TrackBuffer::addBlock (const Data &data)
+void TrackBuilder::addBlock (const Data &data)
 {
 	for (auto & byte : data)
 		addByte(byte);
 }
 
-void TrackBuffer::addBlockUpdateCrc (const Data &data)
+void TrackBuilder::addBlockUpdateCrc (const Data &data)
 {
 	for (auto & byte : data)
 	{
@@ -100,7 +100,7 @@ void TrackBuffer::addBlockUpdateCrc (const Data &data)
 	}
 }
 
-void TrackBuffer::addGap (int count, int fill)
+void TrackBuilder::addGap (int count, int fill)
 {
 	if (fill < 0)
 		fill = (m_encoding == Encoding::FM) ? 0xff : 0x4e;
@@ -108,20 +108,20 @@ void TrackBuffer::addGap (int count, int fill)
 	addBlock(fill, count);
 }
 
-void TrackBuffer::addGap2 (int fill)
+void TrackBuilder::addGap2 (int fill)
 {
 	int gap2_bytes = (m_encoding == Encoding::FM) ? 11 :
 		(m_datarate == DataRate::_1M) ? 41 : 22;
 	addGap(gap2_bytes, fill);
 }
 
-void TrackBuffer::addSync ()
+void TrackBuilder::addSync ()
 {
 	auto sync{0x00};
 	addBlock(sync, (m_encoding == Encoding::FM) ? 6 : 12);
 }
 
-void TrackBuffer::addAM (int type, bool omit_sync)
+void TrackBuilder::addAM (int type, bool omit_sync)
 {
 	if (!omit_sync)
 		addSync();
@@ -144,7 +144,7 @@ void TrackBuffer::addAM (int type, bool omit_sync)
 	}
 }
 
-void TrackBuffer::addIAM ()
+void TrackBuilder::addIAM ()
 {
 	addSync();
 
@@ -161,14 +161,14 @@ void TrackBuffer::addIAM ()
 	}
 }
 
-void TrackBuffer::addCrcBytes (bool bad_crc)
+void TrackBuilder::addCrcBytes (bool bad_crc)
 {
 	uint16_t adjust = bad_crc ? 0x5555 : 0;
 	addByte((m_crc ^ adjust) >> 8);
 	addByte((m_crc ^ adjust) & 0xff);
 }
 
-void TrackBuffer::addTrackStart ()
+void TrackBuilder::addTrackStart ()
 {
 	switch (m_encoding)
 	{
@@ -196,7 +196,7 @@ void TrackBuffer::addTrackStart ()
 	}
 }
 
-void TrackBuffer::addSectorHeader(const Header &header, bool crc_error)
+void TrackBuilder::addSectorHeader(const Header &header, bool crc_error)
 {
 	addAM(0xfe);
 	addByteUpdateCrc(header.cyl);
@@ -206,7 +206,7 @@ void TrackBuffer::addSectorHeader(const Header &header, bool crc_error)
 	addCrcBytes(crc_error);
 }
 
-void TrackBuffer::addSectorData(const Data &data, int size, uint8_t dam, bool crc_error)
+void TrackBuilder::addSectorData(const Data &data, int size, uint8_t dam, bool crc_error)
 {
 	// Ensure this isn't used for over-sized protected sectors.
 	assert(Sector::SizeCodeToLength(size) == Sector::SizeCodeToLength(size));
@@ -230,7 +230,7 @@ void TrackBuffer::addSectorData(const Data &data, int size, uint8_t dam, bool cr
 	addCrcBytes(crc_error);
 }
 
-void TrackBuffer::addSector(const Sector &sector, int gap3_bytes)
+void TrackBuilder::addSector(const Sector &sector, int gap3_bytes)
 {
 	setEncoding(sector.encoding);
 
@@ -258,7 +258,7 @@ void TrackBuffer::addSector(const Sector &sector, int gap3_bytes)
 	}
 }
 
-void TrackBuffer::addSector (const Header &header, const Data &data, int gap3_bytes, uint8_t dam, bool crc_error)
+void TrackBuilder::addSector (const Header &header, const Data &data, int gap3_bytes, uint8_t dam, bool crc_error)
 {
 	Sector sector(m_datarate, m_encoding, header, gap3_bytes);
 	sector.add(Data(data), crc_error, dam);
@@ -266,7 +266,7 @@ void TrackBuffer::addSector (const Header &header, const Data &data, int gap3_by
 }
 
 // Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.
-void TrackBuffer::addSectorUpToData (const Header &header, uint8_t dam)
+void TrackBuilder::addSectorUpToData (const Header &header, uint8_t dam)
 {
 	addSectorHeader(header);
 	addGap2();
@@ -274,19 +274,19 @@ void TrackBuffer::addSectorUpToData (const Header &header, uint8_t dam)
 }
 
 
-void TrackBuffer::addAmigaTrackStart ()
+void TrackBuilder::addAmigaTrackStart ()
 {
 	addBlock(0x00, 60);
 }
 
-void TrackBuffer::addAmigaDword (uint32_t dword, uint32_t &checksum)
+void TrackBuilder::addAmigaDword (uint32_t dword, uint32_t &checksum)
 {
 	dword = util::htobe(dword);
 	std::vector<uint32_t> bits = splitAmigaBits(&dword, sizeof(uint32_t), checksum);
 	addAmigaBits(bits);
 }
 
-void TrackBuffer::addAmigaBits (std::vector<uint32_t> &bits)
+void TrackBuilder::addAmigaBits (std::vector<uint32_t> &bits)
 {
 	for (auto it = bits.begin(); it != bits.end(); ++it)
 	{
@@ -299,7 +299,7 @@ void TrackBuffer::addAmigaBits (std::vector<uint32_t> &bits)
 	}
 }
 
-std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, int len, uint32_t &checksum)
+std::vector<uint32_t> TrackBuilder::splitAmigaBits (const void *buf, int len, uint32_t &checksum)
 {
 	auto dwords = len / static_cast<int>(sizeof(uint32_t));
 	const uint32_t *pdw = reinterpret_cast<const uint32_t*>(buf);
@@ -330,7 +330,7 @@ std::vector<uint32_t> TrackBuffer::splitAmigaBits (const void *buf, int len, uin
 	return odddata;
 }
 
-void TrackBuffer::addAmigaSector (const CylHead &cylhead, int sector, const void *buf)
+void TrackBuilder::addAmigaSector (const CylHead &cylhead, int sector, const void *buf)
 {
 	addByte(0x00);
 	addByteWithClock(0xa1, 0x0a);	// A1 with missing clock bit
@@ -358,7 +358,7 @@ void TrackBuffer::addAmigaSector (const CylHead &cylhead, int sector, const void
 }
 
 
-void TrackBuffer::addRX02Sector(const Header &header, const Data &data, int gap3_bytes)
+void TrackBuilder::addRX02Sector(const Header &header, const Data &data, int gap3_bytes)
 {
 	setEncoding(Encoding::FM);
 

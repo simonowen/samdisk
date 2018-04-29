@@ -11,7 +11,7 @@ public:
 
 	const TrackData &read (const CylHead &cylhead) override;
 	const TrackData &write (TrackData &&trackdata) override;
-	void unload () override;
+	void clear () override;
 
 	void extend (const CylHead &cylhead);
 

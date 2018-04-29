@@ -2,7 +2,7 @@
 //
 
 #include "SAMdisk.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 
 #define SAP_SIGNATURE	"SYSTEME D'ARCHIVAGE PUKALL S.A.P. (c) Alexandre PUKALL Avril 1998"
 #define SAP_SECTORS_PER_TRACK	16
@@ -94,7 +94,7 @@ bool ReadSAP (MemFile &file, std::shared_ptr<Disk> &disk)
 		for (int cyl = 0; cyl < fmt.cyls; ++cyl)
 		{
 			CylHead cylhead(cyl, head);
-			BitstreamTrackBuffer bitbuf(fmt.datarate, fmt.encoding);
+			BitstreamTrackBuilder bitbuf(fmt.datarate, fmt.encoding);
 			uint8_t track_fill{};
 
 			for (int sec = 0; sec < fmt.sectors; ++sec)

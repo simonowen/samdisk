@@ -2,7 +2,7 @@
 
 #include "SAMdisk.h"
 #include "BitstreamEncoder.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 #include "SpecialFormat.h"
 
 bool generate_special(TrackData &trackdata)
@@ -39,7 +39,7 @@ bool generate_simple(TrackData &trackdata)
 {
 	bool first_sector = true;
 	auto &track = trackdata.track();
-	BitstreamTrackBuffer bitbuf(track[0].datarate, track[0].encoding);
+	BitstreamTrackBuilder bitbuf(track[0].datarate, track[0].encoding);
 
 	for (auto &s : track)
 	{

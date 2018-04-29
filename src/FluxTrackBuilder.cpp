@@ -1,10 +1,10 @@
 // Buffer for assembling flux-level data (incomplete)
 
 #include "SAMdisk.h"
-#include "FluxTrackBuffer.h"
+#include "FluxTrackBuilder.h"
 
-FluxTrackBuffer::FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding)
-	: TrackBuffer(datarate, encoding),
+FluxTrackBuilder::FluxTrackBuilder (const CylHead &cylhead, DataRate datarate, Encoding encoding)
+	: TrackBuilder(datarate, encoding),
 	m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate)),
 	m_flux_time(0U - m_bitcell_ns)
 {
@@ -12,7 +12,7 @@ FluxTrackBuffer::FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Enc
 	// This ensures the first reversal exactly matches the added data.
 }
 
-void FluxTrackBuffer::addRawBit (bool next_bit)
+void FluxTrackBuilder::addRawBit (bool next_bit)
 {
 	m_flux_time += m_bitcell_ns;
 
@@ -37,7 +37,7 @@ void FluxTrackBuffer::addRawBit (bool next_bit)
 	m_curr_bit = next_bit;
 }
 
-void FluxTrackBuffer::addWeakBlock (int length)
+void FluxTrackBuilder::addWeakBlock (int length)
 {
 	// Flush out previous constant block.
 	addRawBit(1);
@@ -50,7 +50,7 @@ void FluxTrackBuffer::addWeakBlock (int length)
 		m_flux_times.push_back(m_bitcell_ns * 3 / 2);
 }
 
-std::vector<uint32_t> &FluxTrackBuffer::buffer ()
+std::vector<uint32_t> &FluxTrackBuilder::buffer ()
 {
 	// Flush any buffered time with a transition.
 	if (m_flux_time)

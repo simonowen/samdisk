@@ -60,7 +60,7 @@ bool Disk::preload (const Range &range_, int cyl_step)
 	return true;
 }
 
-void Disk::unload ()
+void Disk::clear ()
 {
 	m_trackdata.clear();
 }

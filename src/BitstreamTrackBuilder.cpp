@@ -1,32 +1,32 @@
 // Buffer for assembling bitstream data (incomplete)
 
 #include "SAMdisk.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 
 #define INIT_BITSIZE   5000000
 
-BitstreamTrackBuffer::BitstreamTrackBuffer (DataRate datarate, Encoding encoding)
-	: TrackBuffer(datarate, encoding), m_buffer(datarate, encoding)
+BitstreamTrackBuilder::BitstreamTrackBuilder (DataRate datarate, Encoding encoding)
+	: TrackBuilder(datarate, encoding), m_buffer(datarate, encoding)
 {
 }
 
-int BitstreamTrackBuffer::size () const
+int BitstreamTrackBuilder::size () const
 {
 	return m_buffer.size();
 }
 
-void BitstreamTrackBuffer::setEncoding(Encoding encoding)
+void BitstreamTrackBuilder::setEncoding(Encoding encoding)
 {
-	TrackBuffer::setEncoding(encoding);
+	TrackBuilder::setEncoding(encoding);
 	m_buffer.encoding = encoding;
 }
 
-void BitstreamTrackBuffer::addRawBit (bool bit)
+void BitstreamTrackBuilder::addRawBit (bool bit)
 {
 	m_buffer.add(bit);
 }
 
-void BitstreamTrackBuffer::addCrc (int size)
+void BitstreamTrackBuilder::addCrc (int size)
 {
 	auto old_bitpos{ m_buffer.tell() };
 	auto byte_bits{ (m_buffer.encoding == Encoding::FM) ? 32 : 16 };
@@ -43,17 +43,17 @@ void BitstreamTrackBuffer::addCrc (int size)
 	addByte(crc & 0xff);
 }
 
-BitBuffer &BitstreamTrackBuffer::buffer()
+BitBuffer &BitstreamTrackBuilder::buffer()
 {
 	return m_buffer;
 }
 
-DataRate BitstreamTrackBuffer::datarate () const
+DataRate BitstreamTrackBuilder::datarate () const
 {
 	return m_buffer.datarate;
 }
 
-Encoding BitstreamTrackBuffer::encoding () const
+Encoding BitstreamTrackBuilder::encoding () const
 {
 	return m_buffer.encoding;
 }

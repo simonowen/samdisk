@@ -3,11 +3,11 @@
 
 #include "CRC16.h"
 
-class TrackBuffer
+class TrackBuilder
 {
 public:
-	TrackBuffer (DataRate datarate, Encoding encoding = Encoding::Unknown);
-	virtual ~TrackBuffer () = default;
+	TrackBuilder (DataRate datarate, Encoding encoding = Encoding::Unknown);
+	virtual ~TrackBuilder () = default;
 
 	virtual void setEncoding (Encoding encoding);
 	virtual void addRawBit (bool one) = 0;

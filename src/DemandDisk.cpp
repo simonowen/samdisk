@@ -71,8 +71,8 @@ const TrackData &DemandDisk::write (TrackData &&/*trackdata*/)
 #endif
 }
 
-void DemandDisk::unload ()
+void DemandDisk::clear ()
 {
-	Disk::unload();
+	Disk::clear();
 	m_loaded.reset();
 }

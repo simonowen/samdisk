@@ -3,7 +3,7 @@
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 
 const int DMK_MAX_TRACK_LENGTH = 0x3fff;	// most images use 0x2940, a few have 0x29a0
 const int DMK_TRACK_INDEX_SIZE = 0x80;
@@ -86,7 +86,7 @@ bool ReadDMK (MemFile &file, std::shared_ptr<Disk> &disk)
 			bool found_iam = false;
 			bool found_dam = false;
 
-			BitstreamTrackBuffer bitbuf(DataRate::_250K, current_idam_encoding);
+			BitstreamTrackBuilder bitbuf(DataRate::_250K, current_idam_encoding);
 			if (opt.debug)
 				util::cout << "DMK: " << CylHead(cyl, head) << "\n";
 

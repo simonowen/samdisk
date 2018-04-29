@@ -2,9 +2,9 @@
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 #include "BitstreamDecoder.h"
-#include "FluxTrackBuffer.h"
+#include "FluxTrackBuilder.h"
 #include "SpecialFormat.h"
 
 static Track &complete (Track &track)
@@ -910,7 +910,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 		{
 			disk->metadata["comment"] = "500Kbps MFM bitstream";
 
-			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::MFM);
+			BitstreamTrackBuilder bitbuf(DataRate::_500K, Encoding::MFM);
 
 			bitbuf.addTrackStart();
 			for (i = 0; i < 18; i++)
@@ -930,7 +930,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// Simple 9-sector format.
 			{
-				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+				BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 
 				bitbuf.addTrackStart();
 				for (i = 0; i < 9; i++)
@@ -986,7 +986,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 		{
 			disk->metadata["comment"] = "250Kbps FM bitstream";
 
-			BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::FM);
+			BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::FM);
 
 			bitbuf.addTrackStart();
 			for (i = 0; i < 8; i++)
@@ -1005,7 +1005,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->metadata["comment"] = "500Kbps MFM flux";
 
 			const Data data(512, 0x00);
-			FluxTrackBuffer fluxbuf(cylhead, DataRate::_500K, Encoding::MFM);
+			FluxTrackBuilder fluxbuf(cylhead, DataRate::_500K, Encoding::MFM);
 
 			fluxbuf.addTrackStart();
 			for (i = 0; i < 18; i++)
@@ -1023,7 +1023,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			// Simple 9-sector format.
 			{
 				const Data data(512, 0x00);
-				FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+				FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 
 				fluxbuf.addTrackStart();
 				for (i = 0; i < 9; i++)
@@ -1211,7 +1211,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->metadata["comment"] = "250Kbps FM flux";
 
 			const Data data(256, 0x00);
-			FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::FM);
+			FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::FM);
 
 			fluxbuf.addTrackStart();
 			for (i = 0; i < 8; i++)
@@ -1227,7 +1227,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->metadata["comment"] = "500Kbps Amiga bitstream";
 
 			const Data data(512, 0x00);
-			BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::Amiga);
+			BitstreamTrackBuilder bitbuf(DataRate::_500K, Encoding::Amiga);
 
 			bitbuf.addTrackStart();
 			for (i = 0; i < 22; i++)
@@ -1244,7 +1244,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// AmigaDOS
 			{
-				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::Amiga);
+				BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::Amiga);
 
 				bitbuf.addTrackStart();
 				for (i = 0; i < 11; i++)
@@ -1258,7 +1258,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			// RX02
 			{
-				BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::RX02);
+				BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::RX02);
 
 				bitbuf.addTrackStart();
 				for (i = 0; i < 26; i++)

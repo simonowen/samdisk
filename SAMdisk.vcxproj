@@ -34,7 +34,7 @@
     <ClCompile Include="src\JupiterAce.cpp" />
     <ClCompile Include="src\BitBuffer.cpp" />
     <ClCompile Include="src\BitstreamDecoder.cpp" />
-    <ClCompile Include="src\BitstreamTrackBuffer.cpp" />
+    <ClCompile Include="src\BitstreamTrackBuilder.cpp" />
     <ClCompile Include="src\cmd_copy.cpp" />
     <ClCompile Include="src\CrashDump.cpp" />
     <ClCompile Include="src\CRC16.cpp" />
@@ -45,7 +45,7 @@
     <ClCompile Include="src\Disk.cpp" />
     <ClCompile Include="src\DiskUtil.cpp" />
     <ClCompile Include="src\Driver.cpp" />
-    <ClCompile Include="src\FluxTrackBuffer.cpp" />
+    <ClCompile Include="src\FluxTrackBuilder.cpp" />
     <ClCompile Include="src\FluxDecoder.cpp" />
     <ClCompile Include="src\cmd_format.cpp" />
     <ClCompile Include="src\getopt_long.c">
@@ -109,7 +109,7 @@
     <ClCompile Include="src\SpecialFormat.cpp" />
     <ClCompile Include="src\SuperCardPro.cpp" />
     <ClCompile Include="src\Track.cpp" />
-    <ClCompile Include="src\TrackBuffer.cpp" />
+    <ClCompile Include="src\TrackBuilder.cpp" />
     <ClCompile Include="src\TrackData.cpp" />
     <ClCompile Include="src\TrackDataParser.cpp" />
     <ClCompile Include="src\Trinity.cpp" />
@@ -222,13 +222,13 @@
     <ClInclude Include="include\JupiterAce.h" />
     <ClInclude Include="include\BitBuffer.h" />
     <ClInclude Include="include\BitstreamDecoder.h" />
-    <ClInclude Include="include\BitstreamTrackBuffer.h" />
+    <ClInclude Include="include\BitstreamTrackBuilder.h" />
     <ClInclude Include="include\CRC16.h" />
     <ClInclude Include="include\DemandDisk.h" />
     <ClInclude Include="include\BlockDevice.h" />
     <ClInclude Include="include\Disk.h" />
     <ClInclude Include="include\DiskUtil.h" />
-    <ClInclude Include="include\FluxTrackBuffer.h" />
+    <ClInclude Include="include\FluxTrackBuilder.h" />
     <ClInclude Include="include\FluxDecoder.h" />
     <ClInclude Include="include\getopt_long.h" />
     <ClInclude Include="include\HDD.h" />
@@ -255,7 +255,7 @@
     <ClInclude Include="include\SuperCardPro.h" />
     <ClInclude Include="include\ThreadPool.h" />
     <ClInclude Include="include\Track.h" />
-    <ClInclude Include="include\TrackBuffer.h" />
+    <ClInclude Include="include\TrackBuilder.h" />
     <ClInclude Include="include\TrackData.h" />
     <ClInclude Include="include\TrackDataParser.h" />
     <ClInclude Include="include\Trinity.h" />

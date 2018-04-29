@@ -6,8 +6,8 @@
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
-#include "BitstreamTrackBuffer.h"
-#include "FluxTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
+#include "FluxTrackBuilder.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ TrackData GenerateEmptyTrack (const CylHead &cylhead, const Track &track)
 
 	// Generate a DD track full of gap filler. It shouldn't really matter
 	// which datarate and encoding as long as there are no sync marks.
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addBlock(0x4e, 6250);
 
 	return TrackData(cylhead, std::move(bitbuf.buffer()));
@@ -76,7 +76,7 @@ TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 		0x20,0x4D,0x41,0x53,0x54,0x45,0x52,0x20		// " MASTER "
 	};
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 
 	// Track start with slightly shorter gap4a.
 	bitbuf.addGap(64);
@@ -159,7 +159,7 @@ TrackData GenerateSystem24Track (const CylHead &cylhead, const Track &track)
 {
 	assert(IsSystem24Track(track));
 
-	BitstreamTrackBuffer bitbuf(DataRate::_500K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_500K, Encoding::MFM);
 
 	for (auto &s : track)
 	{
@@ -222,10 +222,10 @@ TrackData GenerateSpectrumSpeedlockTrack (const CylHead &cylhead, const Track &t
 	assert(weak_offset == temp_offset && weak_size == temp_size);
 #endif
 
-	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
 	for (auto &sector : track)
@@ -326,10 +326,10 @@ TrackData GenerateCpcSpeedlockTrack (const CylHead &cylhead, const Track &track,
 	assert(weak_offset == temp_offset && weak_size == temp_size);
 #endif
 
-	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
 	for (auto &sector : track)
@@ -407,10 +407,10 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, 
 	assert(weak_offset == temp_offset && weak_size == temp_size);
 #endif
 
-	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
 	for (auto &sector : track)
@@ -489,10 +489,10 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int we
 	assert(weak_offset == temp_offset && weak_size == temp_size);
 #endif
 
-	FluxTrackBuffer fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
+	FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::MFM);
 	fluxbuf.addTrackStart();
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
 	for (auto &sector : track)
@@ -569,7 +569,7 @@ TrackData GenerateLogoProfTrack (const CylHead &cylhead, const Track &track)
 {
 	assert(IsLogoProfTrack(track));
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 	bitbuf.addGap(600);
 
@@ -614,7 +614,7 @@ TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track)
 {
 	assert(IsOperaSoftTrack(track));
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
 	for (auto &sector : track)
@@ -659,7 +659,7 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
 {
 	assert(Is8KSectorTrack(track));
 
-	BitstreamTrackBuffer bitbuf(DataRate::_250K, Encoding::MFM);
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addGap(16);	// gap 4a
 	bitbuf.addIAM();
 	bitbuf.addGap(16);	// gap 1

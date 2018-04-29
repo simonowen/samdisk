@@ -1,12 +1,12 @@
 #ifndef BITSTREAMTRACKBUFFER_H
 #define BITSTREAMTRACKBUFFER_H
 
-#include "TrackBuffer.h"
+#include "TrackBuilder.h"
 
-class BitstreamTrackBuffer final : public TrackBuffer
+class BitstreamTrackBuilder final : public TrackBuilder
 {
 public:
-	BitstreamTrackBuffer (DataRate datarate, Encoding encoding);
+	BitstreamTrackBuilder (DataRate datarate, Encoding encoding);
 
 	int size () const;
 	void setEncoding (Encoding encoding) override;

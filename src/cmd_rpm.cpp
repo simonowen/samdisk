@@ -36,14 +36,14 @@ bool DiskRpm (const std::string &path)
 			std::setw(6) << std::setprecision(6) << rpm << " rpm";
 
 		if (forever)
-			util::cout << "\r" << ss.str() << "  (Ctrl-C to stop";
+			util::cout << "\r" << ss.str() << "  (Ctrl-C to stop)";
 		else
 			util::cout << ss.str() << "\n";
 
 		util::cout.screen->flush();
 
 		// Discard source data for a fresh read
-		disk->unload();
+		disk->clear();
 	}
 
 	return true;

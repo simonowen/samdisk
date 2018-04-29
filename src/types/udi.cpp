@@ -2,7 +2,7 @@
 //  http://scratchpad.wikia.com/wiki/Spectrum_emulator_file_format:_udi
 
 #include "SAMdisk.h"
-#include "BitstreamTrackBuffer.h"
+#include "BitstreamTrackBuilder.h"
 
 #define UDI_SIGNATURE				"UDI!"
 #define UDI_SIGNATURE_COMPRESSED	"udi!"
@@ -108,7 +108,7 @@ bool ReadUDI(MemFile &file, std::shared_ptr<Disk> &disk)
 
 			auto encoding = (ut.format == 0x01) ? Encoding::FM : Encoding::MFM;
 			auto datarate = (tlen > 6400) ? DataRate::_500K : DataRate::_250K;
-			BitstreamTrackBuffer bitbuf(datarate, encoding);
+			BitstreamTrackBuilder bitbuf(datarate, encoding);
 
 			for (unsigned u = 0; u < tlen; u++)
 			{

@@ -1,12 +1,12 @@
 #ifndef FLUXTRACKBUFFER_H
 #define FLUXTRACKBUFFER_H
 
-#include "TrackBuffer.h"
+#include "TrackBuilder.h"
 
-class FluxTrackBuffer final : public TrackBuffer
+class FluxTrackBuilder final : public TrackBuilder
 {
 public:
-	FluxTrackBuffer (const CylHead &cylhead, DataRate datarate, Encoding encoding);
+	FluxTrackBuilder (const CylHead &cylhead, DataRate datarate, Encoding encoding);
 
 	void addRawBit (bool one) override;
 	void addWeakBlock (int length);
