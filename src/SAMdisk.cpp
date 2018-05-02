@@ -23,6 +23,7 @@ void Version ()
 int Usage ()
 {
 	Version();
+	Format fmtMGT = RegularFormat::MGT;
 
 	util::cout << "\n"
 		<< " SAMDISK [copy|scan|format|list|view|info|dir|rpm] <args>\n"
@@ -30,19 +31,20 @@ int Usage ()
 		<< "  -c, --cyls=N        cylinder count (N) or range (A-B)\n"
 		<< "  -h, --head=N        single head select (0 or 1)\n"
 		<< "  -s, --sector[s]     sector count for format, or single sector select\n"
-		<< "  -r, --retries=N     retry count for data errors (default=5)\n"
-		<< "  -R, --rescan[s=N]   rescan track to locate faint sectors\n"
+		<< "  -r, --retries=N     retry count for bad sectors (default=" << opt.retries << ")\n"
+		<< "  -R, --rescans=N     rescan count for full track reads (default=" << opt.rescans << ")\n"
 		<< "  -d, --double-step   step floppy head twice between tracks\n"
 		<< "  -f, --force         suppress confirmation prompts (careful!)\n"
 		<< "\n"
 		<< "The following apply to regular disk formats only:\n"
 		<< "  -n, --no-format     skip formatting stage when writing\n"
 		<< "  -m, --minimal       read/write only used MGT tracks\n"
-		<< "  -g, --gap3=N        override gap3 inter-sector spacing (default=auto)\n"
-		<< "  -i, --interleave=N  override sector interleave (default=0)\n"
-		<< "  -k, --skew=N        override inter-track skew (default=1)\n"
-		<< "  -z, --size=N        override sector size code (default=2; 512 bytes)\n"
-		<< "  -b, --base=N        override lowest sector number (default=1)\n"
+		<< "  -g, --gap3=N        override gap3 inter-sector spacing (default=0; auto)\n"
+		<< "  -i, --interleave=N  override sector interleave (default=" << fmtMGT.interleave << ")\n"
+		<< "  -k, --skew=N        override inter-track skew (default=" << fmtMGT.skew << ")\n"
+		<< "  -z, --size=N        override sector size code (default=" <<
+			fmtMGT.size << "; " << Sector::SizeCodeToLength(fmtMGT.size) << " bytes)\n"
+		<< "  -b, --base=N        override lowest sector number (default=" << fmtMGT.base << ")\n"
 		<< "  -0, --head[0|1]=N   override head 0 or 1 value\n"
 		<< "\n"
 		<< "See " << colour::CYAN << "http://simonowen.com/samdisk/" << colour::none << " for further details.\n";
@@ -176,7 +178,6 @@ struct option long_options[] =
 	{ "multi-format",	  no_argument, &opt.multiformat, 1 },
 	{ "offsets",		  no_argument, &opt.offsets, 1 },
 	{ "abs-offsets",	  no_argument, &opt.absoffsets, 1 },
-	{ "no-write",		  no_argument, &opt.nowrite, 1 },
 	{ "no-offsets",		  no_argument, &opt.offsets, 0 },
 	{ "id-crc",			  no_argument, &opt.idcrc, 1 },
 	{ "no-gap2",          no_argument, &opt.gap2, 0 },
@@ -215,15 +216,11 @@ struct option long_options[] =
 	{ "align",			  no_argument, &opt.align, 1 },
 	{ "no-fix",			  no_argument, &opt.fix, 0 },
 	{ "no-fm",			  no_argument, nullptr, OPT_NOFM },
-	{ "blind",			  no_argument, &opt.blind, 1 },
-//	{ "regular",		  no_argument, &opt.blind, 0 },			ToDo: restore?
 	{ "no-weak",		  no_argument, &opt.noweak, 1 },
 	{ "merge",			  no_argument, &opt.merge, 1 },
 	{ "trim",             no_argument, &opt.trim, 1 },
 	{ "flip",			  no_argument, &opt.flip, 1 },
 	{ "legacy",			  no_argument, &opt.legacy, 1 },
-//	{ "quiet",			  no_argument, nullptr, 'q' },
-	{ "verify",			  no_argument, &opt.verify, 1 },
 	{ "time",			  no_argument, &opt.time, 1 },			// undocumented
 	{ "tty",			  no_argument, &opt.tty, 1 },
 	{ "help",			  no_argument, nullptr, 0 },
