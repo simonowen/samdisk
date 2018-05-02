@@ -29,6 +29,8 @@ bool generate_special(TrackData &trackdata)
 		trackdata.add(GenerateLogoProfTrack(trackdata.cylhead, track));
 	else if (IsOperaSoftTrack(track))
 		trackdata.add(GenerateOperaSoftTrack(trackdata.cylhead, track));
+	else if (Is8KSectorTrack(track))
+		trackdata.add(Generate8KSectorTrack(trackdata.cylhead, track));
 	else
 		return false;
 
@@ -91,9 +93,7 @@ void generate_bitstream(TrackData &trackdata)
 	else if (opt.nottb)
 		throw util::exception("track to bitstream conversion not permitted");
 	else if (!generate_simple(trackdata))
-	{
 		throw util::exception("bitstream conversion not yet implemented for ", trackdata.cylhead);
-	}
 }
 
 void generate_flux(TrackData &trackdata)

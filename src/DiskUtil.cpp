@@ -1159,3 +1159,15 @@ int ChecksumLength (ChecksumType method)
 
 	return 0;
 }
+
+void scale_flux (std::vector<uint32_t> &flux_rev, uint64_t numerator, uint64_t denominator)
+{
+	uint64_t old_total = 0, new_total = 0;
+	for (auto &time : flux_rev)
+	{
+		old_total += time;
+		auto new_target = old_total * numerator / denominator;
+		time = static_cast<uint32_t>(new_target - new_total);
+		new_total += time;
+	}
+}

@@ -60,15 +60,16 @@ const TrackData &DemandDisk::read (const CylHead &cylhead)
 	return Disk::read(cylhead);
 }
 
-const TrackData &DemandDisk::write (TrackData &&/*trackdata*/)
+void DemandDisk::save (TrackData &/*trackdata*/)
 {
-#if 1
-	throw util::exception("writing not currently supported");
-#else
-	//save(trackdata);
+	throw util::exception("writing to this device is not currently supported");
+}
+
+const TrackData &DemandDisk::write (TrackData &&trackdata)
+{
+	save(trackdata);
 	m_loaded[trackdata.cylhead] = true;
 	return Disk::write(std::move(trackdata));
-#endif
 }
 
 void DemandDisk::clear ()

@@ -56,4 +56,6 @@ std::string ChecksumName (std::set<ChecksumType> method);
 std::string ChecksumNameShort (std::set<ChecksumType> methods);
 int ChecksumLength (ChecksumType method);
 
+void scale_flux (std::vector<uint32_t> &flux_rev, uint64_t numerator, uint64_t denominator);
+
 #endif // DISKUTIL_H

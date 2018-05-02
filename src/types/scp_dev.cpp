@@ -19,6 +19,7 @@ public:
 		auto step_delay = opt.newdrive ? 5000 : 10000;
 		m_supercardpro->SetParameters(1000, step_delay, 1000, 15, 10000);
 
+		m_supercardpro->StepTo(1);
 		m_supercardpro->Seek0();
 	}
 
@@ -36,6 +37,7 @@ protected:
 		auto revs = first_read ? FIRST_READ_REVS : rev_limit;
 
 		if (!m_supercardpro->SelectDrive(0) ||
+			!m_supercardpro->EnableMotor(0) ||
 			!m_supercardpro->StepTo(cylhead.cyl) ||
 			!m_supercardpro->SelectSide(cylhead.head) ||
 			!m_supercardpro->ReadFlux(revs, flux_revs))
@@ -51,8 +53,42 @@ protected:
 		return false;
 	}
 
+	void save (TrackData &trackdata) override
+	{
+		auto &flux_data = trackdata.flux();
+		auto flux_times = *flux_data.rbegin(); // copy of last revolution
+
+		if (m_supercardpro->SelectDrive(0) &&
+			m_supercardpro->EnableMotor(0) &&
+			m_supercardpro->StepTo(trackdata.cylhead.cyl) &&
+			m_supercardpro->SelectSide(trackdata.cylhead.head))
+		{
+			if (!track_time_ns)
+			{
+				FluxData flux_revs{};
+				if (!m_supercardpro->ReadFlux(1, flux_revs))
+					throw util::exception(m_supercardpro->GetErrorStatusText());
+
+				track_time_ns = std::accumulate(flux_revs[0].begin(), flux_revs[0].end(), 0ULL);
+			}
+
+			auto total_time_ns = std::accumulate(flux_times.begin(), flux_times.end(), 0ULL);
+			if (total_time_ns > track_time_ns)
+			{
+				scale_flux(flux_times, track_time_ns, total_time_ns);
+				total_time_ns = std::accumulate(flux_times.begin(), flux_times.end(), 0ULL);
+			}
+
+			if (m_supercardpro->WriteFlux(flux_times))
+				return;
+		}
+
+		throw util::exception(m_supercardpro->GetErrorStatusText());
+	}
+
 private:
 	std::unique_ptr<SuperCardPro> m_supercardpro;
+	uint64_t track_time_ns{0};
 };
 
 
@@ -89,10 +125,24 @@ bool ReadSuperCardPro (const std::string &path, std::shared_ptr<Disk> &disk)
 	return true;
 }
 
-bool WriteSuperCardPro (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+bool WriteSuperCardPro (const std::string &path, std::shared_ptr<Disk> &disk)
 {
 	if (util::lowercase(path) != "scp:")
 		return false;
 
-	throw std::logic_error("SuperCard Pro writing not yet implemented");
+	auto supercardpro = SuperCardPro::Open();
+	if (!supercardpro)
+		throw util::exception("failed to open SuperCard Pro device");
+
+	auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
+	ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, 1, scp_dev_disk->cyls(), scp_dev_disk->heads());
+
+	opt.range.each([&](const CylHead &cylhead)
+	{
+		auto trackdata = disk->read(cylhead);
+		Message(msgStatus, "Writing %s", CH(cylhead.cyl, cylhead.head));
+		scp_dev_disk->write(std::move(trackdata));
+	});
+
+	return true;
 }

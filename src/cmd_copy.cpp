@@ -42,6 +42,7 @@ bool ImageToImage (const std::string &src_path, const std::string &dst_path)
 		if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
 			return;
 
+		Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
 		auto src_data = src_disk->read(cylhead * opt.step);
 		auto src_track = src_data.track();
 

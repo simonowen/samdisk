@@ -127,7 +127,7 @@ void Message (MsgType type, const char* pcsz_, Args&& ...args)
 	}
 
 	if (type == msgStatus)
-		util::cout << msg << colour::none << ttycmd::cleartoeol;
+		util::cout << msg << colour::none << ttycmd::cleartoeol << '\r';
 	else
 		util::cout << msg << colour::none << '\n';
 }

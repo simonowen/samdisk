@@ -18,7 +18,7 @@ public:
 protected:
 	virtual bool supports_retries () const;
 	virtual TrackData load (const CylHead &cylhead, bool first_read=false) = 0;
-	//virtual void save (TrackData &trackdata) = 0;
+	virtual void save (TrackData &trackdata);
 
 	std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_loaded {};
 };
