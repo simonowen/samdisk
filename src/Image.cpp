@@ -39,8 +39,13 @@ bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool norma
 		}
 
 		// Store the archive type the image was found in, if any
-		if (f && file.compression() != Compress::None)
-			disk->metadata["archive"] = to_string(file.compression());
+		if (f)
+		{
+			if (file.compression() != Compress::None)
+				disk->metadata["archive"] = to_string(file.compression());
+			if (file.path().rfind(file.name()) + file.name().size() != file.path().size())
+				disk->metadata["filename"] = file.name();
+		}
 	}
 
 #if 0

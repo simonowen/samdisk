@@ -9,13 +9,14 @@ class MemFile
 {
 public:
 	bool open (const std::string &path, bool uncompress = true);
-	bool open (const void *buf, int size, const std::string &path);
+	bool open (const void *buf, int size, const std::string &path,
+		const std::string &filename="");
 
 	const Data &data () const;
 	int size () const;
 	int remaining () const;
 	const std::string &path () const;
-	const char *name () const;
+	const std::string &name () const;
 	Compress compression () const;
 
 	std::vector<uint8_t> read (int len);
@@ -44,6 +45,7 @@ public:
 
 private:
 	std::string m_path {};
+	std::string m_filename {};
 	Data m_data {};
 	Data::iterator m_it {};
 	Compress m_compress = Compress::None;

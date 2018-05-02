@@ -33,6 +33,7 @@ std::string to_string (const Compress &compression)
 
 bool MemFile::open (const std::string &path_, bool uncompress)
 {
+	std::string filename;
 	MEMORY mem(MAX_IMAGE_SIZE + 1);
 	size_t uRead = 0;
 
@@ -70,6 +71,7 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 				{
 					nRet = unzReadCurrentFile(hfZip, mem, static_cast<unsigned int>(mem.size));
 					unzCloseCurrentFile(hfZip);
+					filename = szFile;
 					break;
 				}
 
@@ -121,8 +123,37 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 				throw posix_error(errno, path_.c_str());
 
 			uRead = gzread(gf, mem, static_cast<unsigned>(mem.size));
-			m_compress = (gztell(gf) != FileSize(path_)) ? Compress::Gzip : Compress::None;
+			m_compress = gzdirect(gf) ? Compress::None : Compress::Gzip;
 			gzclose(gf);
+
+			// If gzipped, attempt to extract the original filename
+			if (m_compress == Compress::Gzip)
+			{
+				std::ifstream zs(path_.c_str(), std::ios_base::binary);
+				std::vector<uint8_t> zbuf((std::istreambuf_iterator<char>(zs)),
+					std::istreambuf_iterator<char>());
+
+				z_stream stream{};
+				stream.next_in = zbuf.data();
+				stream.avail_in = zbuf.size();
+				stream.next_out = zbuf.data();	// same as next_in!
+				stream.avail_out = 0;			// we don't want data
+
+				auto zerr = inflateInit2(&stream, 16 + MAX_WBITS); // 16=gzip
+				if (zerr == Z_OK)
+				{
+					Bytef name[MAX_PATH]{};
+					gz_header header{};
+					header.name = name;
+					header.name_max = MAX_PATH;
+
+					zerr = inflateGetHeader(&stream, &header);
+					zerr = inflate(&stream, 0);
+					if (zerr == Z_OK && name[0])
+						filename = reinterpret_cast<const char*>(name);
+					inflateEnd(&stream);
+				}
+			}
 		}
 	}
 	else
@@ -138,46 +169,38 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 		m_compress = Compress::None;
 	}
 
-
 	// zip compressed? (and not handled above)
 	if (uncompress && mem[0U] == 'P' && mem[1U] == 'K')
 		throw util::exception("zlib support is not available for zipped files");
-
 	// gzip compressed?
 	if (uncompress && mem[0U] == 0x1f && mem[1U] == 0x8b && mem[2U] == 0x08)
 	{
 		if (!have_zlib)
 			throw util::exception("zlib support is not available for gzipped files");
 
+		// Unknowingly gzipped image files may be zipped, so we need to handle
+		// a second level of decompression here.
 #ifdef HAVE_ZLIB
 		MEMORY mem2(MAX_IMAGE_SIZE + 1);
-		uint8_t flags = mem[3];
-		auto pb = mem.pb + 10, pbEnd = mem.pb + mem.size;
 
-		if (flags & 0x04)	// EXTRA_FIELD
-		{
-			if (pb < pbEnd - 1)
-				pb += 2 + pb[0] + (pb[1] << 8);
-		}
-
-		if (flags & 0x08 || flags & 0x10)	// ORIG_NAME or COMMENT
-		{
-			while (pb < pbEnd && *pb++);
-		}
-
-		if (flags & 0x02)	// HEAD_CRC
-			pb += 2;
-
-		z_stream stream = {};
-		stream.next_in = pb;
-		stream.avail_in = (pb < pbEnd) ? static_cast<uInt>(pbEnd - pb) : 0;
+		z_stream stream{};
+		stream.next_in = mem.pb;
+		stream.avail_in = uRead;
 		stream.next_out = mem2.pb;
 		stream.avail_out = mem2.size;
 
-		auto zerr = inflateInit2(&stream, -MAX_WBITS);
+		auto zerr = inflateInit2(&stream, 16 + MAX_WBITS);
 		if (zerr == Z_OK)
 		{
+			Bytef name[MAX_PATH]{};
+			gz_header header{};
+			header.name = name;
+			header.name_max = MAX_PATH;
+
+			zerr = inflateGetHeader(&stream, &header);
 			zerr = inflate(&stream, Z_FINISH);
+			if (zerr == Z_STREAM_END && name[0])
+				filename = reinterpret_cast<const char*>(name);
 			inflateEnd(&stream);
 		}
 
@@ -242,18 +265,33 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 	}
 
 	if (uRead <= MAX_IMAGE_SIZE)
-		return open(mem.pb, static_cast<int>(uRead), path_);
+		return open(mem.pb, static_cast<int>(uRead), path_, filename);
 
 	throw util::exception("file size too big");
 }
 
-bool MemFile::open (const void *buf, int len, const std::string &path_)
+bool MemFile::open (const void *buf, int len, const std::string &path_, const std::string &filename_)
 {
 	auto pb = reinterpret_cast<const uint8_t *>(buf);
 
 	m_data.clear();
 	m_it = m_data.insert(m_data.begin(), pb, pb + len);
 	m_path = path_;
+	m_filename = filename_;
+
+	// If a filename wasn't supplied from an archive, determine it here.
+	if (filename_.empty())
+	{
+		std::string::size_type pos = m_path.rfind(PATH_SEPARATOR_CHR);
+		m_filename = (pos == m_path.npos) ? m_path : m_path.substr(pos + 1);
+
+		// Remove the archive extension from single compressed files.
+		if (IsFileExt(m_filename, "gz") || IsFileExt(m_filename, "xz"))
+			m_filename = m_filename.substr(0, m_filename.size() - 3);
+		else if (IsFileExt(m_filename, "bz2"))
+			m_filename = m_filename.substr(0, m_filename.size() - 4);
+	}
+
 	return true;
 }
 
@@ -278,10 +316,9 @@ const std::string &MemFile::path () const
 	return m_path;
 }
 
-const char *MemFile::name () const
+const std::string &MemFile::name () const
 {
-	std::string::size_type pos = m_path.rfind(PATH_SEPARATOR_CHR);
-	return m_path.c_str() + ((pos == m_path.npos) ? 0 : pos + 1);
+	return m_filename;
 }
 
 Compress MemFile::compression () const
