@@ -137,8 +137,11 @@ bool ReadFdrawcmdSysAB (const std::string &path, std::shared_ptr<Disk> &disk)
 	return true;
 }
 
-bool WriteFdrawcmdSysAB (const std::string &/*path*/, std::shared_ptr<Disk> &/*disk*/)
+bool WriteFdrawcmdSysAB (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
 {
+	if (util::lowercase(path) != "ab:")
+		return false;
+
 	throw util::exception("2-drive writing is impossible");
 }
 
