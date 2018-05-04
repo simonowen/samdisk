@@ -16,7 +16,7 @@ public:
 
 enum class ttycmd : uint8_t
 {
-	cleartoeol
+	cleartoeol, clearline, statusbegin, statusend
 };
 
 #ifdef _WIN32
@@ -206,21 +206,29 @@ struct LogHelper
 
 	std::ostream *screen;
 	std::ostream *file;
+	bool statusmsg = false;
+	bool clearline = false;
 };
 
 extern LogHelper cout;
 extern std::ofstream log;
 
+LogHelper& operator<<(LogHelper& h, colour c);
+LogHelper& operator<<(LogHelper& h, ttycmd cmd);
+
 template <typename T>
 LogHelper& operator<<(LogHelper& h, const T& t)
 {
+	if (h.clearline)
+	{
+		h.clearline = false;
+		h << ttycmd::clearline;
+	}
+
 	*h.screen << t;
-	if (h.file) *h.file << t;
+	if (h.file && !h.statusmsg) *h.file << t;
 	return h;
 }
-
-LogHelper& operator<<(LogHelper& h, colour c);
-LogHelper& operator<<(LogHelper& h, ttycmd cmd);
 
 
 template <typename ForwardIter>

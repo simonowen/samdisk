@@ -744,6 +744,7 @@ int main (int argc_, char *argv_[])
 		util::cout << "Elapsed time: " << elapsed_ms << "ms\n";
 	}
 
+	util::cout << colour::none;
 	util::log.close();
 
 	return f ? 0 : 1;

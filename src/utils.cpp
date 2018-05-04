@@ -130,20 +130,34 @@ LogHelper& operator<<(LogHelper& h, ttycmd cmd)
 	{
 		switch (cmd)
 		{
-			case ttycmd::cleartoeol:
+		case ttycmd::statusbegin:
+			h.statusmsg = true;
+			break;
+
+		case ttycmd::statusend:
+			h.statusmsg = false;
+			h.clearline = true;
+			break;
+
+		case ttycmd::clearline:
+			h << "\r" << ttycmd::cleartoeol;
+			h.clearline = false;
+			break;
+
+		case ttycmd::cleartoeol:
 #ifdef _WIN32
-				h.screen->flush();
+			h.screen->flush();
 
-				DWORD dwWritten;
-				CONSOLE_SCREEN_BUFFER_INFO csbi;
-				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD dwWritten;
+			CONSOLE_SCREEN_BUFFER_INFO csbi{};
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-				if (GetConsoleScreenBufferInfo(hConsole, &csbi))
-					FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X - csbi.dwCursorPosition.X, csbi.dwCursorPosition, &dwWritten);
+			if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+				FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X - csbi.dwCursorPosition.X, csbi.dwCursorPosition, &dwWritten);
 #else
-				*h.screen << "\x1b[0K";
+			*h.screen << "\x1b[0K";
 #endif
-				break;
+			break;
 		}
 	}
 	return h;

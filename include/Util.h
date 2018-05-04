@@ -119,7 +119,7 @@ void Message (MsgType type, const char* pcsz_, Args&& ...args)
 
 	switch (type)
 	{
-		case msgStatus:	 util::cout << '\r'; break;
+		case msgStatus:	 break;
 		case msgInfo:	 util::cout << "Info: "; break;
 		case msgFix:	 util::cout << colour::GREEN << "Fixed: "; break;
 		case msgWarning: util::cout << colour::YELLOW << "Warning: "; break;
@@ -127,7 +127,7 @@ void Message (MsgType type, const char* pcsz_, Args&& ...args)
 	}
 
 	if (type == msgStatus)
-		util::cout << msg << colour::none << ttycmd::cleartoeol << '\r';
+		util::cout << ttycmd::statusbegin << "\r" << msg << ttycmd::statusend;
 	else
 		util::cout << msg << colour::none << '\n';
 }
