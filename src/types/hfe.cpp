@@ -33,7 +33,7 @@ typedef struct
 	uint16_t track_len;
 } HFE_TRACK;
 
-enum HfeFloppyInterfaceMode
+enum FloppyInterfaceMode
 {
 	IBMPC_DD_FLOPPYMODE = 0,
 	IBMPC_HD_FLOPPYMODE,
@@ -52,7 +52,7 @@ enum HfeFloppyInterfaceMode
 	DISABLE_FLOPPYMODE = 0xfe
 };
 
-enum HfeTrackEncoding
+enum TrackEncoding
 {
 	ISOIBM_MFM_ENCODING = 0,
 	AMIGA_MFM_ENCODING,
@@ -61,7 +61,7 @@ enum HfeTrackEncoding
 	UNKNOWN_ENCODING = 0xff
 };
 
-std::string to_string(HfeFloppyInterfaceMode interface_mode)
+std::string to_string (FloppyInterfaceMode interface_mode)
 {
 	switch (interface_mode)
 	{
@@ -84,7 +84,7 @@ std::string to_string(HfeFloppyInterfaceMode interface_mode)
 	return "Unknown";
 }
 
-std::string to_string(HfeTrackEncoding track_encoding)
+std::string to_string (TrackEncoding track_encoding)
 {
 	switch (track_encoding)
 	{
@@ -163,8 +163,8 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 		}
 	}
 
-	disk->metadata["interface_mode"] = to_string(static_cast<HfeFloppyInterfaceMode>(hh.floppy_interface_mode));
-	disk->metadata["track_encoding"] = to_string(static_cast<HfeTrackEncoding>(hh.track_encoding));
+	disk->metadata["interface_mode"] = to_string(static_cast<FloppyInterfaceMode>(hh.floppy_interface_mode));
+	disk->metadata["track_encoding"] = to_string(static_cast<TrackEncoding>(hh.track_encoding));
 	disk->metadata["data_bitrate"] = std::to_string(hh.bitrate_kbps) + "Kbps";
 	if (hh.floppy_rpm)
 		disk->metadata["floppy_rpm"] = std::to_string(hh.floppy_rpm);
