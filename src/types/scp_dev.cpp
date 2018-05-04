@@ -1,4 +1,5 @@
 // SuperCard Pro real device wrapper
+//  http://www.cbmstuff.com/downloads/scp/scp_sdk.pdf
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
@@ -15,9 +16,9 @@ public:
 		m_supercardpro->EnableMotor(0);
 
 		// Default to a slower step rate to be compatible with older drive,
-		// unless the user says otherwise. Other parameters are defaults.
-		auto step_delay = opt.newdrive ? 5000 : 10000;
-		m_supercardpro->SetParameters(1000, step_delay, 1000, 15, 10000);
+		// unless the user says otherwise.
+		auto step_delay = opt.newdrive ? 5000 : 16'000;
+		m_supercardpro->SetParameters(1000, step_delay, 1000, 50, 10'000);
 
 		m_supercardpro->StepTo(1);
 		m_supercardpro->Seek0();

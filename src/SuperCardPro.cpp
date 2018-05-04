@@ -207,15 +207,15 @@ bool SuperCardPro::GetParameters (int &drive_select_delay, int &step_delay, int 
 	return true;
 }
 
-bool SuperCardPro::SetParameters (int drive_select_delay, int step_delay, int motor_on_delay, int seek_0_delay, int motor_off_delay)
+bool SuperCardPro::SetParameters (int drive_select_delay_us, int step_delay_us, int motor_on_delay_ms, int seek_0_delay_ms, int motor_off_delay_ms)
 {
 	uint16_t params[5] = {};
 
-	params[0] = util::betoh(static_cast<uint16_t>(drive_select_delay));
-	params[1] = util::betoh(static_cast<uint16_t>(step_delay));
-	params[2] = util::betoh(static_cast<uint16_t>(motor_on_delay));
-	params[3] = util::betoh(static_cast<uint16_t>(seek_0_delay));
-	params[4] = util::betoh(static_cast<uint16_t>(motor_off_delay));
+	params[0] = util::betoh(static_cast<uint16_t>(drive_select_delay_us));
+	params[1] = util::betoh(static_cast<uint16_t>(step_delay_us));
+	params[2] = util::betoh(static_cast<uint16_t>(motor_on_delay_ms));
+	params[3] = util::betoh(static_cast<uint16_t>(seek_0_delay_ms));
+	params[4] = util::betoh(static_cast<uint16_t>(motor_off_delay_ms));
 
 	return SendCmd(CMD_SETPARAMS, params, sizeof(params));
 }
@@ -305,6 +305,9 @@ bool SuperCardPro::WriteFlux (const std::vector<uint32_t> &flux_times)
 
 		flux_data.push_back(util::htobe(static_cast<uint16_t>(time_ticks)));
 	}
+
+	if (flux_data.empty())
+		flux_data.push_back(4'000 / NS_PER_TICK);
 
 	auto flux_count{flux_data.size()};
 	auto flux_bytes{flux_count * sizeof(flux_data[0])};

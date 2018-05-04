@@ -15,6 +15,8 @@
 	path = SuperCardProWin32::GetDevicePath();
 #elif defined(__linux__)
 	path = "/dev/ttyUSB0";
+#elif defined(__APPLE__)
+	path = "/dev/cu.usbserial-SCP-JIM";
 #endif
 
 	if (!path.empty())
