@@ -23,8 +23,8 @@ bool generate_special(TrackData &trackdata)
 		trackdata.add(GenerateCpcSpeedlockTrack(trackdata.cylhead, track, weak_offset, weak_size));
 	else if (IsRainbowArtsTrack(track, weak_offset, weak_size))
 		trackdata.add(GenerateRainbowArtsTrack(trackdata.cylhead, track, weak_offset, weak_size));
-	else if (IsKBI10Track(track, weak_offset, weak_size))
-		trackdata.add(GenerateKBI10Track(trackdata.cylhead, track, weak_offset, weak_size));
+	else if (IsKBIWeakSectorTrack(track, weak_offset, weak_size))
+		trackdata.add(GenerateKBIWeakSectorTrack(trackdata.cylhead, track, weak_offset, weak_size));
 	else if (IsLogoProfTrack(track))
 		trackdata.add(GenerateLogoProfTrack(trackdata.cylhead, track));
 	else if (IsOperaSoftTrack(track))

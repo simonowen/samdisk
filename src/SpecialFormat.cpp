@@ -452,40 +452,66 @@ TrackData GenerateRainbowArtsTrack (const CylHead &cylhead, const Track &track, 
 ////////////////////////////////////////////////////////////////////////////////
 
 // KBI-10 weak sector for CPC?
-bool IsKBI10Track (const Track &track, int &weak_offset, int &weak_size)
+bool IsKBIWeakSectorTrack (const Track &track, int &weak_offset, int &weak_size)
 {
-	if (track.size() != 10)
+	auto sectors = track.size();
+
+	// Most titles use the 10-sector version, but some have 3x2K sectors.
+	int size_code;
+	if (sectors == 3)
+		size_code = 4;
+	else if (sectors == 10)
+		size_code = 2;
+	else
 		return false;
 
-	auto &sector0 = track[0];
-	auto &sector9 = track[9];
-
-	if (sector0.encoding != Encoding::MFM || sector9.encoding != Encoding::MFM ||
-		sector0.datarate != DataRate::_250K || sector9.datarate != DataRate::_250K ||
-		sector0.size() != 512 ||
-		sector0.data_size() < 512 || sector9.data_size() < 256 ||
-		sector9.header.size != 1 || !sector9.has_baddatacrc())	// 256-byte weak sector
+	// Weak sector is always last on track and 256 bytes
+	auto &sectorW = track[sectors - 1];
+	if (sectorW.encoding != Encoding::MFM ||
+		sectorW.datarate != DataRate::_250K ||
+		sectorW.header.size != 1 ||
+		sectorW.data_size() < 256 ||
+		!sectorW.has_baddatacrc())
+	{
 		return false;
+	}
 
-	auto &data9 = sector9.data_copy();
+	// The remaining sector must be the correct type and size code.
+	for (int i = 0; i < sectors - 1; ++i)
+	{
+		auto &sector = track[i];
+		if (sector.encoding != Encoding::MFM ||
+			sector.datarate != DataRate::_250K ||
+			sector.header.size != size_code ||
+			sector.data_size() < Sector::SizeCodeToLength(size_code))
+		{
+			return false;
+		}
+	}
 
-	// Check for the signature at the start of the weak sector
-	if (memcmp(data9.data(), "KBI", 3))
+	auto &dataW = sectorW.data_copy();
+
+	// The first character of the weak sector is 'K', and the next two are alphabetic.
+	if (dataW[0] != 'K' ||
+		!std::isalpha(static_cast<uint8_t>(dataW[1])) ||
+		!std::isalpha(static_cast<uint8_t>(dataW[2])))
+	{
 		return false;
+	}
 
 	// =4 -4 =124 -4 =120
 	weak_offset = 4;
 	weak_size = 4;
 
-	if (opt.debug) util::cout << "detected KBI-10 track\n";
+	if (opt.debug) util::cout << "detected KBI weak sector track\n";
 	return true;
 }
 
-TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
+TrackData GenerateKBIWeakSectorTrack (const CylHead &cylhead, const Track &track, int weak_offset, int weak_size)
 {
 #ifdef _DEBUG
 	int temp_offset, temp_size;
-	assert(IsKBI10Track(track, temp_offset, temp_size));
+	assert(IsKBIWeakSectorTrack(track, temp_offset, temp_size));
 	assert(weak_offset == temp_offset && weak_size == temp_size);
 #endif
 
@@ -495,10 +521,11 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int we
 	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 	bitbuf.addTrackStart();
 
+	auto sectors = track.size();
 	for (auto &sector : track)
 	{
 		auto &data_copy = sector.data_copy();
-		auto is_weak{ &sector == &track[9] };
+		auto is_weak = sector.header.size == 1;
 
 		if (!is_weak)
 			fluxbuf.addSector(sector.header, data_copy, 0x54, sector.dam);
@@ -514,12 +541,13 @@ TrackData GenerateKBI10Track (const CylHead &cylhead, const Track &track, int we
 
 		bitbuf.addSector(sector.header, data_copy, 1, sector.dam, is_weak);
 
-		if (&sector == &track[3])
+		// Insert the duplicate sector earlier on the track.
+		if (&sector == &track[((sectors - 1) / 2) - 1])
 		{
-			auto &sector9{ track[9] };
-			auto data9{ sector9.data_copy() };
-			std::fill(data9.begin() + weak_offset, data9.begin() + weak_offset + weak_size, uint8_t(0xee));
-			bitbuf.addSector(sector9.header, data9, 1, sector9.dam, true);
+			auto &sectorW = track[sectors - 1];
+			auto dataW{ sectorW.data_copy() };
+			std::fill(dataW.begin() + weak_offset, dataW.begin() + weak_offset + weak_size, uint8_t(0xee));
+			bitbuf.addSector(sectorW.header, dataW, 1, sectorW.dam, true);
 		}
 	}
 

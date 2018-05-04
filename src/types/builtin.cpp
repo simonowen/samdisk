@@ -1159,7 +1159,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				std::copy(sig.begin(), sig.end(), data9.begin());
 				track[9].add(std::move(data9), true);
 
-				disk->write(GenerateKBI10Track(cylhead.next_cyl(), complete(track), 4, 4));
+				disk->write(GenerateKBIWeakSectorTrack(cylhead.next_cyl(), complete(track), 4, 4));
 			}
 
 			// Logo Professor (overformatted track).
