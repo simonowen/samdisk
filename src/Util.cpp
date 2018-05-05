@@ -400,39 +400,6 @@ int GetFileType (const char *pcsz_)
 	return ftUnknown;
 }
 
-bool GetInt (char *psz_, int &n_)
-{
-	if (!*psz_) return false;
-	n_ = static_cast<int>(strtoul(psz_, &psz_, 0));
-	return !*psz_;
-}
-
-bool GetLong (char *psz_, long &l_)
-{
-	if (!*psz_) return false;
-	l_ = strtol(psz_, &psz_, 0);
-	return !*psz_;
-}
-
-bool GetRange (char *psz_, int &range_begin, int &range_end)
-{
-	if (!*psz_) return false;
-
-	range_begin = strtoul(psz_, &psz_, 0);
-
-	if (*psz_ == '-')
-		range_end = strtoul(psz_ + 1, &psz_, 0) + 1;
-	else
-	{
-		range_end = range_begin;
-		range_begin = 0;
-	}
-
-	// Ensure nothing left, and range is low-high
-	return !*psz_ && range_end > range_begin;
-}
-
-
 void ByteSwap (void *pv, size_t len)
 {
 	assert((len & 1) == 0);

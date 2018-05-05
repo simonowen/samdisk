@@ -238,10 +238,11 @@ void hex_dump (ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour *
 	static const char hex[] = "0123456789ABCDEF";
 
 	it += start_offset;
-	pColours += start_offset;
+	if (pColours)
+		pColours += start_offset;
 
 	colour c = colour::none;
-	auto base_offset = -start_offset % per_line;
+	auto base_offset = start_offset - (start_offset % per_line);
 	start_offset %= per_line;
 
 	while (it < itEnd)
@@ -287,6 +288,62 @@ void hex_dump (ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour *
 
 		util::cout << colour::none << " " << text << "\n";
 	}
+}
+
+template <typename T>
+T str_value(const std::string &str)
+{
+	static_assert(std::is_same<T, int>::value || std::is_same<T, long>::value, "int or long only");
+	try
+	{
+		size_t idx_end = 0;
+		auto hex = util::lowercase(str.substr(0, 2)) == "0x";
+		T n{};
+		if (std::is_same<T, int>::value)
+			n = std::stoi(str, &idx_end, hex ? 16 : 10);
+		else
+			n = std::stol(str, &idx_end, hex ? 16 : 10);
+		if (idx_end == str.size() && n >= 0)
+			return n;
+	}
+	catch (...)
+	{
+	}
+
+	throw util::exception(util::format("invalid value '", str, "'"));
+}
+
+inline void str_range (const std::string &str, int &range_begin, int &range_end)
+{
+	auto idx = str.rfind('-');
+	if (idx == str.npos)
+		idx = str.rfind(',');
+
+	try
+	{
+		if (idx == str.npos)
+		{
+			range_begin = 0;
+			range_end = str_value<int>(str);
+			return;
+		}
+
+		range_begin = str_value<int>(str.substr(0, idx));
+		auto value2 = str_value<int>(str.substr(idx + 1));
+
+		if (str[idx] == '-')
+			range_end = value2 + 1;
+		else
+			range_end = range_begin + value2;
+
+		if (range_end > range_begin)
+			return;
+	}
+	catch (...)
+	{
+	}
+
+	throw util::exception(util::format("invalid range '", str, "'"));
 }
 
 } // namespace util

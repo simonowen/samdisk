@@ -260,27 +260,18 @@ bool ParseCommandLine (int argc_, char *argv_[])
 		switch (arg)
 		{
 			case 'c':
-				if (!GetRange(optarg, opt.range.cyl_begin, opt.range.cyl_end))
-				{
-					// -c0 is shorthand for -c0-0
-					if (opt.range.cyls() == 0)
-						opt.range.cyl_end = 1;
-					else
-					{
-						util::cout << "Invalid cylinder count or range '" << optarg << "'\n";
-						return false;
-					}
-				}
+				util::str_range(optarg, opt.range.cyl_begin, opt.range.cyl_end);
+
+				// -c0 is shorthand for -c0-0
+				if (opt.range.cyls() == 0)
+					opt.range.cyl_end = 1;
 				break;
 
 			case 'h':
 			{
-				int heads = 0;
-				if (!GetInt(optarg, heads) || heads > MAX_DISK_HEADS)
-				{
-					util::cout << "Invalid head count or select '" << optarg << "'\n";
-					return false;
-				}
+				auto heads = util::str_value<int>(optarg);
+				if (heads > MAX_DISK_HEADS)
+					throw util::exception("invalid head count/select '", optarg, "', expected 0-", MAX_DISK_HEADS);
 
 				opt.range.head_begin = (heads == 1) ? 1 : 0;
 				opt.range.head_end = (heads == 0) ? 1 : 2;
@@ -288,43 +279,53 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			}
 
 			case 's':
-				if (!GetLong(optarg, opt.sectors))
-					return BadValue("sector");
+				opt.sectors = util::str_value<long>(optarg);
 				break;
 
 			case 'r':
-				if (!GetInt(optarg, opt.retries))
-					return BadValue("retries");
+				opt.retries = util::str_value<int>(optarg);
 				break;
 
 			case 'R':
-				if (!GetInt(optarg, opt.rescans))
-					return BadValue("rescans");
+				opt.rescans = util::str_value<int>(optarg);
 				break;
 
 			case 'n':	opt.noformat = 1; break;
 			case 'm':	opt.minimal = 1; break;
 
-			case 'z':	if (!GetInt(optarg, opt.size)) return BadValue("size"); break;
-			case 'g':	if (!GetInt(optarg, opt.gap3)) return BadValue("gap3"); break;
-			case 'i':	if (!GetInt(optarg, opt.interleave)) return BadValue("sector interleave"); break;
-			case 'k':	if (!GetInt(optarg, opt.skew)) return BadValue("track skew"); break;
-			case 'F':	if (!GetInt(optarg, opt.fill) || opt.fill > 0xff) return BadValue("fill byte"); break;
-			case 'b':	if (!GetInt(optarg, opt.base)) return BadValue("base-sector"); break;
-			case '0':	if (!GetInt(optarg, opt.head0) || opt.head0 > 0xff) return BadValue("head0"); break;
-			case '1':	if (!GetInt(optarg, opt.head1) || opt.head1 > 0xff) return BadValue("head1"); break;
-			case 'D':	if (!GetInt(optarg, opt.datacopy)) return BadValue("data-copy"); break;
+			case 'b':	opt.base = util::str_value<int>(optarg); break;
+			case 'z':	opt.size = util::str_value<int>(optarg); break;
+			case 'g':	opt.gap3 = util::str_value<int>(optarg); break;
+			case 'i':	opt.interleave = util::str_value<int>(optarg); break;
+			case 'k':	opt.skew = util::str_value<int>(optarg); break;
+			case 'D':	opt.datacopy = util::str_value<int>(optarg); break;
+
+			case 'F':
+				opt.fill = util::str_value<int>(optarg);
+				if (opt.fill > 255)
+					throw util::exception("invalid fill value '", optarg, "', expected 0-255");
+				break;
+			case '0':
+				opt.head0 = util::str_value<int>(optarg);
+				if (opt.head0 > 1)
+					throw util::exception("invalid head0 value '", optarg, "', expected 0 or 1");
+				break;
+			case '1':
+				opt.head1 = util::str_value<int>(optarg);
+				if (opt.head1 > 1)
+					throw util::exception("invalid head1 value '", optarg, "', expected 0 or 1");
+				break;
 
 			case 't':
 				opt.datarate = datarate_from_string(optarg);
 				if (opt.datarate == DataRate::Unknown)
-					return BadValue("datarate");
+					throw util::exception("invalid data rate '", optarg, "'");
 				break;
 
 			case 'e':
 				opt.encoding = encoding_from_string(optarg);
 				if (opt.encoding == Encoding::Unknown)
-					return BadValue("encoding");
+					throw util::exception("invalid encoding '", optarg, "'");
 				break;
 
 			case 'd':	opt.step = 2; break;
@@ -337,10 +338,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_LOG:
 				util::log.open(optarg ? optarg : "samdisk.log");
 				if (util::log.bad())
-				{
-					util::cout << "failed to open log file for writing\n";
-					return false;
-				}
+					throw util::exception("failed to open log file for writing");
 				util::cout.file = &util::log;
 				break;
 
@@ -352,7 +350,7 @@ bool ParseCommandLine (int argc_, char *argv_[])
 				else if (str == std::string("heads").substr(0, str.length()))
 					opt.cylsfirst = 0;
 				else
-					return BadValue("order");
+					throw util::exception("invalid order type '", optarg, "', expected 'cylinders' or 'heads'");
 				break;
 			}
 
@@ -361,23 +359,51 @@ bool ParseCommandLine (int argc_, char *argv_[])
 			case OPT_AGAT:	opt.encoding = Encoding::Agat;	break;
 			case OPT_NOFM:	opt.encoding = Encoding::MFM;	break;
 
-			case OPT_GAPMASK: if (!GetInt(optarg, opt.gapmask)) return BadValue("gap-mask"); break;
-			case OPT_MAXCOPIES: if (!GetInt(optarg, opt.maxcopies) || opt.maxcopies < 1) return BadValue("max-copies"); break;
-			case OPT_MAXSPLICE: if (!GetInt(optarg, opt.maxsplice)) return BadValue("max-splice-bits"); break;
-			case OPT_CHECK8K: if (!optarg) opt.check8k = 1; else if (!GetInt(optarg, opt.check8k)) return BadValue("check8k"); break;
-			case OPT_RPM:	if (!GetInt(optarg, opt.rpm) || (opt.rpm != 300 && opt.rpm != 360)) return BadValue("rpm"); break;
-			case OPT_HDF:	if (!GetInt(optarg, opt.hdf) || (opt.hdf != 10 && opt.hdf != 11)) return BadValue("hdf"); break;
-			case OPT_SCALE: if (!GetInt(optarg, opt.scale)) return BadValue("scale"); break;
-			case OPT_PLLADJUST: if (!GetInt(optarg, opt.plladjust) || opt.plladjust <= 0 || opt.plladjust > 50) return BadValue("pll-adjust"); break;
-			case OPT_PLLPHASE: if (!GetInt(optarg, opt.pllphase) || opt.pllphase <= 0 || opt.pllphase > 90) return BadValue("pll-phase"); break;
-			case OPT_STEPRATE: if (!GetInt(optarg, opt.steprate) || opt.steprate > 15) return BadValue("step-rate"); break;
+			case OPT_GAPMASK:
+				opt.gapmask = util::str_value<int>(optarg);
+				break;
+			case OPT_MAXCOPIES:
+				opt.maxcopies = util::str_value<int>(optarg);
+				if (!opt.maxcopies)
+					throw util::exception("invalid data copy count '", optarg, "', expected >= 1");
+				break;
+			case OPT_MAXSPLICE:
+				opt.maxsplice = util::str_value<int>(optarg);
+				break;
+			case OPT_CHECK8K:
+				opt.check8k = !optarg ? 1 : util::str_value<int>(optarg);
+				break;
+			case OPT_RPM:
+				opt.rpm = util::str_value<int>(optarg);
+				if (opt.rpm != 300 && opt.rpm != 360)
+					throw util::exception("invalid rpm '", optarg, "', expected 300 or 360");
+				break;
+			case OPT_HDF:
+				opt.hdf = util::str_value<int>(optarg);
+				if (opt.hdf != 10 && opt.hdf != 11)
+					throw util::exception("invalid HDF version '", optarg, "', expected 10 or 11");
+				break;
+			case OPT_SCALE:
+				opt.scale = util::str_value<int>(optarg);
+				break;
+			case OPT_PLLADJUST:
+				opt.plladjust = util::str_value<int>(optarg);
+				if (opt.plladjust <= 0 || opt.plladjust > 50)
+					throw util::exception("invalid pll adjustment '", optarg, "', expected 0-50");
+				break;
+			case OPT_PLLPHASE:
+				opt.pllphase = util::str_value<int>(optarg);
+				if (opt.pllphase <= 0 || opt.pllphase > 90)
+					throw util::exception("invalid pll phase '", optarg, "', expected 0-90");
+				break;
+			case OPT_STEPRATE:
+				opt.steprate = util::str_value<int>(optarg);
+				if (opt.steprate > 15)
+					throw util::exception("invalid step rate '", optarg, "', expected 0-15");
+				break;
 
 			case OPT_BYTES:
-				if (!GetRange(optarg, opt.bytes_begin, opt.bytes_end))
-				{
-					util::cout << "Invalid byte count or range\n";
-					return false;
-				}
+				util::str_range(optarg, opt.bytes_begin, opt.bytes_end);
 				break;
 
 			case OPT_VERSION:
@@ -631,7 +657,7 @@ int main (int argc_, char *argv_[])
 					Usage();
 
 				if (nSource == argHDD && IsHddImage(opt.szSource) && (nTarget != argNone || opt.sectors != -1))
-					f = CreateHddImage(opt.szSource, strtoul(opt.szTarget, nullptr, 0));
+					f = CreateHddImage(opt.szSource, util::str_value<int>(opt.szTarget));
 				else if (nSource == argDisk && nTarget == argNone)
 					f = CreateImage(opt.szSource, opt.range);
 				else
