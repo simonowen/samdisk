@@ -280,7 +280,7 @@ typedef struct
 	int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
 	int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
 
-	int maxcopies = 5, retries = maxcopies;
+	int retries = 5, maxcopies = 3;
 	int scale = 100, plladjust = 5, pllphase = 60;
 	int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
 
