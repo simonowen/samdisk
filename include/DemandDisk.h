@@ -9,7 +9,7 @@ public:
 	constexpr static int FIRST_READ_REVS = 2;
 	constexpr static int REMAIN_READ_REVS = 5;
 
-	const TrackData &read (const CylHead &cylhead) override;
+	const TrackData &read (const CylHead &cylhead, bool uncached = false) override;
 	const TrackData &write (TrackData &&trackdata) override;
 	void clear () override;
 

@@ -18,7 +18,7 @@ bool DiskRpm (const std::string &path)
 	// Display 5 revolutions, or run forever if forced
 	for (auto i = 0; forever || i < 5; ++i)
 	{
-		auto &track = disk->read_track(cylhead);
+		auto &track = disk->read_track(cylhead, true);
 
 		if (!track.tracktime)
 		{
@@ -33,7 +33,7 @@ bool DiskRpm (const std::string &path)
 
 		std::stringstream ss;
 		ss << std::setw(6) << time_us << " = " <<
-			std::setw(6) << std::setprecision(6) << rpm << " rpm";
+			std::setprecision(2) << std::fixed << rpm << " rpm";
 
 		if (forever)
 			util::cout << "\r" << ss.str() << "  (Ctrl-C to stop)";
@@ -41,9 +41,6 @@ bool DiskRpm (const std::string &path)
 			util::cout << ss.str() << "\n";
 
 		util::cout.screen->flush();
-
-		// Discard source data for a fresh read
-		disk->clear();
 	}
 
 	return true;

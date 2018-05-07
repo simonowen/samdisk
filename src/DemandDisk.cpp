@@ -20,9 +20,9 @@ bool DemandDisk::supports_retries () const
 	return false;
 }
 
-const TrackData &DemandDisk::read (const CylHead &cylhead)
+const TrackData &DemandDisk::read (const CylHead &cylhead, bool uncached)
 {
-	if (!m_loaded[cylhead])
+	if (uncached || !m_loaded[cylhead])
 	{
 		// Quick first read, plus sector-based conversion
 		auto trackdata = load(cylhead, true);

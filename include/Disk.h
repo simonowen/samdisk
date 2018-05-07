@@ -20,10 +20,10 @@ public:
 	virtual bool preload (const Range &range, int cyl_step);
 	virtual void clear ();
 
-	virtual const TrackData &read (const CylHead &cylhead);
-	const Track &read_track (const CylHead &cylhead);
-	const BitBuffer &read_bitstream (const CylHead &cylhead);
-	const FluxData &read_flux (const CylHead &cylhead);
+	virtual const TrackData &read (const CylHead &cylhead, bool uncached =false);
+	const Track &read_track (const CylHead &cylhead, bool uncached = false);
+	const BitBuffer &read_bitstream (const CylHead &cylhead, bool uncached = false);
+	const FluxData &read_flux (const CylHead &cylhead, bool uncached = false);
 
 	virtual const TrackData &write (TrackData &&trackdata);
 	const Track &write (const CylHead &cylhead, Track &&track);

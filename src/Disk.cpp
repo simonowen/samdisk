@@ -63,30 +63,30 @@ void Disk::clear ()
 }
 
 
-const TrackData &Disk::read (const CylHead &cylhead)
+const TrackData &Disk::read (const CylHead &cylhead, bool /*uncached*/)
 {
 	// Safe look-up requires mutex ownership, in case of call from preload()
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
 	return m_trackdata[cylhead];
 }
 
-const Track &Disk::read_track (const CylHead &cylhead)
+const Track &Disk::read_track (const CylHead &cylhead, bool uncached)
 {
-	read(cylhead);
+	read(cylhead, uncached);
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
 	return m_trackdata[cylhead].track();
 }
 
-const BitBuffer &Disk::read_bitstream (const CylHead &cylhead)
+const BitBuffer &Disk::read_bitstream (const CylHead &cylhead, bool uncached)
 {
-	read(cylhead);
+	read(cylhead, uncached);
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
 	return m_trackdata[cylhead].bitstream();
 }
 
-const FluxData &Disk::read_flux (const CylHead &cylhead)
+const FluxData &Disk::read_flux (const CylHead &cylhead, bool uncached)
 {
-	read(cylhead);
+	read(cylhead, uncached);
 	std::lock_guard<std::mutex> lock(m_trackdata_mutex);
 	return m_trackdata[cylhead].flux();
 }
