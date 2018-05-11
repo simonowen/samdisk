@@ -63,7 +63,7 @@ int BitBuffer::size () const
 
 int BitBuffer::remaining () const
 {
-	return size() - tell();
+	return size() - tell() + m_splicepos;
 }
 
 int BitBuffer::tell () const
@@ -102,6 +102,16 @@ bool BitBuffer::seek_index (int index)
 		return false;
 
 	return seek(m_indexes[index]);
+}
+
+int BitBuffer::splicepos () const
+{
+	return m_splicepos;
+}
+
+void BitBuffer::splicepos (int pos)
+{
+	m_splicepos = pos;
 }
 
 void BitBuffer::index ()

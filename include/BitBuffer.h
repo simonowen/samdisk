@@ -21,6 +21,9 @@ public:
 	bool seek_index (int index);
 	int tell_index () const;
 
+	int splicepos () const;
+	void splicepos (int pos);
+
 	void index ();
 	void sync_lost ();
 	void clear ();
@@ -38,16 +41,12 @@ public:
 	bool read (T &buf)
 	{
 		static_assert(sizeof(buf[0]) == 1, "unit size must be 1 byte");
+		bool clean = remaining() >= static_cast<int>(sizeof(buf));
 
 		for (auto &b : buf)
-		{
 			b = read_byte();
 
-			if (wrapped())
-				return false;
-		}
-
-		return true;
+		return clean;
 	}
 
 	int track_bitsize () const;
@@ -65,6 +64,7 @@ private:
 	std::vector<int> m_sync_losses {};
 	int m_bitsize = 0;
 	int m_bitpos = 0;
+	int m_splicepos = 0;
 	bool m_wrapped = false;
 };
 
