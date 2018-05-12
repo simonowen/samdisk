@@ -38,6 +38,12 @@ public:
 		return true;
 	}
 
+	template <typename T>
+	auto ptr() const
+	{
+		return reinterpret_cast<const T*>(&*m_it);
+	}
+
 	bool rewind ();
 	bool seek (int offset);
 	int tell () const;

@@ -357,6 +357,9 @@
     <ClCompile Include="src\BitstreamTrackBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\woz.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
