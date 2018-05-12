@@ -580,7 +580,8 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write(cylhead.next_cyl(), std::move(complete(track)));
+			auto trackdata = GenerateKBI19Track(cylhead.next_cyl(), complete(track));
+			disk->write(std::move(trackdata));
 		}
 
 		// CAL2BOOT.DMK (track 9)

@@ -91,12 +91,23 @@ TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 		}
 		else
 		{
-			data.resize(s.size());
-			bitbuf.addBlock(data);
-			bitbuf.addCrc(3 + 1 + 512);
-
-			if (s.header.sector != 0)
+			if (s.header.sector == 0)
+			{
+				data.resize(s.size());
+				bitbuf.addBlock(data);
+				bitbuf.addCrc(3 + 1 + 512);
+			}
+			else
+			{
+				auto crc_block_size = 3 + 1 + s.size();
+				bitbuf.addBlock({ data.begin() + 0, data.begin() + 0x10e });
+				bitbuf.addCrc(crc_block_size);
+				bitbuf.addBlock({ data.begin() + 0x110, data.begin() + 0x187 });
+				bitbuf.addCrc(crc_block_size);
+				bitbuf.addBlock({ data.begin() + 0x189, data.begin() + s.size() });
+				bitbuf.addCrc(crc_block_size);
 				bitbuf.addGap(80);
+			}
 		}
 	}
 
