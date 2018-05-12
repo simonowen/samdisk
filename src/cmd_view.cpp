@@ -16,9 +16,6 @@ void ViewTrack (const CylHead &cylhead, const Track &track)
 
 	for (const auto &sector : track.sectors())
 	{
-		if (g_fAbort)
-			return;
-
 		// If a specific sector/size is required, skip non-matching ones
 		if ((opt.sectors != -1 && (sector.header.sector != opt.sectors)) ||
 			(opt.size >= 0 && (sector.header.size != opt.size)))
@@ -211,34 +208,31 @@ bool ViewImage (const std::string &path, Range range)
 		ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
 
 		range.each([&] (const CylHead &cylhead) {
-			if (!g_fAbort)
+			auto track = disk->read_track(cylhead * opt.step);
+			NormaliseTrack(cylhead, track);
+			ViewTrack(cylhead, track);
+
+			if (opt.verbose)
 			{
-				auto track = disk->read_track(cylhead * opt.step);
-				NormaliseTrack(cylhead, track);
-				ViewTrack(cylhead, track);
+				auto bitbuf = disk->read_bitstream(cylhead * opt.step);
+				NormaliseBitstream(bitbuf);
+				auto encoding = (opt.encoding == Encoding::Unknown) ?
+					bitbuf.encoding : opt.encoding;
 
-				if (opt.verbose)
+				switch (encoding)
 				{
-					auto bitbuf = disk->read_bitstream(cylhead * opt.step);
-					NormaliseBitstream(bitbuf);
-					auto encoding = (opt.encoding == Encoding::Unknown) ?
-						bitbuf.encoding : opt.encoding;
-
-					switch (encoding)
-					{
-					case Encoding::MFM:
-					case Encoding::Amiga:
-					case Encoding::Agat:
-					case Encoding::MX:
-						ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
-						break;
-					case Encoding::FM:
-					case Encoding::RX02:
-						ViewTrack_MFM_FM(Encoding::FM, bitbuf);
-						break;
-					default:
-						throw util::exception("unsupported track view encoding");
-					}
+				case Encoding::MFM:
+				case Encoding::Amiga:
+				case Encoding::Agat:
+				case Encoding::MX:
+					ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
+					break;
+				case Encoding::FM:
+				case Encoding::RX02:
+					ViewTrack_MFM_FM(Encoding::FM, bitbuf);
+					break;
+				default:
+					throw util::exception("unsupported track view encoding");
 				}
 			}
 		}, true);

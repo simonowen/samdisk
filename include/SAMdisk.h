@@ -294,6 +294,5 @@ typedef struct
 } OPTIONS;
 
 extern OPTIONS opt;
-extern volatile bool g_fAbort;
 
 #endif

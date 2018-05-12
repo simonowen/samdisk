@@ -119,16 +119,10 @@ bool ScanImage (const std::string &path, Range range)
 
 			ScanContext context;
 			range.each([&] (const CylHead cylhead) {
-				if (g_fAbort)
-					return;
-
 				if (cylhead.cyl == range.cyl_begin)
 					context = ScanContext();
 
 				auto track = disk->read_track(cylhead * opt.step);
-
-				if (g_fAbort)
-					return;
 
 				NormaliseTrack(cylhead, track);
 				ScanTrack(cylhead, track, context);

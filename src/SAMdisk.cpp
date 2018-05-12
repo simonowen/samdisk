@@ -12,7 +12,6 @@ static const char* aszCommands[] =
 
 
 OPTIONS opt;
-volatile bool g_fAbort;
 
 void Version ()
 {
@@ -462,11 +461,6 @@ int GetArgType (const std::string &arg)
 	return argDisk;
 }
 
-void signal_handler (int)
-{
-	g_fAbort = true;
-}
-
 int main (int argc_, char *argv_[])
 {
 	auto start_time = std::chrono::system_clock::now();
@@ -502,20 +496,12 @@ int main (int argc_, char *argv_[])
 #endif // _DEBUG
 #endif // _WIN32
 
-	signal(SIGINT, signal_handler);
-	signal(SIGTERM, signal_handler);
-#ifdef SIGBREAK
-	signal(SIGBREAK, signal_handler);
-#endif
-
 	bool f = false;
 
 	try
 	{
 		if (!ParseCommandLine(argc_, argv_))
 			return 1;
-
-		g_fAbort = false;
 
 		// Read at most two non-option command-line arguments
 		if (optind < argc_) strncpy(opt.szSource, argv_[optind++], arraysize(opt.szSource) - 1);

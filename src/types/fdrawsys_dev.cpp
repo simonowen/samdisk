@@ -50,9 +50,9 @@ protected:
 		auto track = BlindReadHeaders(cylhead, firstSectorSeen);
 
 		int i;
-		for (i = 0; !g_fAbort && i < track.size(); i += 2)
+		for (i = 0; i < track.size(); i += 2)
 			ReadSector(cylhead, track, i, firstSectorSeen);
-		for (i = 1 ; !g_fAbort && i < track.size(); i += 2)
+		for (i = 1 ; i < track.size(); i += 2)
 			ReadSector(cylhead, track, i, firstSectorSeen);
 
 		if (opt.gaps >= GAPS_CLEAN)
@@ -251,7 +251,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead &cylhead, Track &track, int index
 	auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(sector.header.size));
 	MEMORY mem(size);
 
-	for (int i = 0; !g_fAbort && i <= opt.retries; ++i)
+	for (int i = 0; i <= opt.retries; ++i)
 	{
 		// If the sector id occurs more than once on the track, synchronise to the correct one
 		if (track.is_repeated(sector))
@@ -332,7 +332,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead &cylhead, Track &track)
 	auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
 	MEMORY mem(size);
 
-	for (int i = 0; !g_fAbort && i <= opt.retries; ++i)
+	for (int i = 0; i <= opt.retries; ++i)
 	{
 		// Invalidate the content so misbehaving FDCs can be identififed.
 		memset(mem.pb, 0xee, mem.size);

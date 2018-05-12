@@ -46,12 +46,9 @@ bool Disk::preload (const Range &range_, int cyl_step)
 	std::vector<std::future<void>> rets;
 
 	range_.each([&] (const CylHead cylhead) {
-		if (!g_fAbort)
-		{
-			rets.push_back(pool.enqueue([this, cylhead, cyl_step] () {
-				read_track(cylhead * cyl_step);
-			}));
-		}
+		rets.push_back(pool.enqueue([this, cylhead, cyl_step] () {
+			read_track(cylhead * cyl_step);
+		}));
 	});
 
 	for (auto &ret : rets)

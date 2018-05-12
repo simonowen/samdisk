@@ -208,21 +208,18 @@ bool HDD::SafetyCheck ()
 
 	util::cout << "Are you sure? (y/N) ";
 
-	int ch = getchar();
-	g_fAbort |= (ch == 3);	// under Win32 our SIGINT handler may not be called!
-
-	return !g_fAbort && (ch == 'Y' || ch == 'y');
+	auto ch = getchar();
+	return (ch == 'Y' || ch == 'y');
 }
 
 
 bool HDD::Copy (HDD *phSrc_, int64_t uSectors_, int64_t uSrcOffset_/*=0*/, int64_t uDstOffset_/*=0*/, int64_t uTotal_/*=0*/, const char *pcszAction_)
 {
-	bool f = true;
 	MEMORY mem(SECTOR_BLOCK * sector_size);
 
 	if (!uTotal_) uTotal_ = uSectors_;
 
-	for (int64_t uPos = 0; f; f &= !g_fAbort)
+	for (int64_t uPos = 0;;)
 	{
 		// Sync source and destinations
 		if (phSrc_) phSrc_->Seek(uSrcOffset_ + uPos);
@@ -267,7 +264,7 @@ bool HDD::Copy (HDD *phSrc_, int64_t uSectors_, int64_t uSrcOffset_/*=0*/, int64
 		uPos += uWritten;
 	}
 
-	return f;
+	return true;
 }
 
 

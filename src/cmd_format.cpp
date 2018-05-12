@@ -85,8 +85,7 @@ bool UnformatImage (const std::string &path, Range range)
 	ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
 	range.each([&] (const CylHead &cylhead) {
-		if (!g_fAbort)
-			disk->write(cylhead, Track());
+		disk->write(cylhead, Track());
 	});
 
 	return WriteImage(path, disk);
@@ -142,7 +141,7 @@ bool FormatHdd (const std::string &path)
 		if (!opt.nosig) memcpy(mem + 232, "BDOS", 4);
 
 		// Format the record data area
-		for (int64_t uPos = bdc.base_sectors; f; uPos += MGT_DISK_SECTORS, f &= !g_fAbort)
+		for (int64_t uPos = bdc.base_sectors; ; uPos += MGT_DISK_SECTORS)
 		{
 			// Determine how much to transfer in one go
 			if (uPos > total_sectors) uPos = total_sectors;

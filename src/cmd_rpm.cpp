@@ -16,7 +16,7 @@ bool DiskRpm (const std::string &path)
 	opt.retries = opt.rescans = 0;
 
 	// Display 5 revolutions, or run forever if forced
-	for (auto i = 0; !g_fAbort && (forever || i < 5); ++i)
+	for (auto i = 0; forever || i < 5; ++i)
 	{
 		auto &track = disk->read_track(cylhead);
 

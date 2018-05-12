@@ -131,7 +131,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 	MEMORY mem(0x10000);
 	auto pbTrack = mem.pb;
 
-	for (uint8_t cyl = 0; cyl < hh.number_of_tracks && !g_fAbort; cyl++)
+	for (uint8_t cyl = 0; cyl < hh.number_of_tracks; ++cyl)
 	{
 		// Offset is in 512-byte blocks, data length covers both heads
 		auto uTrackDataOffset = util::letoh(aTrackLUT[cyl].offset) << 9;
@@ -140,7 +140,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 		if (uTrackDataLen > mem.size)
 			throw util::exception("invalid track size (", uTrackDataLen, ") for track ", CylStr(cyl));
 
-		for (uint8_t head = 0; head < hh.number_of_sides && !g_fAbort; head++)
+		for (uint8_t head = 0; head < hh.number_of_sides; ++head)
 		{
 			// Head 1 data starts 256 bytes in
 			if (head == 1)
