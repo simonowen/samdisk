@@ -13,6 +13,8 @@ bool generate_special(TrackData &trackdata)
 	// Special formats have special conversions
 	if (IsEmptyTrack(track))
 		trackdata.add(GenerateEmptyTrack(trackdata.cylhead, track));
+	else if (opt.nospecial)
+		return false;
 	else if (IsKBI19Track(track))
 		trackdata.add(GenerateKBI19Track(trackdata.cylhead, track));
 	else if (IsSystem24Track(track))

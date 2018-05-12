@@ -894,6 +894,7 @@ void scan_flux_amiga (TrackData &trackdata)
 void scan_bitstream_mfm_fm (TrackData &trackdata)
 {
 	Track track;
+	uint32_t sync_mask = opt.a1sync ? 0xffdfffdf : 0xffffffff;
 
 	auto &bitbuf = trackdata.bitstream();
 	bitbuf.seek(0);
@@ -913,9 +914,9 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 
 		dword = (dword << 1) | bitbuf.read1();
 
-		if (dword == 0x44894489)
+		if ((dword & sync_mask) == 0x44894489)
 		{
-			if (bitbuf.read16() != 0x4489) continue;
+			if ((bitbuf.read16() & sync_mask) != 0x4489) continue;
 
 			bitbuf.encoding = Encoding::MFM;
 			crc.init(CRC16::A1A1A1);

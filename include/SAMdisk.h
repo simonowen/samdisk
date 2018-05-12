@@ -279,6 +279,7 @@ typedef struct
 	int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
 	int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
 	int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
+	int nospecial = 0, a1sync = 0;
 
 	int retries = 5, maxcopies = 3;
 	int scale = 100, plladjust = 5, pllphase = 60;
