@@ -19,6 +19,7 @@ public:
 	void addByteWithClock (int data, int clock);
 	void addBlock (int byte, int count);
 	void addBlock (const Data &data);
+	void addBlockUpdateCrc (int byte, int count);
 	void addBlockUpdateCrc (const Data &data);
 
 	void addGap (int count, int fill = -1);

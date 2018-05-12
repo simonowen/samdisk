@@ -447,6 +447,34 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 		}
 	}
 
+	// Check for the problematic Reussir protection (CPC), and disable it!
+	if (opt.fix != 0 && track.size() == 10)
+	{
+		for (auto &s : track)
+		{
+			if (s.size() != 512 || !s.has_good_data())
+				continue;
+
+			auto &data = s.data_copy();
+			if (std::memcmp(data.data(), "\0LANCE", 6))
+				continue;
+
+			// LD A,(IX+0); CP (HL); JR NZ,e
+			static const uint8_t prot_check[]{ 0xdd, 0x7e, 0x00, 0xbe, 0x20 };
+
+			for (i = 0; i < data.size() - static_cast<int>(sizeof(prot_check)); ++i)
+			{
+
+				if (data[i] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
+				{
+					data[i + 3] = 0xaf;	// XOR A
+					Message(msgFix, "disabled problematic Reussir protection");
+					break;
+				}
+			}
+		}
+	}
+
 	// Single copy of an 8K sector?
 	if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
 	{

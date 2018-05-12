@@ -681,3 +681,73 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
+/*
+We don't currently use these functions, as patching the protection code gives a
+simpler and more reliable writing solution.
+
+The protection reads 8K from cyl 38 sector 1 and takes a byte at offset 0x1f9f.
+It then reads cyl 39 sector 195 and reads a byte at offset 0x1ff.
+If the two bytes don't match the protection fails and the computer is reset.
+
+The byte sampled from sector 1 is part of 2K of E5 filler bytes, so the byte
+read from the second track revolution will be one of the 16 possible MFM data
+or clock patterns: E5 CB 97 2F 5E BC 79 F2  10 20 40 80 01 02 04 08.
+
+To write the protection we must read the byte from sector 1 and ensure the
+correct byte is written to the end of sector 195. If the track splice sync
+isn't reliable for sector 1 it may need to be formatted multiple times.
+*/
+
+// Reussir protection with leading 8K sector.
+bool IsReussirProtectedTrack (const Track &track)
+{
+	if (track.size() != 2)
+		return false;
+
+	auto &sector1 = track[0];
+	auto &sector2 = track[1];
+
+	if (sector1.header.sector != 1 || sector1.datarate != DataRate::_250K ||
+		sector1.encoding != Encoding::MFM || sector1.size() != 8192 ||
+		!sector1.has_data() || !sector1.has_baddatacrc())
+		return false;
+
+	if (sector2.header.sector != 2 || sector2.datarate != DataRate::_250K ||
+		sector2.encoding != Encoding::MFM || sector2.size() != 512 ||
+		!sector2.has_data() || !sector2.has_baddatacrc())
+		return false;
+
+	if (opt.debug) util::cout << "detected Reussir protected track\n";
+	return true;
+}
+
+// This format isn't difficult to create, but we need to ensure it's close to
+// the correct length so the sampling point is comfortably within sector 1.
+TrackData GenerateReussirProtectedTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(IsReussirProtectedTrack(track));
+
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addGap(80);	// gap 4a
+	bitbuf.addIAM();
+	bitbuf.addGap(50);	// gap 1
+
+	auto &sector1 = track[0];
+	bitbuf.addSectorUpToData(sector1.header, sector1.dam);
+	bitbuf.addBlockUpdateCrc(0x4e, 2048);
+	bitbuf.addCrcBytes();
+
+	bitbuf.addGap(82);
+
+	auto &sector2 = track[1];
+	bitbuf.addSectorUpToData(sector2.header, sector2.dam);
+	bitbuf.addBlockUpdateCrc(0x4e, 2048);
+	bitbuf.addCrcBytes();
+
+	bitbuf.addGap(1802);
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+#endif
+////////////////////////////////////////////////////////////////////////////////

@@ -91,6 +91,12 @@ void TrackBuilder::addBlock (const Data &data)
 		addByte(byte);
 }
 
+void TrackBuilder::addBlockUpdateCrc (int byte, int count)
+{
+	for (int i = 0; i < count; ++i)
+		addByteUpdateCrc(byte);
+}
+
 void TrackBuilder::addBlockUpdateCrc (const Data &data)
 {
 	for (auto & byte : data)
