@@ -34,22 +34,18 @@ TrackData GenerateEmptyTrack (const CylHead &cylhead, const Track &track)
 // KBI-19 protection for CPC? (19 valid sectors)
 bool IsKBI19Track (const Track &track)
 {
-	uint32_t sector_mask = 0;
+	static const uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
 
-	if (track.size() != 19)
+	if (track.size() != arraysize(ids))
 		return false;
 
+	int idx = 0;
 	for (auto &s : track.sectors())
 	{
-		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM || s.size() != 512)
+		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
+			s.header.sector != ids[idx++] || s.size() != 512 || !s.has_good_data())
 			return false;
-
-		sector_mask |= (1 << s.header.sector);
 	}
-
-	// Sectors must be numbered 0 to 18
-	if (sector_mask != ((1 << 19) - 1))
-		return false;
 
 	if (opt.debug) util::cout << "detected KBI-19 track\n";
 	return true;
@@ -58,24 +54,8 @@ bool IsKBI19Track (const Track &track)
 TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 {
 	assert(IsKBI19Track(track));
-	(void)track;
 
-	static const uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
-	static const Data gap2_sig{
-		0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,
-		0x20,0x4B,0x42,0x49,0x20,	// " KBI "
-		0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E,0x4E
-	};
-	static const Data data_sig{
-		// "(c)1986 for KBI"
-		0x28,0x63,0x29,0x20,0x31,0x39,0x38,0x36,0x20,0x66,0x6F,0x72,0x20,0x4B,0x42,0x49,
-		// "by L. TOURNIER"
-		0x20,0x62,0x79,0x20,0x4C,0x2E,0x20,0x54,0x4F,0x55,0x52,0x4E,0x49,0x45,0x52
-	};
-	static const Data end_sig{
-		0x20,0x4D,0x41,0x53,0x54,0x45,0x52,0x20		// " MASTER "
-	};
-
+	static const Data gap2_sig{ 0x20,0x4B,0x42,0x49,0x20 };	// " KBI "
 	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
 
 	// Track start with slightly shorter gap4a.
@@ -83,52 +63,45 @@ TrackData GenerateKBI19Track (const CylHead &cylhead, const Track &track)
 	bitbuf.addIAM();
 	bitbuf.addGap(50);
 
-	// Initial full-sized sector
-	bitbuf.addSectorHeader(Header(cylhead, 0, 2));
-	bitbuf.addBlock(gap2_sig);
-	bitbuf.addAM(0xfb);
-	bitbuf.addBlock(Data(512, 0xf6));
-	bitbuf.addCrc(4 + 512);
-
-	auto sector_index{0};
-	for (int j = 0; j < 6; ++j)
+	int sector_index = 0;
+	for (auto &s : track)
 	{
-		// Two short headers that overlap the next sector.
-		for (int k = 0; k < 2; ++k)
+		bitbuf.addSectorHeader(s.header);
+
+		if (s.header.sector == 0)
 		{
-			bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
+			bitbuf.addGap(17);
 			bitbuf.addBlock(gap2_sig);
-			bitbuf.addAM(0xfb);
-			bitbuf.addBlock(data_sig);
-			bitbuf.addGap(30);
 		}
-
-		// Full-sized sector with data completing CRCs above.
-		bitbuf.addSectorHeader(Header(cylhead, ids[++sector_index], 2));
-		bitbuf.addBlock(gap2_sig);
-		bitbuf.addAM(0xfb);
-		bitbuf.addBlock(data_sig);
-		bitbuf.addBlock(0xe5, 239);
-		bitbuf.addCrc(4 + 512);		// CRC for 1st short sector
-		bitbuf.addGap(50);
-		bitbuf.addBlock(0xe5, 69);
-		bitbuf.addCrc(4 + 512);		// CRC for 2nd short sector
-		bitbuf.addGap(50);
-
-		if (ids[sector_index] != 18)
-			bitbuf.addBlock(0xe5, 69);
 		else
 		{
-			// Final sector has MASTER signature.
-			bitbuf.addBlock(0xe5, 69 - end_sig.size());
-			bitbuf.addBlock(end_sig);
+			bitbuf.addGap(8);
+			bitbuf.addBlock(gap2_sig);
+			bitbuf.addGap(9);
 		}
-		bitbuf.addCrc(4 + 512);		// CRC for full-sized sector
-		bitbuf.addGap(80);
+
+		bitbuf.addAM(s.dam);
+		auto data = s.data_copy();
+
+		// Short or full sector data?
+		if (sector_index++ % 3)
+		{
+			data.resize(61);
+			bitbuf.addBlock(data);
+		}
+		else
+		{
+			data.resize(s.size());
+			bitbuf.addBlock(data);
+			bitbuf.addCrc(3 + 1 + 512);
+
+			if (s.header.sector != 0)
+				bitbuf.addGap(80);
+		}
 	}
 
 	// Pad up to normal track size.
-	bitbuf.addGap(170);
+	bitbuf.addGap(90);
 
 	return TrackData(cylhead, std::move(bitbuf.buffer()));
 }
@@ -674,7 +647,7 @@ bool Is8KSectorTrack (const Track &track)
 	if (track.size() != 1)
 		return false;
 
-	const auto sector{ track[0] };
+	auto &sector{ track[0] };
 	if (sector.datarate != DataRate::_250K || sector.encoding != Encoding::MFM ||
 		sector.size() != 8192 || !sector.has_data())
 		return false;
@@ -692,7 +665,7 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
 	bitbuf.addIAM();
 	bitbuf.addGap(16);	// gap 1
 
-	const auto &sector{ track[0] };
+	auto &sector{ track[0] };
 	bitbuf.addSectorUpToData(sector.header, sector.dam);
 
 	// Maximum size of long-track version used by Coin-Op Hits

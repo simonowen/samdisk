@@ -13,8 +13,6 @@ bool generate_special(TrackData &trackdata)
 	// Special formats have special conversions
 	if (IsEmptyTrack(track))
 		trackdata.add(GenerateEmptyTrack(trackdata.cylhead, track));
-	else if (opt.nospecial)
-		return false;
 	else if (IsKBI19Track(track))
 		trackdata.add(GenerateKBI19Track(trackdata.cylhead, track));
 	else if (IsSystem24Track(track))
@@ -84,8 +82,8 @@ void generate_bitstream(TrackData &trackdata)
 {
 	assert(trackdata.has_track());
 
-	// Special formats have special conversions
-	if (generate_special(trackdata))
+	// Special formats have special conversions (unless disabled)
+	if (!opt.nospecial && generate_special(trackdata))
 	{
 		// Fail if we've encountered a flux-only special format, as converting
 		// it to bitstream is unlikely to give a working track.
