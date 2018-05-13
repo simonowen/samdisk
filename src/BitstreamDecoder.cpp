@@ -300,10 +300,11 @@ void scan_bitstream_apple (TrackData &trackdata)
 						track.add(std::move(s));
 					}
 				}
-				else
+				else if (!track.empty())
 				{
 					Message(msgWarning, "unknown %s address mark epilogue (%02X%02X%02X) at offset %u on %s",
-						to_string(bitbuf.encoding).c_str(), idraw[8], idraw[9], idraw[10], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+						to_string(bitbuf.encoding).c_str(), idraw[8], idraw[9], idraw[10],
+						am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				}
 				break;
 			}
@@ -1272,9 +1273,11 @@ void scan_bitstream_agat (TrackData &trackdata)
 					if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 				}
-				else
+				else if (!track.empty())
 				{
-					Message(msgWarning, "unknown %s address mark epilogue (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), id[3], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+					Message(msgWarning, "unknown %s address mark epilogue (%02X) at offset %u on %s",
+						to_string(bitbuf.encoding).c_str(), id[3], am_offset,
+						CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				}
 				break;
 			}
@@ -1287,7 +1290,12 @@ void scan_bitstream_agat (TrackData &trackdata)
 			}
 
 			default:
-				Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				if (!track.empty())
+				{
+					Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
+						to_string(bitbuf.encoding).c_str(), am, am_offset,
+						CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				}
 				break;
 		}
 	}
