@@ -977,6 +977,12 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 					if (opt.debug) util::cout << "* " << bitbuf.encoding << " IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 
+					if (opt.debug && crc != 0)
+					{
+						util::cout << util::fmt("Bad id CRC: %02X %02X, expected %02X %02X\n",
+							id[4], id[5], crc.msb(), crc.lsb());
+					}
+
 					if (bitbuf.encoding == Encoding::FM)
 						last_fm_am = am;
 				}
@@ -1108,6 +1114,11 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			Data data(data_bytes);
 			bitbuf.read(data);
 			bool bad_crc = crc.add(data.data(), normal_bytes) != 0;
+			if (opt.debug && bad_crc)
+			{
+				util::cout << util::fmt("Bad data CRC: %02X %02X, expected %02X %02X\n",
+					data[sector.size()], data[sector.size() + 1], crc.msb(), crc.lsb());
+			}
 
 			// Truncate at the extent size, unless we're asked to keep overlapping sectors
 			if (!opt.keepoverlap && extent_bytes < sector.size())
