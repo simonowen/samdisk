@@ -570,8 +570,9 @@ bool WriteDSK (FILE* f_, std::shared_ptr<Disk> &disk)
 						data_size = real_size;
 					}
 
-					// Otherwise, drop extra copies on sectors larger than the track
-					else if (data_size > track_capacity)
+					// Drop extra copies on sectors larger than the track, unless it's
+					// an 8K sector with an error during the first 6K of data.
+					else if (data_size > track_capacity && !track.is_8k_sector())
 						num_copies = 1;
 
 					// Drop any extra copies of error sectors
