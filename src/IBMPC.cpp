@@ -140,3 +140,118 @@ int GetFormatGap (int drive_speed, DataRate datarate, Encoding encoding, int sec
 	auto gap3 = (chunk > overhead) ? chunk - overhead : 0;
 	return (gap3 > MAX_GAP3) ? MAX_GAP3 : gap3;
 }
+
+bool FitTrackIBMPC (const CylHead &cylhead, const Track &track, int track_time_ms, FitDetails &details)
+{
+	if (track.empty() || track.is_mixed_encoding())
+		return false;
+
+	auto datarate = track[0].datarate;
+	auto encoding = track[0].encoding;
+	if (encoding != Encoding::MFM && encoding != Encoding::FM)
+		return false;
+
+	auto track_space = GetTrackCapacity(track_time_ms, datarate, encoding);
+	auto sector_overhead = GetSectorOverhead(encoding);
+
+	details.sector_units.resize(track.size());
+	std::vector<int> sizes(track.size());
+	int min_size, max_size;
+
+	// Check both with real errors and dummy errors
+	for (details.real_errors = true; ; details.real_errors = false)
+	{
+		bool all_errors = true;
+		min_size = SIZE_MASK_765;
+		max_size = 0;
+
+		// Determine the largest and smallest true sector sizes.
+		for (int i = 0; i < track.size(); ++i)
+		{
+			auto &s = track[i];
+
+			if (!details.real_errors && !s.has_good_data())
+				sizes[i] = -1;
+			else
+			{
+				sizes[i] = Sector::SizeCodeToRealSizeCode(s.header.size);
+				min_size = std::min(sizes[i], min_size);
+				max_size = std::max(sizes[i], max_size);
+				all_errors &= !s.has_good_data();
+			}
+		}
+
+		// If all sectors are bad, consider the largest size that works.
+		if (all_errors)
+			max_size = SIZE_MASK_765;
+
+		// Attempt to fit using simple size multiples, and either trusting or ignoring the size
+		// of sectors that don't have a good data field.
+		for (details.size_code = max_size; details.size_code >= 0; --details.size_code)
+		{
+			details.total_units = 0;
+			for (int i = 0; i < track.size(); ++i)
+			{
+				details.sector_units[i] = (sizes[i] < 0 || sizes[i] < details.size_code) ? 1 :
+					(Sector::SizeCodeToLength(sizes[i]) / Sector::SizeCodeToLength(details.size_code));
+				details.total_units += details.sector_units[i];
+			}
+
+			if (!details.total_units)
+				continue;
+
+			// Try standard format gaps, or calculate one that is suitable
+			details.gap3 =
+				GetFormatGap(track_time_ms, datarate, encoding, details.total_units, details.size_code);
+
+			if (details.gap3)
+			{
+				// In debug, show the unit count wasn't obvious (unless forced)
+				if (opt.debug && (details.total_units != track.size() || opt.verbose))
+					util::cout << "FitTrack: " << cylhead << " fits with " << details.total_units <<
+						" units of size=" << details.size_code <<" gap3=" << details.gap3 << "\n";
+
+				return true;
+			}
+		}
+
+		// Attempt a more difficult fit using size and gap3 variations.
+		for (details.size_code = min_size; details.size_code >= 0; --details.size_code)
+		{
+			for (details.gap3 = 255; details.gap3 > 0; --details.gap3)
+			{
+				auto unit_length =
+					sector_overhead + Sector::SizeCodeToLength(details.size_code) + details.gap3;
+
+				details.total_units = 0;
+				for (int i = 0; i < track.size(); ++i)
+				{
+					auto needed_length = sector_overhead +
+						Sector::SizeCodeToLength(((sizes[i] < 0) ? details.size_code : sizes[i]));
+
+					details.sector_units[i] = (needed_length + unit_length - 1) / unit_length;
+					details.total_units += details.sector_units[i];
+				}
+
+				auto total_size =
+					GetFormatLength(encoding, details.total_units, details.size_code, details.gap3);
+				if (total_size < track_space)
+				{
+					if (opt.debug)
+						util::cout << "FitTrack: " << cylhead << " fits with " <<
+							details.total_units << " clipped units of size=" << details.size_code <<
+							" gap3=" << details.gap3 << "\n";
+					return true;
+				}
+			}
+		}
+
+		if (!details.real_errors)
+			break;
+	}
+
+	if (opt.debug)
+		util::cout << colour::RED << "FitTrack: unable to fit " << cylhead << colour::none << "\n";
+
+	return false;
+}

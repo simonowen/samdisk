@@ -4,6 +4,7 @@
 #include "BitstreamEncoder.h"
 #include "BitstreamTrackBuilder.h"
 #include "SpecialFormat.h"
+#include "IBMPC.h"
 
 bool generate_special(TrackData &trackdata)
 {
@@ -43,10 +44,16 @@ bool generate_simple(TrackData &trackdata)
 	auto &track = trackdata.track();
 	BitstreamTrackBuilder bitbuf(track[0].datarate, track[0].encoding);
 
+	FitDetails fit_details{};
+	bool fits_ibmpc = FitTrackIBMPC(trackdata.cylhead, track, 200'000, fit_details);
+
 	for (auto &s : track)
 	{
-		// Take user gap3 over sector gap3, with default of 50 bytes.
-		int gap3 = (opt.gap3 > 0) ? opt.gap3 : s.gap3 ? s.gap3 : 0x32;
+		// Take user gap3 over sector gap3, with default of 25 bytes.
+		int gap3 = (opt.gap3 > 0) ? opt.gap3 :
+			s.gap3 ? s.gap3 :
+			(fits_ibmpc && fit_details.total_units == track.size()) ? fit_details.gap3 :
+			25;
 
 		bitbuf.setEncoding(s.encoding);
 
@@ -58,7 +65,25 @@ bool generate_simple(TrackData &trackdata)
 		case Encoding::RX02:
 			if (first_sector)
 				bitbuf.addTrackStart();
-			bitbuf.addSector(s, gap3);
+
+			if (s.has_badidcrc())
+			{
+				bitbuf.addSectorHeader(s.header, true);
+			}
+			else if (s.has_baddatacrc() && fits_ibmpc && !fit_details.real_errors)
+			{
+				bitbuf.addSectorUpToData(s.header, s.dam);
+
+				auto fake_size = Sector::SizeCodeToLength(fit_details.size_code);
+				auto data = s.data_copy();
+				if (data.size() > fake_size)
+					data.resize(fake_size);
+				bitbuf.addBlock(data);
+			}
+			else
+			{
+				bitbuf.addSector(s, gap3);
+			}
 			break;
 		default:
 			throw util::exception("bitstream conversion not yet available for ", s.encoding, " sectors");

@@ -85,6 +85,7 @@ bool UnformatImage (const std::string &path, Range range)
 	ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
 	range.each([&] (const CylHead &cylhead) {
+		Message(msgStatus, "Unformatting %s", CH(cylhead.cyl, cylhead.head));
 		disk->write(cylhead, Track());
 	});
 
