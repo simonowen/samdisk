@@ -94,6 +94,7 @@ void ViewTrack_MFM_FM (Encoding encoding, BitBuffer &bitbuf)
 	uint32_t dword = 0;
 	int bits = 0, a1 = 0, am_dist = 0xffff, data_size = 0;
 	uint8_t am = 0;
+	uint16_t sync_mask = opt.a1sync ? 0xffdf : 0xffff;
 
 	bitbuf.seek(0);
 	while (!bitbuf.wrapped())
@@ -102,7 +103,7 @@ void ViewTrack_MFM_FM (Encoding encoding, BitBuffer &bitbuf)
 		++bits;
 
 		bool found_am = false;
-		if (encoding == Encoding::MFM && (dword & 0xffff) == 0x4489)
+		if (encoding == Encoding::MFM && (dword & sync_mask) == 0x4489)
 		{
 			found_am = true;
 		}

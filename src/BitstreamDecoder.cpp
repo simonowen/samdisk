@@ -801,6 +801,7 @@ void scan_bitstream_amiga (TrackData &trackdata)
 
 	CRC16 crc;
 	uint32_t dword = 0;
+	uint32_t sync_mask = opt.a1sync ? 0xffdfffdf : 0xffffffff;
 
 	while (!bitbuf.wrapped())
 	{
@@ -811,7 +812,7 @@ void scan_bitstream_amiga (TrackData &trackdata)
 		dword = (dword << 1) | bitbuf.read1();
 
 		// Check for A1A1 MFM sync markers
-		if (dword != 0x44894489)
+		if ((dword & sync_mask) != 0x44894489)
 			continue;
 
 		auto sector_offset = bitbuf.tell();

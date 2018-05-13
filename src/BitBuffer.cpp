@@ -288,6 +288,7 @@ bool BitBuffer::align ()
 {
 	bool modified = false;
 	auto bits_per_byte = (encoding == Encoding::FM) ? 32 : 16;
+	uint16_t sync_mask = opt.a1sync ? 0xffdf : 0xffff;
 	uint32_t dword = 0;
 	int i;
 
@@ -302,7 +303,7 @@ bool BitBuffer::align ()
 		{
 			dword = (dword << 1) | read1();
 
-			if (encoding == Encoding::MFM && (dword & 0xffff) == 0x4489)
+			if (encoding == Encoding::MFM && (dword & sync_mask) == 0x4489)
 			{
 				found_am = true;
 			}
