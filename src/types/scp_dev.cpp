@@ -56,8 +56,16 @@ protected:
 
 	void save (TrackData &trackdata) override
 	{
-		auto &flux_data = trackdata.flux();
-		auto flux_times = *flux_data.rbegin(); // copy of last revolution
+		std::vector<uint32_t> flux_times;
+
+		if (trackdata.has_normalised_flux())
+			flux_times = *trackdata.flux().rbegin();
+		else
+		{
+			// Convert bitstream to flux.
+			TrackData td_bitstream(trackdata.cylhead, BitBuffer(trackdata.bitstream()));
+			flux_times = *td_bitstream.flux().rbegin();
+		}
 
 		if (m_supercardpro->SelectDrive(0) &&
 			m_supercardpro->EnableMotor(0) &&

@@ -94,6 +94,8 @@ std::string FooterTime(uint64_t unix_time)
 class SCPDisk final : public DemandDisk
 {
 public:
+	SCPDisk (bool normalised) : m_normalised(normalised) {}
+
 	void add_track_data (const CylHead &cylhead, std::vector<std::vector<uint16_t>> &&trackdata)
 	{
 		m_data[cylhead] = std::move(trackdata);
@@ -130,11 +132,12 @@ protected:
 			flux_revs.push_back(std::move(flux_times));
 		}
 
-		return TrackData(cylhead, std::move(flux_revs));
+		return TrackData(cylhead, std::move(flux_revs), m_normalised);
 	}
 
 private:
 	std::map<CylHead, std::vector<std::vector<uint16_t>>> m_data {};
+	bool m_normalised = false;
 };
 
 bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
@@ -164,7 +167,7 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 	if (!file.read(tdh_offsets))
 		throw util::exception("short file reading track offset index");
 
-	auto scp_disk = std::make_shared<SCPDisk>();
+	auto scp_disk = std::make_shared<SCPDisk>((fh.flags & FLAG_TYPE) != 0);
 
 	for (auto tracknr = fh.start_track; tracknr <= fh.end_track; ++tracknr)
 	{

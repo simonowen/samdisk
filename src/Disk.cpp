@@ -115,9 +115,9 @@ const BitBuffer &Disk::write(const CylHead &cylhead, BitBuffer &&bitbuf)
 	return read_bitstream(cylhead);
 }
 
-const FluxData &Disk::write(const CylHead &cylhead, FluxData &&flux_revs)
+const FluxData &Disk::write(const CylHead &cylhead, FluxData &&flux_revs, bool normalised)
 {
-	write(TrackData(cylhead, std::move(flux_revs)));
+	write(TrackData(cylhead, std::move(flux_revs), normalised));
 	return read_flux(cylhead);
 }
 

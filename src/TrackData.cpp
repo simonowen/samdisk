@@ -21,10 +21,10 @@ TrackData::TrackData (const CylHead &cylhead_, BitBuffer &&bitstream)
 	add(std::move(bitstream));
 }
 
-TrackData::TrackData (const CylHead &cylhead_, FluxData &&flux)
+TrackData::TrackData (const CylHead &cylhead_, FluxData &&flux, bool normalised)
 	: cylhead(cylhead_), m_type(TrackDataType::Flux)
 {
-	add(std::move(flux));
+	add(std::move(flux), normalised);
 }
 
 
@@ -41,6 +41,11 @@ bool TrackData::has_bitstream () const
 bool TrackData::has_flux () const
 {
 	return (m_flags & TD_FLUX) != 0;
+}
+
+bool TrackData::has_normalised_flux () const
+{
+	return has_flux() && m_normalised_flux;
 }
 
 
@@ -98,7 +103,7 @@ const FluxData &TrackData::flux ()
 void TrackData::add (TrackData &&trackdata)
 {
 	if (trackdata.has_flux())
-		add(FluxData(trackdata.flux()));
+		add(FluxData(trackdata.flux()), trackdata.has_normalised_flux());
 
 	if (trackdata.has_bitstream())
 		add(BitBuffer(trackdata.bitstream()));
@@ -127,8 +132,9 @@ void TrackData::add (BitBuffer &&bitstream)
 	m_flags |= TD_BITSTREAM;
 }
 
-void TrackData::add (FluxData &&flux)
+void TrackData::add (FluxData &&flux, bool normalised)
 {
+	m_normalised_flux = normalised;
 	m_flux = std::move(flux);
 	m_flags |= TD_FLUX;
 }

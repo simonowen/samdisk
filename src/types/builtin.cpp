@@ -1012,7 +1012,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 18; i++)
 				fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
+			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())}, true);
 			break;
 		}
 
@@ -1030,7 +1030,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				for (i = 0; i < 9; i++)
 					fluxbuf.addSector(Header(cylhead, i + 1, 2), data, 0x54);
 
-				disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
+				disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())}, true);
 			}
 
 			// Spectrum +3 Speedlock weak sectors (full and part).
@@ -1061,7 +1061,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				iota(weak_data, 0);
 				track[1].add(Data(weak_data), true);
 				auto trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
-				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 
 				// Part weak sector.
 				track[1].remove_data();
@@ -1070,7 +1070,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				fill(weak_data, 256 + 32, 256 + 32 + 48, 2);
 				track[1].add(Data(weak_data), true);
 				trackdata = GenerateSpectrumSpeedlockTrack(cylhead.next_cyl(), track, 336, 32);
-				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 			}
 
 			// Amstrad CPC Speedlock weak sectors (full, half, and part).
@@ -1097,7 +1097,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				iota(weak_data, 0);
 				track[7].add(Data(weak_data), true);
 				auto trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 0, 512);
-				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 
 				// Half weak sector.
 				track[0].datas()[0][129] = 'S';
@@ -1106,7 +1106,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				iota(weak_data, 256, 1);
 				track[7].add(Data(weak_data), true);
 				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 256, 256);
-				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 
 				// Part weak sector.
 				track[0].datas()[0][129] = 0;
@@ -1116,7 +1116,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				fill(weak_data, 256 + 32, 256 + 32 + 48, 2);
 				track[7].add(Data(weak_data), true);
 				trackdata = GenerateCpcSpeedlockTrack(cylhead.next_cyl(), track, 336, 32);
-				disk->write(trackdata.cylhead, FluxData(trackdata.flux()));
+				disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 			}
 
 			// Rainbow Arts weak sector.
@@ -1218,7 +1218,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			for (i = 0; i < 8; i++)
 				fluxbuf.addSector(Header(cylhead, i + 1, 1), data, 0x4e);
 
-			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())});
+			disk->write(cylhead.next_cyl(), FluxData{std::move(fluxbuf.buffer())}, true);
 			break;
 		}
 

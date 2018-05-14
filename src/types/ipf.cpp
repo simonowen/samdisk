@@ -219,7 +219,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 
 			// Add flux or bitstream data, depending on which we generated
 			if (!flux_revs.empty())
-				disk->write(CylHead(cyl, head), std::move(flux_revs));
+				disk->write(CylHead(cyl, head), std::move(flux_revs), image_type == citIPF);
 			else
 				disk->write(CylHead(cyl, head), std::move(bitbuf));
 		}

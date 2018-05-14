@@ -28,7 +28,7 @@ public:
 	virtual const TrackData &write (TrackData &&trackdata);
 	const Track &write (const CylHead &cylhead, Track &&track);
 	const BitBuffer &write (const CylHead &cylhead, BitBuffer &&bitbuf);
-	const FluxData &write (const CylHead &cylhead, FluxData &&flux_revs);
+	const FluxData &write (const CylHead &cylhead, FluxData &&flux_revs, bool normalised=false);
 
 	void each (const std::function<void (const CylHead &cylhead, const Track &track)> &func, bool cyls_first = false);
 
@@ -45,7 +45,6 @@ public:
 	int heads () const;
 
 	Format fmt {};
-//	CHK8K_METHOD chk8k_method = CHK8K_UNKNOWN;
 	std::map<std::string, std::string> metadata {};
 	std::string strType = "<unknown>";
 

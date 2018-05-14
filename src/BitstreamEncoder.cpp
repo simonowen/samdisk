@@ -166,5 +166,5 @@ void generate_flux(TrackData &trackdata)
 	if (!flux_times.empty())
 		flux_data.push_back(std::move(flux_times));
 
-	trackdata.add(std::move(flux_data));
+	trackdata.add(std::move(flux_data), true);
 }
