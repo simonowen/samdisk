@@ -4,6 +4,7 @@
 #include "types.h"
 #include "Disk.h"
 #include "BlockDevice.h"
+#include "FluxDecoder.h"
 
 enum { cmdCopy, cmdScan, cmdFormat, cmdList, cmdView, cmdInfo, cmdDir, cmdRpm, cmdVerify, cmdUnformat, cmdVersion, cmdCreate, cmdEnd };
 
@@ -390,13 +391,13 @@ bool ParseCommandLine (int argc_, char *argv_[])
 				break;
 			case OPT_PLLADJUST:
 				opt.plladjust = util::str_value<int>(optarg);
-				if (opt.plladjust <= 0 || opt.plladjust > 50)
-					throw util::exception("invalid pll adjustment '", optarg, "', expected 0-50");
+				if (opt.plladjust <= 0 || opt.plladjust > MAX_PLL_ADJUST)
+					throw util::exception("invalid pll adjustment '", optarg, "', expected 1-", MAX_PLL_ADJUST);
 				break;
 			case OPT_PLLPHASE:
 				opt.pllphase = util::str_value<int>(optarg);
-				if (opt.pllphase <= 0 || opt.pllphase > 90)
-					throw util::exception("invalid pll phase '", optarg, "', expected 0-90");
+				if (opt.pllphase <= 0 || opt.pllphase > MAX_PLL_PHASE)
+					throw util::exception("invalid pll phase '", optarg, "', expected 1-", MAX_PLL_PHASE);
 				break;
 			case OPT_STEPRATE:
 				opt.steprate = util::str_value<int>(optarg);

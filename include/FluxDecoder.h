@@ -1,15 +1,16 @@
 #ifndef FLUXDECODER_H
 #define FLUXDECODER_H
 
+#define DEFAULT_PLL_ADJUST	4
+#define DEFAULT_PLL_PHASE	60
+#define MAX_PLL_ADJUST		50
+#define MAX_PLL_PHASE		90
+
 class FluxDecoder
 {
-	// This was originally 10%, but increasing it makes the PLL more responsive
-	// to changes in bitcell width caused by damage. So far no side-effects have
-	// been seen, and we only claim to support relatively fixed cell widths.
-	static const int CLOCK_MAX_ADJUST = 50;	// +/- % PLL adjustment
-
 public:
-	FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent = 100);
+	FluxDecoder (const FluxData &flux_revs, int bitcell_ns,
+		int flux_scale_percent=100, int pll_adjust=DEFAULT_PLL_ADJUST);
 
 	bool index ();
 	bool sync_lost ();
@@ -28,6 +29,7 @@ protected:
 	int m_flux = 0;
 	int m_clocked_zeros = 0;
 	int m_flux_scale_percent = 100;
+	int m_pll_adjust = 0;
 	int m_goodbits = 0;
 	bool m_index = false;
 	bool m_sync_lost = false;

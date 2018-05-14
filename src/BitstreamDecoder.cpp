@@ -9,6 +9,8 @@
 #include "JupiterAce.h"
 #include "SpecialFormat.h"
 
+static const int JITTER_PERCENT = 2;
+
 // Scan track flux reversals for sectors. We default to the order MFM/FM,
 // Amiga, then GCR. On subsequent calls the last successful encoding is
 // checked first, as it's the most likely.
@@ -878,7 +880,7 @@ void scan_bitstream_amiga (TrackData &trackdata)
 void scan_flux_amiga (TrackData &trackdata)
 {
 	// Scale the flux values to simulate motor speed variation
-	for (auto flux_scale : { 100, 95, 105 })
+	for (auto flux_scale : { 100, 100-JITTER_PERCENT, 100+JITTER_PERCENT })
 	{
 		FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(DataRate::_250K), flux_scale);
 		BitBuffer bitbuf(DataRate::_250K, decoder);
@@ -1179,29 +1181,44 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 
 void scan_flux_mfm_fm (TrackData &trackdata, DataRate last_datarate)
 {
+	// Small speed variations to simulate jitter.
+	std::vector<int> flux_scales{ 100, 100-JITTER_PERCENT, 100+JITTER_PERCENT };
+	if (opt.nowobble || !JITTER_PERCENT)
+		flux_scales.resize(1);
+
+	// PLL adjustments for different views of the same data.
+	std::vector<int> pll_adjusts{ 2, 4, 8, 16 };
+	if (opt.plladjust > 0)
+		pll_adjusts = { opt.plladjust };
+
 	// Set the datarate scanning order, with the last successful rate first (and its duplicate removed)
 	std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
 	datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
-	// Loop through datarates until we find one that yields sectors
 	for (auto datarate : datarates)
 	{
-		// Scale the flux values to simulate motor speed variation
-		for (auto flux_scale : { 100, 95, 105 })
+		for (auto pll_adjust : pll_adjusts)
 		{
-			FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate), flux_scale);
-			BitBuffer bitbuf(datarate, decoder);
+			for (auto flux_scale : flux_scales)
+			{
+				FluxDecoder decoder(trackdata.flux(), ::bitcell_ns(datarate),
+					flux_scale, pll_adjust);
+				BitBuffer bitbuf(datarate, decoder);
 
-			trackdata.add(std::move(bitbuf));
-			scan_bitstream_mfm_fm(trackdata);
-			auto &track = trackdata.track();
+				trackdata.add(std::move(bitbuf));
+				scan_bitstream_mfm_fm(trackdata);
 
-			// Stop if there's nothing to fix or motor wobble is disabled
-			if (!track.has_data_error() || opt.nowobble)
+				// Stop scaling if the track is error free.
+				if (!trackdata.track().has_data_error())
+					break;
+			}
+
+			// Stop adjusting PLL if the track is error free.
+			if (!trackdata.track().has_data_error())
 				break;
 		}
 
-		// If we found something there's no need to check other data rates.
+		// Stop trying data rates when we find something.
 		if (!trackdata.track().empty())
 			break;
 	}

@@ -5,11 +5,12 @@
 #include "SAMdisk.h"
 #include "FluxDecoder.h"
 
-FluxDecoder::FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent)
+FluxDecoder::FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_scale_percent, int pll_adjust)
 	: m_flux_revs(flux_revs), m_clock(bitcell_ns), m_clock_centre(bitcell_ns),
-	m_clock_min(bitcell_ns * (100 - opt.plladjust) / 100),
-	m_clock_max(bitcell_ns * (100 + opt.plladjust) / 100),
-	m_flux_scale_percent(flux_scale_percent)
+	m_clock_min(bitcell_ns * (100 - pll_adjust) / 100),
+	m_clock_max(bitcell_ns * (100 + pll_adjust) / 100),
+	m_flux_scale_percent(flux_scale_percent),
+	m_pll_adjust(pll_adjust)
 {
 	assert(flux_revs.size());
 	assert(flux_revs[0].size());
@@ -76,12 +77,12 @@ int FluxDecoder::next_bit ()
 	if (m_clocked_zeros <= 3)
 	{
 		// In sync: adjust base clock by percentage of phase mismatch
-		m_clock += m_flux * opt.plladjust / 100;
+		m_clock += m_flux * m_pll_adjust / 100;
 	}
 	else
 	{
 		// Out of sync: adjust base clock towards centre
-		m_clock += (m_clock_centre - m_clock) * opt.plladjust / 100;
+		m_clock += (m_clock_centre - m_clock) * m_pll_adjust / 100;
 
 		// Require 256 good bits before reporting another loss of sync
 		if (m_goodbits >= 256)
