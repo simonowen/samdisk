@@ -87,10 +87,6 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	}
 #endif
 
-	// If both are bad, ignore additional copies with a different DAM
-	if (bad_crc && has_baddatacrc() && new_dam != dam)
-		return Merge::Unchanged;
-
 	// If the exising sector has good data, ignore supplied data if it's bad
 	if (bad_crc && has_good_data())
 		return Merge::Unchanged;
@@ -170,8 +166,16 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		// Will we now have multiple copies?
 		if (copies() > 0)
 		{
-			// We should never see different good copies of the same sector.
-			assert(has_baddatacrc());
+			// Damage can cause us to see different DAM values for a sector.
+			// Favour normal over deleted, and deleted over anything else.
+			if (dam != new_dam &&
+				(dam == 0xfb || (dam == 0xf8 && new_dam != 0xfb)))
+			{
+				return Merge::Unchanged;
+			}
+
+			// Multiple good copies mean a difference in the gap data after
+			// a good sector, perhaps due to a splice. We just ignore it.
 			if (!has_baddatacrc())
 				return Merge::Unchanged;
 
