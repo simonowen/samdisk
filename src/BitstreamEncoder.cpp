@@ -129,6 +129,7 @@ void generate_flux(TrackData &trackdata)
 	bitbuf.seek(0);
 
 	uint32_t flux_time{ 0 };
+	FluxData flux_data{};
 	std::vector<uint32_t> flux_times{};
 	flux_times.reserve(bitbuf.size());
 
@@ -154,7 +155,16 @@ void generate_flux(TrackData &trackdata)
 
 		last_bit = curr_bit;
 		curr_bit = next_bit;
+
+		if (bitbuf.index())
+		{
+			flux_data.push_back(std::move(flux_times));
+			flux_times.clear();
+		}
 	}
 
-	trackdata.add(FluxData({ flux_times }));
+	if (!flux_times.empty())
+		flux_data.push_back(std::move(flux_times));
+
+	trackdata.add(std::move(flux_data));
 }

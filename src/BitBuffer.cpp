@@ -42,7 +42,7 @@ BitBuffer::BitBuffer (DataRate datarate_, FluxDecoder &decoder)
 		add(bit ? 1 : 0);
 
 		if (decoder.index())
-			index();
+			add_index();
 	}
 }
 
@@ -75,33 +75,8 @@ bool BitBuffer::seek (int offset)
 {
 	m_wrapped = false;
 	m_bitpos = std::min(offset, m_bitsize);
+	set_next_index();
 	return m_bitpos == offset;
-}
-
-int BitBuffer::tell_index() const
-{
-	assert(m_bitpos < m_bitsize);
-
-	int rev{0};
-	for (auto index_offset : m_indexes)
-	{
-		if (m_bitpos < index_offset)
-			return rev;
-		++rev;
-	}
-
-	return 0;
-}
-
-bool BitBuffer::seek_index (int index)
-{
-	if (index < 0)
-		index += static_cast<int>(m_indexes.size());
-
-	if (index < 0 || index >= static_cast<int>(m_indexes.size()))
-		return false;
-
-	return seek(m_indexes[index]);
 }
 
 int BitBuffer::splicepos () const
@@ -114,9 +89,32 @@ void BitBuffer::splicepos (int pos)
 	m_splicepos = pos;
 }
 
-void BitBuffer::index ()
+bool BitBuffer::index ()
+{
+	if (m_bitpos < m_next_index)
+		return false;
+
+	set_next_index();
+	return true;
+}
+
+void BitBuffer::add_index ()
 {
 	m_indexes.push_back(m_bitpos);
+}
+
+void BitBuffer::set_next_index ()
+{
+	for (auto &index : m_indexes)
+	{
+		if (index > m_bitpos)
+		{
+			m_next_index = index;
+			return;
+		}
+	}
+
+	m_next_index = m_bitsize;
 }
 
 void BitBuffer::sync_lost ()

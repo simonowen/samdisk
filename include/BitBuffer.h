@@ -18,13 +18,14 @@ public:
 
 	int tell () const;
 	bool seek (int offset);
-	bool seek_index (int index);
-	int tell_index () const;
 
 	int splicepos () const;
 	void splicepos (int pos);
 
-	void index ();
+	bool index ();
+	void add_index ();
+	void set_next_index ();
+
 	void sync_lost ();
 	void clear ();
 	void add (uint8_t bit);
@@ -65,6 +66,7 @@ private:
 	int m_bitsize = 0;
 	int m_bitpos = 0;
 	int m_splicepos = 0;
+	int m_next_index = -1;
 	bool m_wrapped = false;
 };
 

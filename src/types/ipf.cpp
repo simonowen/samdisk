@@ -207,7 +207,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 					}
 
 					// Mark the index hole
-					bitbuf.index();
+					bitbuf.add_index();
 				}
 
 				// A single revolution is enough for IPF tracks without weak areas
