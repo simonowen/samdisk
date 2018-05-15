@@ -25,6 +25,7 @@ public:
 	const Track &track ();
 	/*const*/ BitBuffer &bitstream ();
 	const FluxData &flux ();
+	TrackData preferred ();
 
 	void add (TrackData &&trackdata);
 	void add (Track &&track);

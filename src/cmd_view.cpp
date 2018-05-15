@@ -215,7 +215,8 @@ bool ViewImage (const std::string &path, Range range)
 
 			if (opt.verbose)
 			{
-				auto bitbuf = disk->read_bitstream(cylhead * opt.step);
+				auto trackdata = disk->read(cylhead * opt.step);
+				auto bitbuf = trackdata.preferred().bitstream();
 				NormaliseBitstream(bitbuf);
 				auto encoding = (opt.encoding == Encoding::Unknown) ?
 					bitbuf.encoding : opt.encoding;

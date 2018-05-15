@@ -313,7 +313,8 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 		uint8_t *pbTrack{};
 		for (uint8_t head = 0; head < hh.number_of_sides; ++head)
 		{
-			auto bitstream = disk->read_bitstream(CylHead(cyl, head));
+			auto trackdata = disk->read({ cyl, head });
+			auto bitstream = trackdata.preferred().bitstream();
 			auto track_bytes = (bitstream.track_bitsize() + 7) / 8;
 			bitstream.seek(0);
 

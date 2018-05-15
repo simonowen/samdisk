@@ -99,6 +99,32 @@ const FluxData &TrackData::flux ()
 	return m_flux;
 }
 
+TrackData TrackData::preferred ()
+{
+	switch (opt.prefer)
+	{
+	case PreferredData::Track:
+		return { cylhead, Track(track()) };
+	case PreferredData::Bitstream:
+		return { cylhead, BitBuffer(bitstream()) };
+	case PreferredData::Flux:
+		return { cylhead, FluxData(flux()) };
+	case PreferredData::Unknown:
+		break;
+	}
+
+	auto trackdata = *this;
+	if (trackdata.has_flux() && !trackdata.has_normalised_flux())
+	{
+		// Ensure there are track and bitstream representations, then clear
+		// the unnormalised flux, as its use must be explicitly requested.
+		trackdata.track();
+		trackdata.m_flux.clear();
+		trackdata.m_flags &= ~TD_FLUX;
+	}
+	return trackdata;
+}
+
 
 void TrackData::add (TrackData &&trackdata)
 {

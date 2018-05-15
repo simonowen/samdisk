@@ -261,6 +261,8 @@ bool ViewBoot (const std::string &path, Range range);
 bool CheckDriver ();
 bool ReportDriverVersion ();
 
+enum class PreferredData { Unknown, Track, Bitstream, Flux };
+
 typedef struct
 {
 	Range range {};
@@ -273,12 +275,12 @@ typedef struct
 
 	int command = 0, hex = 0, debug = 0, verbose = 0, log = 0, force = 0, quick = 0;
 	int merge = 0, repair = 0, trim = 0, calibrate = 0, newdrive = 0, byteswap = 0;
-	int noweak = 0, nosig = 0, nodata = 0, noflux = 0, nocfa = 0, noidentify = 0;
+	int noweak = 0, nosig = 0, nodata = 0, nocfa = 0, noidentify = 0, nospecial = 0;
 	int nozip = 0, nodiff = 0, noformat = 0, nodups = 0, nowobble = 0, nottb = 0;
 	int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
 	int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
 	int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
-	int nospecial = 0, a1sync = 0;
+	int a1sync = 0;
 
 	int retries = 5, maxcopies = 3;
 	int scale = 100, pllphase = DEFAULT_PLL_PHASE;
@@ -286,6 +288,7 @@ typedef struct
 
 	Encoding encoding{ Encoding::Unknown };
 	DataRate datarate{ DataRate::Unknown };
+	PreferredData prefer = PreferredData::Unknown;
 	long sectors = -1;
 	std::string label{}, boot{};
 

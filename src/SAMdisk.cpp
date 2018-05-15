@@ -138,7 +138,7 @@ extern "C" {
 enum {
 	OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
 	OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
-	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE };
+	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER };
 
 struct option long_options[] =
 {
@@ -194,7 +194,6 @@ struct option long_options[] =
 	{ "no-dups",	      no_argument, &opt.nodups, 1 },
 	{ "no-check8k",       no_argument, &opt.check8k, 0 },
 	{ "no-data",          no_argument, &opt.nodata, 1 },
-	{ "no-flux",		  no_argument, &opt.noflux, 1 },
 	{ "no-wobble",		  no_argument, &opt.nowobble, 1 },
 	{ "no-mt",			  no_argument, &opt.mt, 0 },
 	{ "new-drive",		  no_argument, &opt.newdrive, 1 },
@@ -235,6 +234,7 @@ struct option long_options[] =
 	{ "rpm",		required_argument, nullptr, OPT_RPM },
 	{ "bytes",		required_argument, nullptr, OPT_BYTES },
 	{ "hdf",		required_argument, nullptr, OPT_HDF },
+	{ "prefer",		required_argument, nullptr, OPT_PREFER },
 	{ "order",		required_argument, nullptr, OPT_ORDER },
 	{ "step-rate",  required_argument, nullptr, OPT_STEPRATE },
 	{ "version",		  no_argument, nullptr, OPT_VERSION },
@@ -354,6 +354,20 @@ bool ParseCommandLine (int argc_, char *argv_[])
 					opt.cylsfirst = 0;
 				else
 					throw util::exception("invalid order type '", optarg, "', expected 'cylinders' or 'heads'");
+				break;
+			}
+
+			case OPT_PREFER:
+			{
+				auto str = util::lowercase(optarg);
+				if (str == std::string("track").substr(0, str.length()))
+					opt.prefer = PreferredData::Track;
+				else if (str == std::string("bitstream").substr(0, str.length()))
+					opt.prefer = PreferredData::Bitstream;
+				else if (str == std::string("flux").substr(0, str.length()))
+					opt.prefer = PreferredData::Flux;
+				else
+					throw util::exception("invalid data type '", optarg, "', expected track/bitstream/flux");
 				break;
 			}
 
