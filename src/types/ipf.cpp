@@ -172,7 +172,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 				auto ns_per_bitcell = bitcell_ns(bitbuf.datarate);
 
 				// Do we have timing data that we're allowed to use?
-				if (cti.timelen > 0 && !opt.noflux)
+				if (cti.timelen > 0)
 				{
 					std::vector<uint32_t> flux_times;
 					flux_times.reserve(tracklen_bits);
@@ -204,6 +204,7 @@ bool ReadIPF (MemFile &file, std::shared_ptr<Disk> &disk)
 					{
 						uint8_t bit = (cti.trackbuf[i / 8] >> (7 - (i & 7))) & 1;
 						bitbuf.add(bit);
+						bitbuf.splicepos(cti.overlap);
 					}
 
 					// Mark the index hole
