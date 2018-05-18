@@ -31,19 +31,21 @@ TrackData GenerateEmptyTrack (const CylHead &cylhead, const Track &track)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// KBI-19 protection for CPC? (19 valid sectors)
+// KBI-19 protection (19 valid sectors on CPC+PC, plus 1 error sector on PC)
 bool IsKBI19Track (const Track &track)
 {
-	static const uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18 };
+	static const uint8_t ids[]{ 0,1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18,19 };
 
-	if (track.size() != arraysize(ids))
+	// CPC version has 19 sectors, PC version has 20 (with bad sector 19).
+	if (track.size() != arraysize(ids) && track.size() != arraysize(ids) - 1)
 		return false;
 
 	int idx = 0;
 	for (auto &s : track.sectors())
 	{
 		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
-			s.header.sector != ids[idx++] || s.size() != 512 || !s.has_good_data())
+			s.header.sector != ids[idx++] || s.size() != 512 ||
+			(!s.has_good_data() && s.header.sector != 19))
 			return false;
 	}
 
