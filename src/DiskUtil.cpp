@@ -447,7 +447,7 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 		}
 	}
 
-	// Check for the problematic Reussir protection (CPC), and disable it!
+	// Check for the problematic Reussir protection (CPC).
 	if (opt.fix != 0 && track.size() == 10)
 	{
 		for (auto &s : track)
@@ -464,12 +464,17 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 
 			for (i = 0; i < data.size() - static_cast<int>(sizeof(prot_check)); ++i)
 			{
-
 				if (data[i] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
 				{
-					data[i + 3] = 0xaf;	// XOR A
-					Message(msgFix, "disabled problematic Reussir protection");
-					break;
+					// Are we to fix (disable) the protection?
+					if (opt.fix == 1)
+					{
+						data[i + 3] = 0xaf;	// XOR A
+						Message(msgFix, "disabled problematic Reussir protection");
+						break;
+					}
+					else
+						Message(msgWarning, "detected problematic Reussir protection (use --fix to disable)");
 				}
 			}
 		}
