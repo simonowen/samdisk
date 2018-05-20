@@ -57,7 +57,22 @@ protected:
 	void save (TrackData &trackdata) override
 	{
 		auto preferred = trackdata.preferred();
-		auto flux_times = *(preferred.flux().rbegin());
+		auto &flux_revs = preferred.flux();
+		auto flux_times = flux_revs[0];
+
+		auto &bitstream = preferred.bitstream();
+		if (bitstream.splicepos() && flux_revs.size() > 1)
+		{
+			int64_t extra_ns = bitcell_ns(bitstream.datarate) * (bitstream.splicepos() + 128);
+			for (auto flux_time : flux_revs[1])
+			{
+				if (flux_time > extra_ns)
+					break;
+
+				flux_times.push_back(flux_time);
+				extra_ns -= flux_time;
+			}
+		}
 
 		if (m_supercardpro->SelectDrive(0) &&
 			m_supercardpro->EnableMotor(0) &&
@@ -66,11 +81,11 @@ protected:
 		{
 			if (!track_time_ns)
 			{
-				FluxData flux_revs{};
-				if (!m_supercardpro->ReadFlux(1, flux_revs))
+				FluxData flux_rev{};
+				if (!m_supercardpro->ReadFlux(1, flux_rev))
 					throw util::exception(m_supercardpro->GetErrorStatusText());
 
-				track_time_ns = std::accumulate(flux_revs[0].begin(), flux_revs[0].end(), 0ULL);
+				track_time_ns = std::accumulate(flux_rev[0].begin(), flux_rev[0].end(), 0ULL);
 			}
 
 			auto total_time_ns = std::accumulate(flux_times.begin(), flux_times.end(), 0ULL);

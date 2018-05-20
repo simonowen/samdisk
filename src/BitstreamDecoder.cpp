@@ -1179,6 +1179,14 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 				if (opt.debug) util::cout << "chk8k_method = " << ChecksumName(chk8k_methods) << '\n';
 			}
 
+			// Consider good sectors overhanging the index
+			if (final_sector && !bad_crc)
+			{
+				auto splice_offset = bitbuf.track_offset(dam_offset + (normal_bytes << shift));
+				if (splice_offset < dam_offset)
+					bitbuf.splicepos(std::max(splice_offset, bitbuf.splicepos()));
+			}
+
 			sector.add(std::move(data), bad_crc, dam);
 
 			// If the data is good there's no need to search for more data fields
