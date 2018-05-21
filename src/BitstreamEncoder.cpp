@@ -113,10 +113,10 @@ void generate_bitstream(TrackData &trackdata)
 		// Fail if we've encountered a flux-only special format, as converting
 		// it to bitstream is unlikely to give a working track.
 		if (!trackdata.has_bitstream())
-			throw util::exception(trackdata.cylhead, " has no suitable bitstream representation");
+			throw util::exception("no suitable bitstream representation for ", trackdata.cylhead);
 	}
 	else if (opt.nottb)
-		throw util::exception("track to bitstream conversion not permitted");
+		throw util::exception("track to bitstream conversion not permitted for ", trackdata.cylhead);
 	else if (!generate_simple(trackdata))
 		throw util::exception("bitstream conversion not yet implemented for ", trackdata.cylhead);
 }

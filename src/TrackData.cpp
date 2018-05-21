@@ -74,9 +74,13 @@ const Track &TrackData::track ()
 			generate_bitstream(*this);
 		else if (has_flux())
 			scan_flux(*this);
+		else
+		{
+			add(Track());
+			generate_bitstream(*this);
+		}
 
-		if (has_bitstream())
-			m_flags |= TD_BITSTREAM;
+		m_flags |= TD_BITSTREAM;
 	}
 
 	return m_bitstream;
