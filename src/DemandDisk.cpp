@@ -36,7 +36,7 @@ const TrackData &DemandDisk::read (const CylHead &cylhead, bool uncached)
 		while (rescans > 0 || retries > 0)
 		{
 			// If no more rescans are required, stop when there's nothing to fix.
-			if (rescans <= 0 && !track.has_data_error())
+			if (rescans <= 0 && track.has_good_data())
 				break;
 
 			auto rescan_trackdata = load(cylhead);

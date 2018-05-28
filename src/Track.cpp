@@ -141,7 +141,7 @@ bool Track::is_repeated (const Sector &sector) const
 	return false;
 }
 
-bool Track::has_data_error () const
+bool Track::has_good_data () const
 {
 	auto it = std::find_if(begin(), end(), [] (const Sector &sector) {
 		if (sector.is_8k_sector() && sector.has_data())
@@ -150,10 +150,10 @@ bool Track::has_data_error () const
 			if (!ChecksumMethods(data.data(), data.size()).empty())
 				return false;
 		}
-		return !sector.has_data() || sector.has_baddatacrc();
+		return !sector.has_good_data();
 	});
 
-	return it != end();
+	return it == end();
 }
 
 void Track::clear ()

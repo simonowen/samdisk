@@ -66,7 +66,7 @@ int Sector::copies () const
 	return static_cast<int>(m_data.size());
 }
 
-Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
+Sector::Merge Sector::add (Data &&new_data, bool bad_crc, uint8_t new_dam)
 {
 	Merge ret = Merge::NewData;
 
@@ -77,12 +77,12 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 #ifdef _DEBUG
 	// If there's enough data, check the CRC
 	if ((encoding == Encoding::MFM || encoding == Encoding::FM) &&
-		static_cast<int>(data.size()) >= (size() + 2))
+		static_cast<int>(new_data.size()) >= (size() + 2))
 	{
 		CRC16 crc;
 		if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
 		crc.add(new_dam);
-		auto bad_data_crc = crc.add(data.data(), size() + 2) != 0;
+		auto bad_data_crc = crc.add(new_data.new_data(), size() + 2) != 0;
 		assert(bad_crc == bad_data_crc);
 	}
 #endif
@@ -103,7 +103,7 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 	{
 		// Attempt to identify the 8K checksum method used by the new data
 		// If it's recognised, replace any existing data with it
-		if (!ChecksumMethods(data.data(), data.size()).empty())
+		if (!ChecksumMethods(new_data.data(), new_data.size()).empty())
 		{
 			remove_data();
 			ret = Merge::Improved;
@@ -120,77 +120,83 @@ Sector::Merge Sector::add (Data &&data, bool bad_crc, uint8_t new_dam)
 		}
 	}
 
-	// Look for existing data that is a superset of what we're adding
-	auto it = std::find_if(m_data.begin(), m_data.end(), [&] (const Data &d) {
-		return d.size() >= data.size() && std::equal(data.begin(), data.end(), d.begin());
-	});
+	// DD 8K sectors are considered complete at 6K, everything else at natural size
+	auto complete_size = is_8k_sector() ? 0x1800 : new_data.size();
 
-	// Return if we already have a better copy
-	if (it != m_data.end())
-		return Merge::Unchanged;
-
-	// Look for existing data that is a subset of what we're adding
-	it = std::find_if(m_data.begin(), m_data.end(), [&] (const Data &d) {
-		return d.size() <= data.size() && std::equal(d.begin(), d.end(), data.begin());
-	});
-
-	// Remove the inferior copy
-	if (it != m_data.end())
+	// Compare existing data with the new data, to avoid storing redundant copies.
+	for (auto it = m_data.begin(); it != m_data.end(); )
 	{
-		ret = (it->size() < size()) ? Merge::Improved : Merge::NewData;
-		m_data.erase(it);
+		auto &data = *it;
+
+		if (data.size() >= complete_size && new_data.size() >= complete_size)
+		{
+			// If the complete area of the data matches, ignore the new copy.
+			if (!std::memcmp(data.data(), new_data.data(), complete_size))
+				return Merge::Unchanged;
+		}
+
+		// Existing data is the same size or larger?
+		if (data.size() >= new_data.size())
+		{
+			// Compare the prefix of each.
+			if (std::equal(new_data.begin(), new_data.end(), data.begin()))
+			{
+				// If identical, or new is shorter than complete size, ignore it.
+				if (data.size() == new_data.size() || new_data.size() < complete_size)
+					return Merge::Unchanged;
+
+				// The new shorter copy replaces the existing data.
+				it = m_data.erase(it);
+				ret = Merge::Improved;
+				continue;
+			}
+		}
+		else // existing is shorter
+		{
+			// Compare the prefix of each.
+			if (std::equal(data.begin(), data.end(), new_data.begin()))
+			{
+				// If the existing data is at least complete size, ignore the new data.
+				if (data.size() >= complete_size)
+					return Merge::Unchanged;
+
+				// The new longer copy replaces the existing data.
+				it = m_data.erase(it);
+				ret = Merge::Improved;
+				continue;
+			}
+		}
+
+		++it;
 	}
 
-	// DD 8K sectors are considered complete at 6K, everything else at natural size
-	auto complete_size = is_8k_sector() ? 0x1800 : data.size();
-
-	// Is the supplied data enough for a complete sector?
-	if (data.size() >= complete_size)
+	// Will we now have multiple copies?
+	if (copies() > 0)
 	{
-		// Look for existing data that contains the same normal sector data
-		it = std::find_if(m_data.begin(), m_data.end(), [&] (const Data &d) {
-			return d.size() >= complete_size && std::equal(d.begin(), d.begin() + complete_size, data.begin());
-		});
-
-		// Found a match?
-		if (it != m_data.end())
+		// Damage can cause us to see different DAM values for a sector.
+		// Favour normal over deleted, and deleted over anything else.
+		if (dam != new_dam &&
+			(dam == 0xfb || (dam == 0xf8 && new_dam != 0xfb)))
 		{
-			// Return if the new one isn't larger
-			if (data.size() <= it->size())
-				return Merge::Unchanged;
-
-			// Remove the existing smaller copy
-			m_data.erase(it);
+			return Merge::Unchanged;
 		}
 
-		// Will we now have multiple copies?
-		if (copies() > 0)
-		{
-			// Damage can cause us to see different DAM values for a sector.
-			// Favour normal over deleted, and deleted over anything else.
-			if (dam != new_dam &&
-				(dam == 0xfb || (dam == 0xf8 && new_dam != 0xfb)))
-			{
-				return Merge::Unchanged;
-			}
+		// Multiple good copies mean a difference in the gap data after
+		// a good sector, perhaps due to a splice. We just ignore it.
+		if (!has_baddatacrc())
+			return Merge::Unchanged;
 
-			// Multiple good copies mean a difference in the gap data after
-			// a good sector, perhaps due to a splice. We just ignore it.
-			if (!has_baddatacrc())
-				return Merge::Unchanged;
+		// Keep multiple copies the same size, whichever is shortest
+		auto new_size = std::min(new_data.size(), m_data[0].size());
+		new_data.resize(new_size);
 
-			// Keep multiple copies the same size, whichever is shortest
-			auto new_size = std::min(data.size(), m_data[0].size());
-			data.resize(new_size);
-
-			// Resize any existing copies to match
-			for (auto &d : m_data)
-				d.resize(new_size);
-		}
+		// Resize any existing copies to match
+		for (auto &d : m_data)
+			d.resize(new_size);
 	}
 
 	// Insert the new data copy.
-	m_data.emplace_back(std::move(data));
+	m_data.emplace_back(std::move(new_data));
 	limit_copies(opt.maxcopies);
 
 	// Update the data CRC state and DAM
@@ -246,7 +252,7 @@ bool Sector::has_data () const
 
 bool Sector::has_good_data() const
 {
-	return has_data() && !has_baddatacrc();
+	return has_data() && !has_baddatacrc() && !has_gapdata();
 }
 
 bool Sector::has_gapdata () const
