@@ -471,10 +471,10 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 					{
 						data[i + 3] = 0xaf;	// XOR A
 						Message(msgFix, "disabled problematic Reussir protection");
-						break;
 					}
 					else
 						Message(msgWarning, "detected problematic Reussir protection (use --fix to disable)");
+					break;
 				}
 			}
 		}
