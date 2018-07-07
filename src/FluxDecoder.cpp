@@ -13,7 +13,6 @@ FluxDecoder::FluxDecoder (const FluxData &flux_revs, int bitcell_ns, int flux_sc
 	m_pll_adjust(pll_adjust)
 {
 	assert(flux_revs.size());
-	assert(flux_revs[0].size());
 
 	m_rev_it = m_flux_revs.cbegin();
 	m_flux_it = (*m_rev_it).cbegin();
@@ -111,6 +110,8 @@ int FluxDecoder::next_flux ()
 
 		m_index = true;
 		m_flux_it = (*m_rev_it).cbegin();
+		if (m_flux_it == (*m_rev_it).cend())
+			return -1;
 	}
 
 	auto time_ns = *m_flux_it++;

@@ -82,7 +82,7 @@ Sector::Merge Sector::add (Data &&new_data, bool bad_crc, uint8_t new_dam)
 		CRC16 crc;
 		if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
 		crc.add(new_dam);
-		auto bad_data_crc = crc.add(new_data.new_data(), size() + 2) != 0;
+		auto bad_data_crc = crc.add(new_data.data(), size() + 2) != 0;
 		assert(bad_crc == bad_data_crc);
 	}
 #endif
