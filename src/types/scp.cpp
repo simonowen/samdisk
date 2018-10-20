@@ -172,8 +172,8 @@ bool ReadSCP (MemFile &file, std::shared_ptr<Disk> &disk)
 	for (auto tracknr = fh.start_track; tracknr <= fh.end_track; ++tracknr)
 	{
 		TRACK_DATA_HEADER tdh;
-		auto cyl = tracknr >> 1;
-		auto head = tracknr & 1;
+		auto cyl = fh.heads == 0 ? (tracknr >> 1) : tracknr;
+		auto head = fh.heads == 0 ? (tracknr & 1) : (fh.heads - 1);
 		CylHead cylhead(cyl, head);
 
 		if (!tdh_offsets[tracknr])
