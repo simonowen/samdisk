@@ -9,7 +9,7 @@ std::string GetWin32ErrorStr (DWORD error_code = 0, bool english = false);
 class win32_category_impl : public std::error_category
 {
 public:
-	const char* name () const _NOEXCEPT override { return "win32"; };
+	const char* name () const noexcept override { return "win32"; };
 	std::string message (int error_code) const override { return GetWin32ErrorStr(error_code); }
 };
 

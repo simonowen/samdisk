@@ -1,10 +1,8 @@
 # SAMdisk
 
-
 ## Introduction
 
 [SAMdisk](http://simonowen.com/samdisk/) is a portable disk image utility. It specialises in reading and writing most PC-compatible floppy media, including many copy-protected formats.
-
 
 ## Development
 
@@ -14,10 +12,9 @@ Despite being based on the SAMdisk 3 source code, the disk core has been complet
 
 Once the missing functionality has been restored it will be released officially as SAMdisk 4.0.
 
-
 ## System Requirements
 
-The current code builds under Windows, Linux and macOS, and should be portable to other systems. Building requires a C++ compiler with C++14 support, such as Visual Studio 2017, g++ 4.9+, or Clang 3.6+.
+The [latest code](https://github.com/simonowen/samdisk/) builds under Windows, Linux and macOS, and should be portable to other systems. Building requires a C++ compiler with C++14 support, such as Visual Studio 2017, g++ 4.9+, or Clang 3.6+.
 
 All platforms can use the [CMake](https://cmake.org/) build system. A number of optional libraries are used if they are available at configuration time. Use `cmake -DCMAKE_BUILD_TARGET=Release .` to create the build scripts then `make` to build.
 
@@ -30,7 +27,6 @@ The provided Visual Studio 2017 project file expects all libraries mentioned abo
 ## License
 
 The SAMdisk source code is released under the [MIT license](https://tldrlegal.com/license/mit-license).
-
 
 ## Contact
 
