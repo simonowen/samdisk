@@ -208,9 +208,17 @@ uint32_t BitBuffer::read32()
 	return dword;
 }
 
+const uint8_t gcr5char[32] = {
+	000, 000, 000, 000, 000, 000, 000, 000, // 00-07
+	000, 0x8, 0x0, 0x1, 000, 0xc, 0x4, 0x5, // 08-0F
+	000, 000, 0x2, 0x3, 000, 0xf, 0x6, 0x7, // 10-17
+	000, 0x9, 0xa, 0xb, 000, 0xd, 0xe, 000, // 18-1F
+};
+
 uint8_t BitBuffer::read_byte ()
 {
 	uint8_t data = 0;
+	uint16_t gcr = 0;
 
 	switch (encoding)
 	{
@@ -242,6 +250,15 @@ uint8_t BitBuffer::read_byte ()
 		{
 			data = (data << 1) | read1();
 		}
+		break;
+
+	case Encoding::GCR:
+	case Encoding::Victor:
+		for (auto i = 0; i < 10; ++i)
+		{
+			gcr = (gcr << 1) | read1();
+		}
+		data = (gcr5char[gcr >> 5] << 4) | gcr5char[gcr & 0x1f];
 		break;
 
 	default:
