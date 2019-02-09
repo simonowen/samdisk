@@ -44,7 +44,7 @@ void scan_flux (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::Apple };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -86,6 +86,10 @@ void scan_flux (TrackData &trackdata)
 				scan_flux_agat(trackdata, last_datarate);
 				break;
 
+			case Encoding::Victor:
+				scan_flux_victor(trackdata);
+				break;
+
 			default:
 				assert(false);
 				break;
@@ -123,7 +127,7 @@ void scan_bitstream (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::Apple };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -165,6 +169,10 @@ void scan_bitstream (TrackData &trackdata)
 
 			case Encoding::Agat:
 				scan_bitstream_agat(trackdata);
+				break;
+
+			case Encoding::Victor:
+				scan_bitstream_victor(trackdata);
 				break;
 
 			default:
@@ -457,18 +465,208 @@ void scan_flux_apple (TrackData &trackdata)
 }
 
 
-void scan_bitstream_gcr (TrackData &/*trackdata*/)
+const char gcr5[32] = {
+	'_', '_', '_', '_', '_', '_', '_', '_', // 00-07
+	'_', '8', '0', '1', '_', 'C', '4', '5', // 08-0F
+	'_', '_', '2', '3', '_', 'F', '6', '7', // 10-17
+	'_', '9', 'A', 'B', '_', 'D', 'E', 's', // 18-1F
+};
+
+void scan_bitstream_gcr (TrackData &trackdata)
 {
-	throw std::logic_error("C64 GCR format is not currently supported");
+	Track track;
+	uint32_t dword = 0;
+	uint8_t stored_cksum = 0;
+	std::vector<std::pair<int, Encoding>> data_fields;
+
+	auto &bitbuf = trackdata.bitstream();
+	bitbuf.seek(0);
+	bitbuf.encoding = Encoding::GCR;
+	track.tracklen = bitbuf.track_bitsize();
+
+	bool sync = false;
+
+	while (!bitbuf.wrapped())
+	{
+		dword = (dword << 1) | bitbuf.read1();
+
+		if (opt.debug && 1)
+		{
+			auto o = bitbuf.tell();
+			Data x(4);
+
+			x[0] = (dword >> 15) & 0x1f;
+			x[1] = (dword >> 10) & 0x1f;
+			x[2] = (dword >>  5) & 0x1f;
+			x[3] = (dword >>  0) & 0x1f;
+
+			util::cout << util::fmt ("  s_b_gcr %016lx (%02x %02x %02x %02x = %c%c%c%c) c:h %d:%d at %d\n",
+				dword, x[0], x[1], x[2], x[3], gcr5[x[0]], gcr5[x[1]], gcr5[x[2]], gcr5[x[3]],
+				trackdata.cylhead.cyl, trackdata.cylhead.head, o);
+		}
+
+		/*
+		 * IDAM: 1/2 SYNC, 0x08, crc, (sector id), (track id), (disk id) x 2, 0x0f x 2, gap1
+		 * DAM:  1/2 SYNC, 0x07, (sector data), crc x 2, 0x00 x 2, gap2
+		 * GAP4: 0x555555
+		 */
+		if ((dword & 0xffffff) == 0xffffff)
+		{
+			sync = true;
+			continue;
+		}
+
+		if (!sync) continue;
+
+		if (opt.debug && 1) util::cout << util::fmt ("  s_b_gcr found SYNC at %u\n", bitbuf.tell());
+
+		sync = false;
+		bitbuf.seek(bitbuf.tell() - 1);
+
+		auto am_offset = bitbuf.tell();
+
+		auto am = bitbuf.read_byte();
+
+		switch (am)
+		{
+			case 0x08:	// IDAM
+			{
+				// crc, sector, track, disk x 2
+				std::array<uint8_t, 7> id;
+				bitbuf.read(id);
+
+				if ((id[1] ^ id[2] ^ id[3] ^ id[4]) == id[0] || (opt.idcrc == 1))
+				{
+					Sector s(bitbuf.datarate, bitbuf.encoding, Header((id[2] - 1), 0, id[1], SizeToCode(256)));
+					s.offset = bitbuf.track_offset(am_offset);
+
+					if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					track.add(std::move(s));
+				}
+
+				break;
+			}
+
+			case 0x07:	// DAM
+			{
+				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
+				break;
+			}
+
+			default:
+				std::array<uint8_t, 3> id;
+//				bitbuf.read(id);
+
+				Message(msgWarning, "unknown %s address mark (%02X %02X %02X %02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, id[0], id[1], id[2], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				break;
+		}
+	}
+
+	// Process each sector header to look for an associated data field
+	for (auto it = track.begin(); it != track.end(); ++it)
+	{
+		auto &sector = *it;
+		auto final_sector = std::next(it) == track.end();
+
+		auto shift = 3;
+		auto gap2_size = 8;	// gap2 size in MFM bytes
+		auto min_distance = (1 + 3) * 10 + (gap2_size << shift);
+		auto max_distance = (1 + 3) * 10 + ((gap2_size + 16) << shift);	// 1=AM, 3=ID, gap2, 16=guesstimate
+
+		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+
+		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
+		{
+			const auto &dam_offset = itData->first;
+			auto itDataNext = (std::next(itData) == data_fields.end()) ? data_fields.begin() : std::next(itData);
+
+			// Determine distance from header to data field, taking care of track wrapping
+			auto dam_track_offset = bitbuf.track_offset(dam_offset);
+			auto distance = ((dam_track_offset < sector.offset) ? track.tracklen : 0) + dam_track_offset - sector.offset;
+
+			// Reject if the data field is too close or too far away
+			if (distance < min_distance || distance > max_distance)
+				continue;
+
+			// If there's a splice between IDAM and DAM the track was probably modified
+#if 0 // disabled until header/data matching enhancements are complete
+			if (bitbuf.sync_lost(sector.offset, dam_offset))
+				track.modified = true;
+#endif
+			bitbuf.seek(dam_offset);
+
+			bitbuf.read_byte();
+
+			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
+			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
+			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
+
+			// Determine the bit offset and distance to the next DAM
+			auto next_dam_offset = itDataNext->first;
+			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_bytes = (next_dam_distance >> shift) - 1;		// -1 due to DAM being read above
+
+			// Attempt to read gap2, unless we're asked not to
+			auto read_gap2 = (opt.gap2 != 0);
+
+			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
+			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
+
+			auto normal_bytes = sector.size() + 1;					// data size + checksum byte
+			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to verify checksum
+//			auto data_bytes = std::max(normal_bytes, extent_bytes);	// data size needed to verify checksum
+
+			// Calculate bytes remaining in the data in current data encoding
+			auto avail_bytes = bitbuf.remaining() >> shift;
+
+			// Ignore truncated copies, unless it's the only copy we have
+			if (avail_bytes < normal_bytes)
+			{
+				// If we've already got a copy, ignore the truncated version
+				if (sector.copies())
+				{
+					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					continue;
+				}
+
+				if (opt.debug)
+				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+			}
+
+			// Read the full data field and verify its checksum
+			Data data(data_bytes);
+			bitbuf.read(data);
+			stored_cksum = data[256];
+
+			// Truncate at the extent size, unless we're asked to keep overlapping sectors
+			if (!opt.keepoverlap && extent_bytes < sector.size())
+				data.resize(extent_bytes);
+			else if (data.size() > sector.size())
+//			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
+				data.resize(sector.size());
+
+//			if (opt.debug) util::cout << util::fmt ("resize? %u vs %u -> %u\n", extent_bytes, sector.size(), data.size());
+
+			bool bad_crc = std::accumulate(data.begin(), data.end(), 0, std::bit_xor<uint8_t>()) != stored_cksum;
+
+			sector.add(std::move(data), bad_crc, 0xfb);
+
+			// If the data is good there's no need to search for more data fields
+			if (!bad_crc)
+				break;
+		}
+	}
+
+	trackdata.add(std::move(track));
 }
 
-// ToDo: finish GCR support
 void scan_flux_gcr (TrackData &trackdata)
 {
 	int bitcell_ns;
 
 	// C64 GCR disks are zoned, with variable rate depending on cylinder
-	// ToDo: make this optional, or passed in if needed
 	if (trackdata.cylhead.cyl < 17)
 		bitcell_ns = 3200;
 	else if (trackdata.cylhead.cyl < 24)
@@ -478,7 +676,7 @@ void scan_flux_gcr (TrackData &trackdata)
 	else
 		bitcell_ns = 4000;
 
-	FluxDecoder decoder(trackdata.flux(), bitcell_ns);
+	FluxDecoder decoder(trackdata.flux(), bitcell_ns, opt.scale);
 	BitBuffer bitbuf(DataRate::_250K, decoder);
 
 	trackdata.add(std::move(bitbuf));
@@ -1452,3 +1650,224 @@ void scan_flux_agat (TrackData &trackdata, DataRate last_datarate)
 			break;
 	}
 }
+
+void scan_flux_victor (TrackData &trackdata)
+{
+	int bitcell_ns;
+
+	// Victor GCR disks are zoned, with variable rate depending on cylinder
+
+	if (trackdata.cylhead.cyl < 4)
+		bitcell_ns = 1789;
+	else if (trackdata.cylhead.cyl < 16)
+		bitcell_ns = 1896;
+	else if (trackdata.cylhead.cyl < 27)
+		bitcell_ns = 2009;
+	else if (trackdata.cylhead.cyl < 38)
+		bitcell_ns = 2130;
+	else if (trackdata.cylhead.cyl < 49)
+		bitcell_ns = 2272;
+	else if (trackdata.cylhead.cyl < 60)
+		bitcell_ns = 2428;
+	else if (trackdata.cylhead.cyl < 71)
+		bitcell_ns = 2613;
+	else
+		bitcell_ns = 2847;
+
+	FluxDecoder decoder(trackdata.flux(), bitcell_ns, opt.scale);
+	BitBuffer bitbuf(DataRate::_250K, decoder);
+
+	trackdata.add(std::move(bitbuf));
+	scan_bitstream_victor(trackdata);
+}
+
+/*
+Victor 9000 aka Sirius One was a MS-DOS compatible computer.
+Its floppy drives are variable speed (9 speed zones)
+and use GCR encoding shared with Commodore 64.
+
+https://www.discferret.com/wiki/Victor_9000_format
+
+https://github.com/mamedev/mame/blob/master/src/lib/formats/victor9k_dsk.cpp
+*/
+
+void scan_bitstream_victor (TrackData &trackdata)
+{
+	Track track;
+	uint32_t dword = 0;
+	std::vector<std::pair<int, Encoding>> data_fields;
+
+	auto &bitbuf = trackdata.bitstream();
+	bitbuf.seek(0);
+	bitbuf.encoding = Encoding::Victor;
+	track.tracklen = bitbuf.track_bitsize();
+
+	bool sync = false;
+
+	while (!bitbuf.wrapped())
+	{
+		dword = (dword << 1) | bitbuf.read1();
+
+		if (opt.debug && 0)
+		{
+			auto o = bitbuf.tell();
+			Data x(4);
+
+			x[0] = (dword >> 15) & 0x1f;
+			x[1] = (dword >> 10) & 0x1f;
+			x[2] = (dword >>  5) & 0x1f;
+			x[3] = (dword >>  0) & 0x1f;
+
+			util::cout << util::fmt ("  s_b_victor %016lx (%02x %02x %02x %02x = %c%c%c%c) c:h %d:%d at %d\n",
+				dword, x[0], x[1], x[2], x[3], gcr5[x[0]], gcr5[x[1]], gcr5[x[2]], gcr5[x[3]],
+				trackdata.cylhead.cyl, trackdata.cylhead.head, o);
+		}
+
+		/*
+		 * IDAM: GCR5 SYNC x 9, GCR5 (0x07) (= 0x17), GCR5 (track id), GCR5 (sector id), header crc, 0x55 x 8
+		 * DAM:  GCR5 SYNC x 5, GCR5 (0x08) (= 0x09), GCR5 (sector data), data crc, 0x55 x 8
+		 * GAP4: 0x555555
+		 */
+		if ((dword & 0x3ff) == 0x3ff)
+		{
+			sync = true;
+			continue;
+		}
+
+		if (!sync) continue;
+
+		if (opt.debug && 0) util::cout << util::fmt ("  s_b_victor found SYNC at %u\n", bitbuf.tell());
+
+		sync = false;
+		bitbuf.seek(bitbuf.tell() - 1);
+
+		auto am_offset = bitbuf.tell();
+
+		auto am = bitbuf.read_byte();
+
+		switch (am)
+		{
+			case 0x07:	// IDAM
+			{
+				// track, sector, crc
+				std::array<uint8_t, 3> id;
+				bitbuf.read(id);
+
+				Sector s(bitbuf.datarate, bitbuf.encoding, Header(id[0], trackdata.cylhead.head, id[1], SizeToCode(512)));
+				s.offset = bitbuf.track_offset(am_offset);
+
+				if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+				track.add(std::move(s));
+
+				break;
+			}
+
+			case 0x08:	// DAM
+			{
+				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
+				break;
+			}
+
+			default:
+				Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				break;
+		}
+	}
+
+	// Process each sector header to look for an associated data field
+	for (auto it = track.begin(); it != track.end(); ++it)
+	{
+		auto &sector = *it;
+		auto final_sector = std::next(it) == track.end();
+
+		auto shift = 3;
+		auto gap2_size = 8;	// gap2 size in MFM bytes
+		auto min_distance = (1 + 3) * 10 + (gap2_size << shift);
+		auto max_distance = (1 + 3) * 10 + ((gap2_size + 16) << shift);	// 1=AM, 3=ID, gap2, 16=guesstimate
+
+		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+
+		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
+		{
+			const auto &dam_offset = itData->first;
+			auto itDataNext = (std::next(itData) == data_fields.end()) ? data_fields.begin() : std::next(itData);
+
+			// Determine distance from header to data field, taking care of track wrapping
+			auto dam_track_offset = bitbuf.track_offset(dam_offset);
+			auto distance = ((dam_track_offset < sector.offset) ? track.tracklen : 0) + dam_track_offset - sector.offset;
+
+			// Reject if the data field is too close or too far away
+			if (distance < min_distance || distance > max_distance)
+				continue;
+
+			// If there's a splice between IDAM and DAM the track was probably modified
+#if 0 // disabled until header/data matching enhancements are complete
+			if (bitbuf.sync_lost(sector.offset, dam_offset))
+				track.modified = true;
+#endif
+			bitbuf.seek(dam_offset);
+
+			bitbuf.read_byte();
+
+			// Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
+			auto next_idam_offset = final_sector ? track.begin()->offset : std::next(it)->offset;
+			auto next_idam_distance = ((next_idam_offset < dam_track_offset) ? track.tracklen : 0) + next_idam_offset - dam_track_offset;
+			auto next_idam_bytes = (next_idam_distance >> shift) - 1;	// -1 due to DAM being read above
+
+			// Determine the bit offset and distance to the next DAM
+			auto next_dam_offset = itDataNext->first;
+			auto next_dam_distance = ((next_dam_offset < dam_offset) ? bitbuf.size() : 0) + next_dam_offset - dam_offset;
+			auto next_dam_bytes = (next_dam_distance >> shift) - 1;		// -1 due to DAM being read above
+
+			// Attempt to read gap2, unless we're asked not to
+			auto read_gap2 = (opt.gap2 != 0);
+
+			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
+			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
+
+			auto normal_bytes = sector.size() + 1;					// data size + checksum byte
+			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to verify checksum
+//			auto data_bytes = std::max(normal_bytes, extent_bytes);	// data size needed to verify checksum
+
+			// Calculate bytes remaining in the data in current data encoding
+			auto avail_bytes = bitbuf.remaining() >> shift;
+
+			// Ignore truncated copies, unless it's the only copy we have
+			if (avail_bytes < normal_bytes)
+			{
+				// If we've already got a copy, ignore the truncated version
+				if (sector.copies())
+				{
+					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					continue;
+				}
+
+				if (opt.debug)
+				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+			}
+
+			// Read the full data field and verify its checksum
+			Data data(data_bytes);
+			bitbuf.read(data);
+
+			// Truncate at the extent size, unless we're asked to keep overlapping sectors
+			if (!opt.keepoverlap && extent_bytes < sector.size())
+				data.resize(extent_bytes);
+			else if (data.size() > sector.size())
+//			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
+				data.resize(sector.size());
+
+			bool bad_crc = false; // XXX 10-bit CRC code is missing
+
+			sector.add(std::move(data), bad_crc, 0xfb);
+
+			// If the data is good there's no need to search for more data fields
+			if (!bad_crc)
+				break;
+		}
+	}
+
+	trackdata.add(std::move(track));
+}
+
