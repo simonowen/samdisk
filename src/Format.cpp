@@ -529,14 +529,8 @@ void Format::Override (bool full_control/*=false*/)
 		if (opt.sectors != -1) sectors = opt.sectors;
 		if (opt.size >= 0 && opt.size <= 7) size = opt.size;
 
-		encoding = Encoding::MFM;
-
-		if (track_size() < 6000)
-			datarate = DataRate::_250K;
-		else if (track_size() < 12000)
-			datarate = DataRate::_500K;
-		else
-			datarate = DataRate::_1M;
+		if (datarate == DataRate::Unknown) datarate = DataRate::_250K;
+		if (encoding == Encoding::Unknown) encoding = Encoding::MFM;
 	}
 
 	// Merge any overrides from the command-line
