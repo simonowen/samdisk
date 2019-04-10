@@ -5,25 +5,48 @@
 bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 {
 	Format fmt;
-	bool from_size = false;
 	fmt.encoding = Encoding::MFM;
 
 	// An empty format should not match an empty file!
 	if (file.size() == 0)
 		throw util::exception("image file is zero bytes");
 
-	// Allow user overrides of the format
+	// Has the user customised any geometry parameters?
+	bool customised = opt.range.cyls() || opt.range.heads() ||  opt.sectors > 0 || opt.size >= 0;
+
+	// Attempt to match raw file size against a likely format.
+	if (!Format::FromSize(file.size(), fmt) && !customised)
+		return false;
+
+	// Allow user overrides of the above format.
+	auto orig_fmt = fmt;
 	fmt.Override(true);
+
+	// Ensure the intermediate geometry is complete.
+	fmt.Validate();
+
+	// If only cyls or heads is given, adjust the other one to match.
+	if (fmt.cyls != orig_fmt.cyls && !opt.range.heads())
+		fmt.heads = file.size() / (opt.range.cyls() * fmt.track_size());
+	else if (fmt.heads != orig_fmt.heads && !opt.range.cyls())
+		fmt.cyls = file.size() / (opt.range.heads() * fmt.track_size());
+
+	// If only sector count or size are specified, adjust the other one to match.
+	if (fmt.size != orig_fmt.size && opt.sectors < 0)
+		fmt.sectors = file.size() / (fmt.cyls * fmt.heads * fmt.sector_size());
+	else if (fmt.sectors != orig_fmt.sectors && opt.size < 0)
+	{
+		auto sector_size = file.size() / (fmt.cyls * fmt.heads * fmt.sectors);
+		for(fmt.size = 0; sector_size > 128; sector_size /= 2)
+			fmt.size++;
+	}
 
 	// Does the format now match the input file?
 	if (fmt.disk_size() != file.size())
-	{
-		if (!Format::FromSize(file.size(), fmt))
-			return false;
-		from_size = true;
-	}
+		throw util::exception("geometry doesn't match file size");
 
-	assert(fmt.disk_size() == file.size());
+	// Ensure the final geometry is valid.
+	fmt.Validate();
 
 	// 720K images with a .cpm extension use the SAM Coupe Pro-Dos parameters
 	if (file.size() == 737280 && IsFileExt(file.name(), "cpm"))
@@ -31,10 +54,11 @@ bool ReadRAW (MemFile &file, std::shared_ptr<Disk> &disk)
 		fmt = RegularFormat::ProDos;
 		disk->strType = "ProDos";
 	}
-	else if (from_size)
+	// Warn if the size-to-format conversion is being used unmodified.
+	// This makes it more obvious when an unsupported format is matched by size.
+	else if (!customised)
 	{
-		// To prevent unexpected behaviour, warn that this is a raw image file
-		Message(msgWarning, "input file format guessed using only file size");
+		Message(msgWarning, "input format guessed from file size -- please check");
 	}
 
 	file.rewind();
