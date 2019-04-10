@@ -649,7 +649,7 @@ void scan_bitstream_gcr (TrackData &trackdata)
 
 //			if (opt.debug) util::cout << util::fmt ("resize? %u vs %u -> %u\n", extent_bytes, sector.size(), data.size());
 
-			bool bad_crc = std::accumulate(data.begin(), data.end(), 0, std::bit_xor<uint8_t>()) != stored_cksum;
+			bool bad_crc = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0), std::bit_xor<uint8_t>()) != stored_cksum;
 
 			sector.add(std::move(data), bad_crc, 0xfb);
 
