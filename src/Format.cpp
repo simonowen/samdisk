@@ -432,6 +432,10 @@ bool Format::FromSize (int64_t size, Format &fmt)
 			fmt = RegularFormat::PC720;
 			break;
 
+		case 819200:	// MGT (800K), for legacy matching.
+			fmt = RegularFormat::MGT;
+			break;
+
 		case 1228800:	// 5.25" DSHD (1200K)
 			fmt = RegularFormat::PC1200;
 			break;
