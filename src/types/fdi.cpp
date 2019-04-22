@@ -103,8 +103,10 @@ bool ReadFDI (MemFile &file, std::shared_ptr<Disk> &disk)
 				// Loop through valid size codes to check the flag bits
 				for (uint8_t size = 0; !no_data && size <= 3; ++size)
 				{
+					auto ssize = Sector::SizeCodeToLength(size);
+
 					// Does the size match the PC treatment of the size code?
-					if (size == Sector::SizeCodeToLength(fs.bSize))
+					if (ssize == Sector::SizeCodeToLength(fs.bSize))
 					{
 						// If the flags say no error, clear the data CRC error
 						if (fs.bFlags & (1 << size))
@@ -113,8 +115,6 @@ bool ReadFDI (MemFile &file, std::shared_ptr<Disk> &disk)
 					// Or is it within the current FD1793 size?
 					else if (size <= b1793Size)
 					{
-						auto ssize = Sector::SizeCodeToLength(size);
-
 						CRC16 crc(CRC16::A1A1A1);
 						crc.add(dam);
 						crc.add(data.data(), ssize);
