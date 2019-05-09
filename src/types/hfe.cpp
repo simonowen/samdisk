@@ -283,7 +283,8 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 	if (fseek(f_, hh.track_list_offset << 9, SEEK_SET))
 		throw util::exception("seek error");
 
-	std::array<HFE_TRACK, 128> aTrackLUT{};
+	std::array<HFE_TRACK, MAX_TRACKS> aTrackLUT{};
+	std::map<CylHead, BitBuffer> bitstreams;
 	int data_offset = 2;
 
 	auto max_disk_track_bytes = 0;
@@ -292,10 +293,13 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 		auto max_track_bytes = 0;
 		for (uint8_t head = 0; head < hh.number_of_sides; ++head)
 		{
-			auto &bitstream = disk->read_bitstream(CylHead(cyl, head));
+			CylHead cylhead(cyl, head);
+			auto trackdata = disk->read(cylhead);
+			auto bitstream = trackdata.preferred().bitstream();
 			auto track_bytes = (bitstream.track_bitsize() + 7) / 8;
 			max_track_bytes = std::max(track_bytes, max_track_bytes);
 			max_disk_track_bytes = std::max(max_disk_track_bytes, max_track_bytes);
+			bitstreams[cylhead] = std::move(bitstream);
 		}
 
 		aTrackLUT[cyl].offset = util::htole(static_cast<uint16_t>(data_offset));
@@ -313,8 +317,7 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 		uint8_t *pbTrack{};
 		for (uint8_t head = 0; head < hh.number_of_sides; ++head)
 		{
-			auto trackdata = disk->read({ cyl, head });
-			auto bitstream = trackdata.preferred().bitstream();
+			auto &bitstream = bitstreams[{ cyl, head }];
 			auto track_bytes = (bitstream.track_bitsize() + 7) / 8;
 			bitstream.seek(0);
 
