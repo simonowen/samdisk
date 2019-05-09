@@ -447,6 +447,28 @@ bool NormaliseTrack (const CylHead &cylhead, Track &track)
 		}
 	}
 
+	// Check for Prehistorik track followed by unused KBI-19 sectors (mastering error?).
+	if (opt.fix != 0 && track.size() == 13)
+	{
+		if (track[6].header.sector == 12 && IsPrehistorikTrack(track))
+		{
+			if (opt.fix == 1)
+			{
+				// Trim the unwanted sectors.
+				while (track.size() > 7)
+				{
+					track.remove(7);
+					changed = true;
+				}
+
+				Message(msgFix, "removed unused KBI-19 sectors from end of Prehistorik track");
+				changed = true;
+			}
+			else
+				Message(msgWarning, "6 junk KBI-19 sectors found (use --fix to remove)");
+		}
+	}
+
 	// Check for the problematic Reussir protection (CPC).
 	if (opt.fix != 0 && track.size() == 10)
 	{

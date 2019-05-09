@@ -11,6 +11,7 @@ bool IsKBIWeakSectorTrack (const Track &track, int &weak_offset, int &weak_size)
 bool IsLogoProfTrack (const Track &track);
 bool IsOperaSoftTrack (const Track &track);
 bool Is8KSectorTrack (const Track &track);
+bool IsPrehistorikTrack(const Track &track);
 bool IsReussirProtectedTrack (const Track &track);
 
 TrackData GenerateEmptyTrack (const CylHead &cylhead, const Track &track);
@@ -23,6 +24,7 @@ TrackData GenerateLogoProfTrack (const CylHead &cylhead, const Track &track);
 TrackData GenerateSystem24Track (const CylHead &cylhead, const Track &track);
 TrackData GenerateOperaSoftTrack (const CylHead &cylhead, const Track &track);
 TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track);
+TrackData GeneratePrehistorikTrack(const CylHead &cylhead, const Track &track);
 TrackData GenerateReussirProtectedTrack (const CylHead &cylhead, const Track &track);
 
 #endif // SPECIALFORMAT_H

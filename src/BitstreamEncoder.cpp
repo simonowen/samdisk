@@ -49,10 +49,16 @@ bool generate_simple(TrackData &trackdata)
 
 	for (auto &s : track)
 	{
-		// Take user gap3 over sector gap3, with default of 25 bytes.
+		// Prefer option gap, then IBM fit, then sector gap, with 25-byte fallback.
+		// For IBM fit use the fit gap3 only if the sectors count matches, implying
+		// a simple fitting case. When space is tight on a real PC FDC we need to
+		// create large sectors from multiple smaller sectors. We don't have that
+		// limitation with bitstream encoding, so just join all sectors together
+		// with a smaller gap3 (currently 10 bytes) to make it fit.
 		int gap3 = (opt.gap3 > 0) ? opt.gap3 :
+			fits_ibmpc ?
+				((fit_details.total_units == track.size()) ? fit_details.gap3 : 10) :
 			s.gap3 ? s.gap3 :
-			(fits_ibmpc && fit_details.total_units == track.size()) ? fit_details.gap3 :
 			25;
 
 		bitbuf.setEncoding(s.encoding);

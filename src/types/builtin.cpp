@@ -601,6 +601,54 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 			disk->write(cylhead.next_cyl(), std::move(complete(track)));
 		}
 
+		// Titus the Fox (track 40)
+		{
+			static constexpr uint8_t ids[]{ 193,198,194,199,195,202,12 };
+			Track track(arraysize(ids));
+
+			for (auto id : ids)
+			{
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
+				if (id == 12)
+				{
+					sector.header.cyl = 90;
+					sector.header.size = 5;
+
+					std::string sig{ "Prehistorik Protection !!! Titus Software Nov 1991" };
+					Data data12(128, 0x4e);
+					std::copy(sig.begin(), sig.end(), data12.begin());
+					sector.add(std::move(data12), true);
+				}
+				track.add(std::move(sector));
+			}
+
+			disk->write(GeneratePrehistorikTrack(cylhead.next_cyl(), complete(track)));
+		}
+
+		// Prehistoric (track 39)
+		{
+			static constexpr uint8_t ids[]{ 193,198,194,199,195,200,196,201,197,202,12 };
+			Track track(arraysize(ids));
+
+			for (auto id : ids)
+			{
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
+				if (id == 12)
+				{
+					sector.header.cyl = 89;
+					sector.header.size = 5;
+
+					std::string sig{ "Prehistorik Protection !!! Titus Software Nov 1991" };
+					Data data12(128, 0x4e);
+					std::copy(sig.begin(), sig.end(), data12.begin());
+					sector.add(std::move(data12), true);
+				}
+				track.add(std::move(sector));
+			}
+
+			disk->write(cylhead.next_cyl(), std::move(complete(track)));
+		}
+
 		// Prehistoric 2 (track 30)
 		{
 			static constexpr uint8_t ids[]{ 1,193,2,194,3,195,4,196,5,197,6,198,7,199 };

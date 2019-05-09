@@ -694,6 +694,61 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// Titus Prehistorik protection, which may be followed by unused KBI-19 sectors.
+// The KBI format isn't tested, so this seems to be a disk mastering error.
+bool IsPrehistorikTrack(const Track &track)
+{
+	bool found_12{ false };
+
+	for (auto &s : track.sectors())
+	{
+		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
+			s.header.size != ((s.header.cyl != 40) ? 5 : 2) ||
+			(s.has_baddatacrc() && s.header.size != 5))
+			return false;
+
+		// The 4K sector 12 contains the protection signature.
+		if (s.header.sector == 12 && s.header.size == 5)
+		{
+			found_12 = true;
+
+			auto &data12 = s.data_copy();
+			if (memcmp(data12.data() + 0x1b, "Titus", 5))
+				return false;
+		}
+	}
+
+	if (!found_12)
+		return false;
+
+	if (opt.debug) util::cout << "detected Prehistorik track\n";
+	return true;
+}
+
+TrackData GeneratePrehistorikTrack(const CylHead &cylhead, const Track &track)
+{
+	assert(IsPrehistorikTrack(track));
+
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart();
+
+	auto gap3 = (track.size() == 11) ? 106 : 30;
+	for (auto &sector : track)
+	{
+		if (sector.header.sector != 12)
+			bitbuf.addSector(sector, gap3);
+		else
+		{
+			bitbuf.addSector(sector.header, sector.data_copy(), gap3, sector.dam, true);
+			break;
+		}
+	}
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #if 0
 /*
 We don't currently use these functions, as patching the protection code gives a
