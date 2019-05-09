@@ -442,8 +442,7 @@
       <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
-@if exist \Shared\ copy "$(TargetPath)" \Shared\
+      <Command>@if exist \Shared\ copy "$(TargetPath)" \Shared\
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -498,8 +497,7 @@
       <DelayLoadDLLs>winusb.dll;ws2_32.dll;CAPSImg.dll;ftd2xx.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>@if exist C:\Batch\sign.bat call C:\Batch\sign.bat "$(TargetPath)"
-@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
+      <Command>@if exist \Shared\x64 copy "$(TargetPath)" \Shared\x64\
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
