@@ -555,10 +555,9 @@ void scan_bitstream_gcr (TrackData &trackdata)
 			}
 
 			default:
-				std::array<uint8_t, 3> id;
-//				bitbuf.read(id);
-
-				Message(msgWarning, "unknown %s address mark (%02X %02X %02X %02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, id[0], id[1], id[2], am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				// Only complain about bad address marks if we've already seen a good header.
+				if (!track.empty())
+					Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				break;
 		}
 	}
