@@ -102,8 +102,8 @@ bool generate_simple(TrackData &trackdata)
 	auto track_time_ms = track_time_ns / 1'000'000;
 
 	// ToDo: caller should supply size limit
-	if (track_time_ms > 205)
-		return false;
+	if (track_time_ms > 205 && !opt.force)
+		throw util::exception("generated bitstream is too big for ", trackdata.cylhead);
 
 	trackdata.add(std::move(bitbuf.buffer()));
 	return true;

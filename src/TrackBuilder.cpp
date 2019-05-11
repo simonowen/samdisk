@@ -221,19 +221,25 @@ void TrackBuilder::addSectorData(const Data &data, int size, uint8_t dam, bool c
 
 	// Ensure the written data matches the sector size code.
 	auto len_bytes{ Sector::SizeCodeToLength(size) };
-	if (data.size() > len_bytes)
+	if (data.size() == len_bytes)
 	{
-		Data data_head(data.begin(), data.begin() + len_bytes);
-		addBlockUpdateCrc(data_head);
+		// Normal data and appropriate CRC.
+		addBlockUpdateCrc(data);
+		addCrcBytes(crc_error);
+	}
+	else if (data.size() > len_bytes)
+	{
+		// Data plus gap, which will include data CRC.
+		addBlockUpdateCrc(data);
 	}
 	else
 	{
+		// Short data padded to full size, and an appropriate CRC.
 		addBlockUpdateCrc(data);
 		Data data_pad(len_bytes - data.size(), 0x00);
 		addBlockUpdateCrc(data_pad);
+		addCrcBytes(crc_error);
 	}
-
-	addCrcBytes(crc_error);
 }
 
 void TrackBuilder::addSector(const Sector &sector, int gap3_bytes)
@@ -249,7 +255,8 @@ void TrackBuilder::addSector(const Sector &sector, int gap3_bytes)
 		addGap2();
 		if (sector.has_data())
 			addSectorData(sector.data_copy(), sector.header.size, sector.dam, sector.has_baddatacrc());
-		addGap(gap3_bytes);
+		if (!sector.has_gapdata())
+			addGap(gap3_bytes);
 		break;
 	}
 	case Encoding::Amiga:
