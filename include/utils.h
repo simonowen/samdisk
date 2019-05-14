@@ -139,13 +139,13 @@ T letoh (T x)
 }
 
 template <int N, std::enable_if_t<N == 2>* = nullptr>
-uint16_t le_value(uint8_t (&arr)[N])
+uint16_t le_value(const uint8_t (&arr)[N])
 {
 	return (arr[1] << 8) | arr[0];
 }
 
 template <int N, std::enable_if_t<N == 3 || N == 4>* = nullptr>
-auto le_value(uint8_t (&arr)[N])
+auto le_value(const uint8_t (&arr)[N])
 {
 	uint32_t value = 0, i = 0;
 	for (auto x : arr)
@@ -154,13 +154,13 @@ auto le_value(uint8_t (&arr)[N])
 }
 
 template <int N, std::enable_if_t<N == 2>* = nullptr>
-uint16_t be_value(uint8_t(&arr)[N])
+uint16_t be_value(const uint8_t(&arr)[N])
 {
 	return (arr[0] << 8) | arr[1];
 }
 
 template <int N, std::enable_if_t<N == 3 || N == 4>* = nullptr>
-auto be_value(uint8_t(&arr)[N])
+auto be_value(const uint8_t(&arr)[N])
 {
 	uint32_t value = 0;
 	for (auto x : arr)

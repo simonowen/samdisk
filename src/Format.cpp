@@ -506,18 +506,27 @@ bool Format::FromSize (int64_t size, Format &fmt)
 
 void Format::Validate () const
 {
-	Validate(cyls, heads, sectors, sector_size());
+	if (!TryValidate(cyls, heads, sectors, sector_size()))
+		throw util::exception("bad geometry");
 }
 
-void Format::Validate (int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
+/*static*/ void Format::Validate (int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
 {
-	if (!cyls_ || cyls_ > MAX_TRACKS ||
-		!heads_ || heads_ > MAX_SIDES ||
-		!sectors_ || sectors_ > MAX_SECTORS ||
-		(max_sector_size && sector_size > max_sector_size))
-	{
+	if (!TryValidate(cyls_, heads_, sectors_, sector_size, max_sector_size))
 		throw util::exception("bad geometry");
-	}
+}
+
+bool Format::TryValidate() const
+{
+	return TryValidate(cyls, heads, sectors, sector_size());
+}
+
+/*static*/ bool Format::TryValidate (int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
+{
+	return cyls_ && cyls_ <= MAX_TRACKS &&
+		heads_ && heads_ <= MAX_SIDES &&
+		sectors_ && sectors_ <= MAX_SECTORS &&
+		(!max_sector_size || sector_size <= max_sector_size);
 }
 
 void Format::Override (bool full_control/*=false*/)

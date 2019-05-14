@@ -169,6 +169,7 @@
     <ClCompile Include="src\types\scp.cpp" />
     <ClCompile Include="src\types\scp_dev.cpp" />
     <ClCompile Include="src\types\sdf.cpp" />
+    <ClCompile Include="src\types\st.cpp" />
     <ClCompile Include="src\types\td0.cpp">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Level3</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level3</WarningLevel>
@@ -268,6 +269,7 @@
     <ClInclude Include="include\Util.h" />
     <ClInclude Include="include\utils.h" />
     <ClInclude Include="include\win32_error.h" />
+    <ClInclude Include="src\types\bpb.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SAMdisk.rc">

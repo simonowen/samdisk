@@ -578,7 +578,6 @@ int SizeToCode (int sector_size)
 		if (sector_size == Sector::SizeCodeToLength(i))
 			return i;
 
-	assert(false);
 	return 0xff;	// Should never hit this
 }
 

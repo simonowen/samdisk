@@ -32,11 +32,13 @@ struct Format
 
 	std::vector<int> get_ids (const CylHead &cylhead) const;
 	void Validate () const;
+	bool TryValidate() const;
 	void Override (bool full_control = false);
 
 	static Format GetFormat (RegularFormat reg_fmt);
 	static bool FromSize (int64_t size, Format &fmt);
 	static void Validate (int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
+	static bool TryValidate (int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
 
 	int cyls = DefaultTracks;
 	int heads = DefaultSides;

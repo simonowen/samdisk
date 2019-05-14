@@ -49,6 +49,7 @@ bool ReadMSA (MemFile &file, std::shared_ptr<Disk> &disk)
 	fmt.cyls = bEndTrack + 1;
 	fmt.heads = bSides;
 	fmt.sectors = bSectors;
+	fmt.gap3 = 0;	// auto, based on sector count
 	fmt.datarate = (fmt.track_size() < 6000) ? DataRate::_250K : DataRate::_500K;
 	fmt.Override();
 

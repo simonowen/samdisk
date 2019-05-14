@@ -360,6 +360,9 @@
     <ClCompile Include="src\types\woz.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\st.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">
@@ -520,6 +523,9 @@
     </ClInclude>
     <ClInclude Include="include\FluxTrackBuilder.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\bpb.h">
+      <Filter>types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
