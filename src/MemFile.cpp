@@ -43,12 +43,28 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 #else
 	bool have_zlib = zlibVersion()[0] == ZLIB_VERSION[0];
 
-	// Try opening as a zip file
+	// Read start of file to check for compression signatures.
 	if (uncompress && have_zlib)
 	{
-		unzFile hfZip = unzOpen(path_.c_str());
-		if (hfZip)
+		FILE *f = fopen(path_.c_str(), "rb");
+        if (!f)
+            throw posix_error(errno, path_.c_str());
+
+		if (!fread(mem, 1, 2, f))
+			mem[0] = mem[1] = '\0';
+
+        fclose(f);
+	}
+
+	if (uncompress && have_zlib)
+	{
+		// Require zip file header magic.
+		if (mem[0U] == 'P' && mem[1U] == 'K')
 		{
+			unzFile hfZip = unzOpen(path_.c_str());
+			if (!hfZip)
+				throw util::exception("bad zip file");
+
 			int nRet;
 			unz_file_info sInfo;
 			uLong ulMaxSize = 0;
@@ -102,20 +118,14 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 			// Close the zip archive
 			unzClose(hfZip);
 
-			// Stop if something went wrong
 			if (nRet < 0)
-			{
-				// Retry bad files without zlib if they lack an explicit .zip extension
-				if (nRet == UNZ_BADZIPFILE && !IsFileExt(path_, ".zip"))
-					return open(path_, false);
-
 				throw util::exception("zip extraction failed (", nRet, ")");
-			}
 
 			uRead = nRet;
 			m_compress = Compress::Zip;
 		}
-		else
+		// Require gzip file header magic.
+		else if (mem[0U] == 0x1f && mem[1U] == 0x8b)
 		{
 			// Open as gzipped or uncompressed
 			gzFile gf = gzopen(path_.c_str(), "rb");
@@ -156,10 +166,11 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 			}
 		}
 	}
-	else
 #endif // HAVE_ZLIB
+
+	// If didn't read as a compressed file, open as normal file.
+	if (!uRead)
 	{
-		// Open as normal file if we couldn't use zlib above
 		FILE *f = fopen(path_.c_str(), "rb");
 		if (!f)
 			throw posix_error(errno, path_.c_str());
@@ -173,7 +184,7 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 	if (uncompress && mem[0U] == 'P' && mem[1U] == 'K')
 		throw util::exception("zlib support is not available for zipped files");
 	// gzip compressed?
-	if (uncompress && mem[0U] == 0x1f && mem[1U] == 0x8b && mem[2U] == 0x08)
+	if (uncompress && mem[0U] == 0x1f && mem[1U] == 0x8b)
 	{
 		if (!have_zlib)
 			throw util::exception("zlib support is not available for gzipped files");
