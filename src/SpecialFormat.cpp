@@ -552,15 +552,24 @@ bool IsLogoProfTrack (const Track &track)
 	if (track.size() != 10 && track.size() != 11)
 		return false;
 
+	// First non-placeholder sector id.
+	int id = 2;
+
 	for (auto &s : track)
 	{
-		// Ignore placeholder sector
-		if (s.has_badidcrc() && s.header.sector == 1)
-			continue;
+		// Check for placeholder sector, present in old EDSK images.
+		if (track.size() == 11 && s.header.sector == 1)
+		{
+			// It must have a bad ID header CRC.
+			if (s.has_badidcrc())
+				continue;
+			else
+				return false;
+		}
 
 		// Ensure each sector is double-density MFM, 512-bytes, with good data
 		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
-			s.size() != 512 || !s.has_data() || s.has_baddatacrc())
+			s.header.sector != id++ || s.size() != 512 || !s.has_good_data())
 			return false;
 	}
 
@@ -588,7 +597,10 @@ TrackData GenerateLogoProfTrack (const CylHead &cylhead, const Track &track)
 	bitbuf.addGap(600);
 
 	for (auto &sector : track)
-		bitbuf.addSector(sector, 0x20);
+	{
+		if (sector.header.sector != 1)
+			bitbuf.addSector(sector, 0x20);
+	}
 
 	return TrackData(cylhead, std::move(bitbuf.buffer()));
 }
