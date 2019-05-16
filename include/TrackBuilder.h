@@ -29,7 +29,7 @@ public:
 	void addIAM ();
 	void addCrcBytes (bool bad_crc = false);
 
-	void addTrackStart ();
+	void addTrackStart (bool short_mfm_gap = false);
 	void addSectorHeader (const Header &header, bool crc_error = false);
 	void addSectorData (const Data &data, int size, uint8_t dam = 0xfb, bool crc_error = false);
 	void addSector (const Sector &sector, int gap3_bytes = 0);

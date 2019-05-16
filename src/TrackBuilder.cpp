@@ -174,15 +174,23 @@ void TrackBuilder::addCrcBytes (bool bad_crc)
 	addByte((m_crc ^ adjust) & 0xff);
 }
 
-void TrackBuilder::addTrackStart ()
+void TrackBuilder::addTrackStart (bool short_mfm_gap)
 {
 	switch (m_encoding)
 	{
 	case Encoding::MFM:
 	case Encoding::FM:
-		addGap((m_encoding == Encoding::FM) ? 40 : 80);	// gap 4a
-		addIAM();
-		addGap((m_encoding == Encoding::FM) ? 26 : 50);	// gap 1
+		if (m_encoding == Encoding::MFM && short_mfm_gap)
+		{
+			// Short gap without IAM, for 11-sector disks.
+			addGap(20);
+		}
+		else
+		{
+			addGap((m_encoding == Encoding::FM) ? 40 : 80);	// gap 4a
+			addIAM();
+			addGap((m_encoding == Encoding::FM) ? 26 : 50);	// gap 1
+		}
 		break;
 	case Encoding::Amiga:
 	{

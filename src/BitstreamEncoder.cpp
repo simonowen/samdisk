@@ -32,6 +32,8 @@ bool generate_special(TrackData &trackdata)
 		trackdata.add(GenerateOperaSoftTrack(trackdata.cylhead, track));
 	else if (Is8KSectorTrack(track))
 		trackdata.add(Generate8KSectorTrack(trackdata.cylhead, track));
+	else if (Is11SectorTrack(track))
+		trackdata.add(Generate11SectorTrack(trackdata.cylhead, track));
 	else
 		return false;
 

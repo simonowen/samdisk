@@ -761,6 +761,40 @@ TrackData GeneratePrehistorikTrack(const CylHead &cylhead, const Track &track)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool Is11SectorTrack(const Track &track)
+{
+	if (track.size() != 11)
+		return false;
+
+	for (auto &s : track)
+	{
+		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
+			s.size() != 512 || !s.has_good_data())
+		{
+			return false;
+		}
+	}
+
+	if (opt.debug) util::cout << "detected 11-sector tight track\n";
+	return true;
+}
+
+TrackData Generate11SectorTrack (const CylHead &cylhead, const Track &track)
+{
+	assert(Is11SectorTrack(track));
+
+	BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::MFM);
+	bitbuf.addTrackStart(true);
+
+	for (auto &sector : track)
+		bitbuf.addSector(sector, 1);
+
+	return TrackData(cylhead, std::move(bitbuf.buffer()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if 0
 /*
 We don't currently use these functions, as patching the protection code gives a
