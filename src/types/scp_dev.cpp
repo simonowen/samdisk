@@ -86,6 +86,9 @@ protected:
 					throw util::exception(m_supercardpro->GetErrorStatusText());
 
 				track_time_ns = std::accumulate(flux_rev[0].begin(), flux_rev[0].end(), 0ULL);
+
+				constexpr auto write_margin_ns = 1'000'000;	// 1ms
+				track_time_ns -= write_margin_ns;
 			}
 
 			auto total_time_ns = std::accumulate(flux_times.begin(), flux_times.end(), 0ULL);
