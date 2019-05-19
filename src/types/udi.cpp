@@ -27,7 +27,7 @@ typedef struct
 
 static uint32_t crc32 (const uint8_t *buf, int len)
 {
-	long crc = ~0;
+	int32_t crc = ~0;
 	for (int i = 0; i < len; i++)
 	{
 		crc ^= ~buf[i];
