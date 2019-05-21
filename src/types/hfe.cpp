@@ -308,7 +308,7 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 		data_offset += ((max_track_bytes * 2) / 512) + 1;
 	}
 
-	if (!fwrite(aTrackLUT.data(), aTrackLUT.size() * sizeof(aTrackLUT[0]), 1, f_))
+	if (fwrite(aTrackLUT.data(), sizeof(aTrackLUT[0]), aTrackLUT.size(), f_) != aTrackLUT.size())
 		throw util::exception("write error");
 
 	MEMORY mem(max_disk_track_bytes * 2 + 512);
@@ -335,7 +335,7 @@ bool WriteHFE (FILE* f_, std::shared_ptr<Disk> &disk)
 
 		fseek(f_, util::letoh(aTrackLUT[cyl].offset) * 512, SEEK_SET);
 		auto track_len = (util::letoh(aTrackLUT[cyl].track_len) + 511) & ~0x1ff;
-		if (!fwrite(mem.pb, track_len, 1, f_))
+		if (fwrite(mem.pb, 1, track_len, f_) != static_cast<size_t>(track_len))
 			throw util::exception("write error");
 	}
 
