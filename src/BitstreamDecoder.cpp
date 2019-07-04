@@ -44,7 +44,7 @@ void scan_flux (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Apple };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Victor, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -127,7 +127,7 @@ void scan_bitstream (TrackData &trackdata)
 	else
 	{
 		// Scan for formats, starting with the last successful encoding.
-		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Apple };
+		encodings = { last_encoding, Encoding::MFM, Encoding::Amiga, Encoding::GCR, Encoding::Victor, Encoding::Apple };
 		encodings.erase(std::next(std::find(encodings.rbegin(), encodings.rend(), last_encoding)).base());
 
 		// MFM and FM use the same scanner, so remove the duplicate
@@ -1687,6 +1687,10 @@ and use GCR encoding shared with Commodore 64.
 
 https://www.discferret.com/wiki/Victor_9000_format
 
+http://cowlark.com/fluxengine/doc/disk-victor9k.html
+
+https://marc.info/?l=classiccmp&m=129908628407202&w=2
+
 https://github.com/mamedev/mame/blob/master/src/lib/formats/victor9k_dsk.cpp
 */
 
@@ -1694,6 +1698,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 {
 	Track track;
 	uint32_t dword = 0;
+	uint16_t stored_cksum, cksum;
 	std::vector<std::pair<int, Encoding>> data_fields;
 
 	auto &bitbuf = trackdata.bitstream();
@@ -1723,8 +1728,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 		}
 
 		/*
-		 * IDAM: GCR5 SYNC x 9, GCR5 (0x07) (= 0x17), GCR5 (track id), GCR5 (sector id), header crc, 0x55 x 8
-		 * DAM:  GCR5 SYNC x 5, GCR5 (0x08) (= 0x09), GCR5 (sector data), data crc, 0x55 x 8
+		 * IDAM: GCR5 SYNC x 9, GCR5 (0x07) (= 0x17), GCR5 (track id), GCR5 (sector id), GCR5 (header checksum), 0x55 x 8
+		 * DAM:  GCR5 SYNC x 5, GCR5 (0x08) (= 0x09), GCR5 (sector data), GCR5 (data checksum, 16 bits), 0x55 x 8
 		 * GAP4: 0x555555
 		 */
 		if ((dword & 0x3ff) == 0x3ff)
@@ -1752,11 +1757,14 @@ void scan_bitstream_victor (TrackData &trackdata)
 				std::array<uint8_t, 3> id;
 				bitbuf.read(id);
 
-				Sector s(bitbuf.datarate, bitbuf.encoding, Header(id[0], trackdata.cylhead.head, id[1], SizeToCode(512)));
-				s.offset = bitbuf.track_offset(am_offset);
+				if ((id[0] + id[1]) == id[2] || (opt.idcrc == 1))
+				{
+					Sector s(bitbuf.datarate, bitbuf.encoding, Header(id[0], trackdata.cylhead.head, id[1], SizeToCode(512)));
+					s.offset = bitbuf.track_offset(am_offset);
 
-				if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
-				track.add(std::move(s));
+					if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					track.add(std::move(s));
+				}
 
 				break;
 			}
@@ -1825,7 +1833,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 			// Calculate the extent of the current data field, up to the next header or data field (depending if gap2 is required)
 			auto extent_bytes = read_gap2 ? next_dam_bytes : next_idam_bytes;
 
-			auto normal_bytes = sector.size() + 1;					// data size + checksum byte
+			auto normal_bytes = sector.size();						// data size + checksum byte
 			auto data_bytes = std::min(normal_bytes, extent_bytes);	// data size needed to verify checksum
 //			auto data_bytes = std::max(normal_bytes, extent_bytes);	// data size needed to verify checksum
 
@@ -1850,6 +1858,9 @@ void scan_bitstream_victor (TrackData &trackdata)
 			Data data(data_bytes);
 			bitbuf.read(data);
 
+			stored_cksum  = bitbuf.read_byte();
+			stored_cksum |= bitbuf.read_byte() << 8;
+
 			// Truncate at the extent size, unless we're asked to keep overlapping sectors
 			if (!opt.keepoverlap && extent_bytes < sector.size())
 				data.resize(extent_bytes);
@@ -1857,7 +1868,10 @@ void scan_bitstream_victor (TrackData &trackdata)
 //			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
 				data.resize(sector.size());
 
-			bool bad_crc = false; // XXX 10-bit CRC code is missing
+			cksum = std::accumulate(data.begin(), data.end(), 0);
+			bool bad_crc = cksum != stored_cksum;
+
+			if (opt.debug) util::cout << util::fmt ("cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
 
 			sector.add(std::move(data), bad_crc, 0xfb);
 
