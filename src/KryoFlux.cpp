@@ -217,6 +217,7 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 	uint32_t time = 0, stream_pos = 0;
 	uint32_t ps_per_tick = PS_PER_TICK(SAMPLE_FREQ);
 	std::vector<uint32_t> index_offsets;
+	int hard_indexes = 0;
 
 	auto itBegin = data.begin(), it = itBegin, itEnd = data.end();
 	while (it != itEnd)
@@ -272,8 +273,13 @@ void KryoFlux::ReadFlux (int revs, FluxData &flux_revs, std::vector<std::string>
 					{
 						assert(size == 12);
 
-						auto pdw = reinterpret_cast<const uint32_t *>(&*it);
-						index_offsets.push_back(util::letoh(pdw[0]));
+						// Soft-sectored disks have a single start-of-track index.
+						// Hard-sectors are combined to achieve the same result.
+						if (opt.hardsectors <= 1 || !(++hard_indexes % opt.hardsectors))
+						{
+							auto pdw = reinterpret_cast<const uint32_t *>(&*it);
+							index_offsets.push_back(util::letoh(pdw[0]));
+						}
 						break;
 					}
 

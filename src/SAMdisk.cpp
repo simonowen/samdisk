@@ -145,6 +145,7 @@ struct option long_options[] =
 	{ "cyls",		required_argument, nullptr, 'c' },
 	{ "head",		required_argument, nullptr, 'h' },
 	{ "sectors",	required_argument, nullptr, 's' },
+	{ "hard-sectors",required_argument,nullptr, 'H' },
 	{ "retries",	required_argument, nullptr, 'r' },
 	{ "rescans",	optional_argument, nullptr, 'R' },
 	{ "double-step",	  no_argument, nullptr, 'd' },
@@ -245,7 +246,7 @@ struct option long_options[] =
 	{ 0, 0, 0, 0 }
 };
 
-static char short_options[] = "?nmdvfLxb:c:h:s:r:R:g:i:k:z:0:1:D:";
+static char short_options[] = "?nmdvfLxb:c:h:s:H:r:R:g:i:k:z:0:1:D:";
 
 bool BadValue (const char *pcszName_)
 {
@@ -283,6 +284,12 @@ bool ParseCommandLine (int argc_, char *argv_[])
 
 			case 's':
 				opt.sectors = util::str_value<long>(optarg);
+				break;
+
+			case 'H':
+				opt.hardsectors = util::str_value<int>(optarg);
+				if (opt.hardsectors <= 1)
+					throw util::exception("invalid hard-sector count '", optarg, "'");
 				break;
 
 			case 'r':
