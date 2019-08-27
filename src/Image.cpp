@@ -7,7 +7,6 @@
 #include "BlockDevice.h"
 
 bool UnwrapSDF (std::shared_ptr<Disk> &src_disk, std::shared_ptr<Disk> &disk);
-bool ReadUnsupp (MemFile &file, std::shared_ptr<Disk> &disk);
 
 bool ReadImage (const std::string &path, std::shared_ptr<Disk> &disk, bool normalise)
 {

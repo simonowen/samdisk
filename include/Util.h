@@ -108,6 +108,7 @@ const char *CHS (int cyl, int head, int sector);
 const char *CHR (int cyl, int head, int record);
 const char *CHSR (int cyl, int head, int sector, int record);
 
+extern std::set<std::string> seen_messages;
 
 template <typename ...Args>
 void Message (MsgType type, const char* pcsz_, Args&& ...args)
@@ -116,6 +117,14 @@ void Message (MsgType type, const char* pcsz_, Args&& ...args)
 
 	if (type == msgError)
 		throw util::exception(msg);
+
+	if (type != msgStatus)
+	{
+		if (seen_messages.find(msg) != seen_messages.end())
+			return;
+
+		seen_messages.insert(msg);
+	}
 
 	switch (type)
 	{
