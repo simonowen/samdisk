@@ -90,6 +90,10 @@ void scan_flux (TrackData &trackdata)
 				scan_flux_victor(trackdata);
 				break;
 
+			case Encoding::Vista:
+				scan_flux_vista(trackdata);
+				break;
+
 			default:
 				assert(false);
 				break;
@@ -173,6 +177,10 @@ void scan_bitstream (TrackData &trackdata)
 
 			case Encoding::Victor:
 				scan_bitstream_victor(trackdata);
+				break;
+
+			case Encoding::Vista:
+				scan_bitstream_vista(trackdata);
 				break;
 
 			default:
@@ -1886,3 +1894,89 @@ void scan_bitstream_victor (TrackData &trackdata)
 	trackdata.add(std::move(track));
 }
 
+// Vista Computer Company: hard-sectored disks with 10 sectors per track.
+// The data is encoded as MFM, but using a custom track format.
+void scan_bitstream_vista(TrackData &trackdata)
+{
+	auto &bitbuf = trackdata.bitstream();
+	bitbuf.seek(0);
+
+	Track track;
+	track.tracklen = bitbuf.track_bitsize();
+
+	uint32_t dword = 0;
+	while (!bitbuf.wrapped())
+	{
+		dword = (dword << 1) | bitbuf.read1();
+
+		// Search for 00 00 MFM pattern in potential preamble.
+		if (dword != 0xaaaaaaaa)
+			continue;
+
+		int zero_bits = 16;
+		while (!bitbuf.wrapped())
+		{
+			dword = (dword << 2) | bitbuf.read2();
+
+			// Stop at the end of the zero run.
+			if (dword != 0xaaaaaaaa)
+				break;
+
+			++zero_bits;
+		}
+
+		// Require enough preamble (currently 20 bytes) before considering a sync marker.
+		if (zero_bits < 20 * 8)
+			continue;
+
+		// Check for 01 55 as MFM pattern (no missing clock bits!).
+		auto am_offset = bitbuf.tell();
+		dword = (dword << 16) | bitbuf.read16();
+		if (dword != 0xaaa91111)
+			continue;
+
+		auto track_number = bitbuf.read_byte();
+		auto sector_number = bitbuf.read_byte();
+
+		Data data(512);
+		bitbuf.read(data);
+
+		auto checksum = bitbuf.read_byte();
+		auto end_marker = bitbuf.read_byte();
+
+		uint8_t calc_checksum = 0;
+		for (auto b : data)
+		{
+			calc_checksum += b;
+			calc_checksum = (calc_checksum << 1) | (calc_checksum >> 7); // rotate left
+		}
+		bool bad_crc = (calc_checksum != checksum) || end_marker != 0xaa;
+
+		auto phys_cyl = trackdata.cylhead.cyl / opt.step;
+		if (bad_crc && track_number != phys_cyl)
+		{
+			if (opt.debug)
+				util::cout << "ignoring bad sector with cyl=" << track_number << " but physical cyl=" << phys_cyl << "\n";
+			continue;
+		}
+
+		Header header(track_number, trackdata.cylhead.head, sector_number, SizeToCode(data.size()));
+		Sector sector(DataRate::_250K, Encoding::Vista, header);
+		sector.offset = am_offset;
+		sector.add(std::move(data), bad_crc);
+		track.add(std::move(sector));
+	}
+
+	trackdata.add(std::move(track));
+}
+
+void scan_flux_vista(TrackData &trackdata)
+{
+	// Fixed data rate.
+	auto datarate = DataRate::_250K;
+	FluxDecoder decoder(trackdata.flux(), bitcell_ns(datarate));
+	BitBuffer bitbuf(datarate, decoder);
+
+	trackdata.add(std::move(bitbuf));
+	scan_bitstream_vista(trackdata);
+}

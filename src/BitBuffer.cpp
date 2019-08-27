@@ -168,6 +168,11 @@ uint8_t BitBuffer::read1 ()
 	return bit;
 }
 
+uint8_t BitBuffer::read2()
+{
+	return (read1() << 1) | read1();
+}
+
 uint8_t BitBuffer::read8_msb()
 {
 	uint8_t byte = 0;

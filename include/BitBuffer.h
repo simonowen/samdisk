@@ -32,6 +32,7 @@ public:
 	void remove (int num_bits);
 
 	uint8_t read1 ();
+	uint8_t read2();
 	uint8_t read8_msb ();
 	uint8_t read8_lsb();
 	uint16_t read16 ();

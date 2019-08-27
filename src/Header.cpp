@@ -28,6 +28,7 @@ std::string to_string (const Encoding &encoding)
 		case Encoding::Agat:	return "Agat";			break;
 		case Encoding::Apple:	return "Apple";		    break;
 		case Encoding::Victor:	return "Victor";		break;
+		case Encoding::Vista:	return "Vista";			break;
 		case Encoding::Unknown:	break;
 	}
 	return "Unknown";
@@ -47,6 +48,7 @@ std::string short_name (const Encoding &encoding)
 		case Encoding::Agat:	return "agat";			break;
 		case Encoding::Apple:	return "a2";			break;
 		case Encoding::Victor:	return "vic";			break;
+		case Encoding::Vista:	return "vis";			break;
 		case Encoding::Unknown:	break;
 	}
 	return "unk";
@@ -76,6 +78,9 @@ Encoding encoding_from_string (std::string str)
 	if (str == "ace") return Encoding::Ace;
 	if (str == "mx") return Encoding::MX;
 	if (str == "agat") return Encoding::Agat;
+	if (str == "apple") return Encoding::Apple;
+	if (str == "victor") return Encoding::Victor;
+	if (str == "vista") return Encoding::Vista;
 	return Encoding::Unknown;
 }
 
