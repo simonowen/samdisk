@@ -145,7 +145,7 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 
 				z_stream stream{};
 				stream.next_in = zbuf.data();
-				stream.avail_in = zbuf.size();
+				stream.avail_in = static_cast<uInt>(zbuf.size());
 				stream.next_out = zbuf.data();	// same as next_in!
 				stream.avail_out = 0;			// we don't want data
 
@@ -196,9 +196,9 @@ bool MemFile::open (const std::string &path_, bool uncompress)
 
 		z_stream stream{};
 		stream.next_in = mem.pb;
-		stream.avail_in = uRead;
+		stream.avail_in = static_cast<uInt>(uRead);
 		stream.next_out = mem2.pb;
-		stream.avail_out = mem2.size;
+		stream.avail_out = static_cast<uInt>(mem2.size);
 
 		auto zerr = inflateInit2(&stream, 16 + MAX_WBITS);
 		if (zerr == Z_OK)

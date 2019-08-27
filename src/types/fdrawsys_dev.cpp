@@ -196,7 +196,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead &cylhead, int &firstSector
 {
 	Track track;
 
-	auto scan_size = sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS;
+	auto scan_size = static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS);
 	MEMORY mem(scan_size);
 	auto scan_result = reinterpret_cast<FD_TIMED_SCAN_RESULT *>(mem.pb);
 

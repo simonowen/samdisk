@@ -247,7 +247,7 @@ bool WriteMFI (FILE* f_, std::shared_ptr<Disk> &disk)
 			CylHead cylhead(cyl, head);
 			auto trackdata = disk->read(cylhead);
 			auto bitstream = trackdata.preferred().flux();
-			int track_bytes = bitstream[0].size() * 4;
+			auto track_bytes = static_cast<int>(bitstream[0].size() * 4);
 			max_track_bytes = std::max(track_bytes, max_track_bytes);
 			max_disk_track_bytes = std::max(max_disk_track_bytes, max_track_bytes);
 			bitstreams[cylhead] = std::move(bitstream);
@@ -270,14 +270,18 @@ bool WriteMFI (FILE* f_, std::shared_ptr<Disk> &disk)
 				[&orient, &total](uint32_t a) -> uint32_t { orient ^= 1; total += a; return (a) | (orient ? MG_B : MG_A); });
 			track_data.push_back((200000000 - total) | (orient ? MG_B : MG_A));
 
-			uLongf csize = track_size * 4 + 1000;
-			int rc = compress(&compressed_data[0], &csize, (const Bytef *)&track_data[0], track_size * 4);
+			auto csize = static_cast<uLongf>(track_size * 4 + 1000);
+			int rc = compress(&compressed_data[0], &csize, (const Bytef *)&track_data[0], static_cast<uLongf>(track_size * 4));
 			if (rc != Z_OK) {
 				util::cout << "compress of " << CylHead(cyl, head) << " failed, rc " << rc << "\n";
 				return false;
 			}
 
-			track_lut[cylhead] = { util::htole(pos), util::htole(csize), util::htole(track_size * 4), 0 };
+			track_lut[cylhead] = {
+				util::htole(static_cast<uint32_t>(pos)),
+				util::htole(static_cast<uint32_t>(csize)),
+				util::htole(static_cast<uint32_t>(track_size * 4)),
+				0 };
 
 			if (!fwrite(compressed_data.data(), csize, 1, f_))
 				throw util::exception("write error");

@@ -65,7 +65,7 @@ std::string FooterString(MemFile &file, uint32_t offset)
 	std::vector<char> str;
 	str.resize(len);
 
-	if (!file.read(str.data(), str.size()))
+	if (!file.read(str.data(), static_cast<int>(str.size())))
 		return "";
 
 	return std::string(str.data(), str.size());

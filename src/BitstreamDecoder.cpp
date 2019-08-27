@@ -1868,7 +1868,9 @@ void scan_bitstream_victor (TrackData &trackdata)
 //			else if (data.size() > sector.size() && (opt.gaps == GAPS_NONE))
 				data.resize(sector.size());
 
-			cksum = std::accumulate(data.begin(), data.end(), 0);
+			cksum = 0;
+			for (auto b : data)
+				cksum += b;
 			bool bad_crc = cksum != stored_cksum;
 
 			if (opt.debug) util::cout << util::fmt ("cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);

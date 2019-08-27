@@ -142,7 +142,7 @@ bool ReadWOZ (MemFile &file, std::shared_ptr<Disk> &disk)
 					if (splicepos != 0xffff)
 						bitbuf.splicepos(splicepos);
 
-					auto cylhead = CylHead(tmap.map[i], (i / cyl_step) / trks.size());
+					auto cylhead = CylHead(tmap.map[i], static_cast<int>((i / cyl_step) / trks.size()));
 					disk->write(cylhead, std::move(bitbuf));
 				}
 			}
