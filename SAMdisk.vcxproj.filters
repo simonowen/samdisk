@@ -363,6 +363,9 @@
     <ClCompile Include="src\types\st.cpp">
       <Filter>types</Filter>
     </ClCompile>
+    <ClCompile Include="src\types\pdi.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\JupiterAce.h">

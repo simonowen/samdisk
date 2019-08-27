@@ -158,6 +158,7 @@
     <ClCompile Include="src\types\mgt.cpp" />
     <ClCompile Include="src\types\msa.cpp" />
     <ClCompile Include="src\types\opd.cpp" />
+    <ClCompile Include="src\types\pdi.cpp" />
     <ClCompile Include="src\types\qdos.cpp" />
     <ClCompile Include="src\types\raw.cpp" />
     <ClCompile Include="src\types\record.cpp" />

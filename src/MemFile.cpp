@@ -337,10 +337,21 @@ Compress MemFile::compression () const
 	return m_compress;
 }
 
+bool MemFile::read(uint8_t &b)
+{
+	if (remaining() < 1)
+		return false;
+
+	b = *m_it++;
+	return true;
+}
+
 std::vector<uint8_t> MemFile::read (int len)
 {
 	auto avail_bytes = std::min(len, remaining());
-	return std::vector<uint8_t>(m_it, m_it + avail_bytes);
+	std::vector<uint8_t> data(m_it, m_it + avail_bytes);
+	m_it += avail_bytes;
+	return data;
 }
 
 bool MemFile::read (void *buf, int len)

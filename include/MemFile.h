@@ -19,6 +19,7 @@ public:
 	const std::string &name () const;
 	Compress compression () const;
 
+	bool read(uint8_t &b);
 	std::vector<uint8_t> read (int len);
 	bool read (void *buf, int len);
 	int read (void *buf, int size, int count);
