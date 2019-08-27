@@ -100,7 +100,6 @@ protected:
 
 private:
 	std::map<CylHead, std::vector<uint32_t>> m_data {};
-	uint32_t m_tick_ns = 0;
 
 };
 
@@ -130,7 +129,7 @@ bool ReadMFI (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	for (unsigned int cyl=0; cyl < fh.cyl_count; cyl++)
 	{
-		for (unsigned int head=0; head != fh.head_count; head++)
+		for (unsigned int head=0; head < fh.head_count; head++)
 		{
 			MFI_TRACK_HEADER th;
 			if (!file.read(&th, sizeof(th)))
@@ -157,6 +156,7 @@ bool ReadMFI (MemFile &file, std::shared_ptr<Disk> &disk)
 				return false;
 			}
 
+			// XXX redo
 			std::transform(track_data.begin(), track_data.end(), track_data.begin(),
 				[](uint32_t c) -> uint32_t { return (util::letoh(c) & TIME_MASK); });
 
@@ -169,6 +169,133 @@ bool ReadMFI (MemFile &file, std::shared_ptr<Disk> &disk)
 
 	mfi_disk->strType = "MFI";
 	disk = mfi_disk;
+
+	return true;
+#endif
+}
+
+static uint32_t MfiVariant (const Track &track, int cyls, int heads)
+{
+	if (!track.empty())
+	{
+		switch (track[0].encoding)
+		{
+		case Encoding::FM:
+			return heads == 2 ? DSSD : SSSD;
+		case Encoding::Amiga:
+		case Encoding::MFM:
+			switch (track[0].datarate)
+			{
+			case DataRate::_250K:
+			case DataRate::_300K:
+				return cyls > 40 ? DSQD : DSDD;
+			case DataRate::_500K:
+				return DSHD;
+			case DataRate::_1M:
+				return DSED;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	return SSSD;
+}
+
+
+bool WriteMFI (FILE* f_, std::shared_ptr<Disk> &disk)
+{
+#ifndef HAVE_ZLIB
+	throw util::exception("MFI disk images are not supported without ZLIB");
+#else
+	int tracks, heads;
+
+	std::vector<uint8_t> header(sizeof(MFI_FILE_HEADER), 0);
+	auto &fh = *reinterpret_cast<MFI_FILE_HEADER*>(header.data());
+	auto &track0 = disk->read_track({ 0, 0 });
+
+	tracks = static_cast<uint32_t>(disk->cyls());
+	heads = static_cast<uint32_t>(disk->heads());
+
+	strncpy(fh.signature, "MESSFLOPPYIMAGE", sizeof(fh.signature));
+	fh.cyl_count = util::htole(tracks);
+	fh.head_count = util::htole(heads);
+	fh.form_factor = util::htole(FF_UNKNOWN);
+	fh.variant = util::htole(MfiVariant(track0, disk->cyls(), disk->heads()));
+
+	if (!fwrite(header.data(), header.size(), 1, f_))
+		throw util::exception("write error");
+
+	std::map<CylHead, MFI_TRACK_HEADER> track_lut;
+	std::map<CylHead, FluxData> bitstreams;
+	int pos = sizeof(MFI_FILE_HEADER) + tracks * heads * sizeof(MFI_TRACK_HEADER);
+
+	if (fseek(f_, pos, SEEK_SET) < 0)
+		throw util::exception("seek error");
+
+//
+
+	auto max_disk_track_bytes = 0;
+	for (int cyl = 0; cyl < tracks; ++cyl)
+	{
+		auto max_track_bytes = 0;
+		for (int head = 0; head < heads; ++head)
+		{
+			CylHead cylhead(cyl, head);
+			auto trackdata = disk->read(cylhead);
+			auto bitstream = trackdata.preferred().flux();
+			int track_bytes = bitstream[0].size() * 4;
+			max_track_bytes = std::max(track_bytes, max_track_bytes);
+			max_disk_track_bytes = std::max(max_disk_track_bytes, max_track_bytes);
+			bitstreams[cylhead] = std::move(bitstream);
+		}
+	}
+
+	for (int cyl = 0; cyl < tracks; ++cyl)
+	{
+		for (int head = 0; head < heads; ++head)
+		{
+			CylHead cylhead(cyl, head);
+			auto &bitstream = bitstreams[cylhead];
+			auto track_size = bitstream[0].size() + 1;
+			int orient = 0, total = 0;
+
+			std::vector<uint32_t> track_data(track_size - 1);
+			Data compressed_data(track_size * 4 + 1000);
+
+			std::transform(bitstream[0].begin(), bitstream[0].end(), track_data.begin(),
+				[&orient, &total](uint32_t a) -> uint32_t { orient ^= 1; total += a; return (a) | (orient ? MG_B : MG_A); });
+			track_data.push_back((200000000 - total) | (orient ? MG_B : MG_A));
+
+			uLongf csize = track_size * 4 + 1000;
+			int rc = compress(&compressed_data[0], &csize, (const Bytef *)&track_data[0], track_size * 4);
+			if (rc != Z_OK) {
+				util::cout << "compress of " << CylHead(cyl, head) << " failed, rc " << rc << "\n";
+				return false;
+			}
+
+			track_lut[cylhead] = { util::htole(pos), util::htole(csize), util::htole(track_size * 4), 0 };
+
+			if (!fwrite(compressed_data.data(), csize, 1, f_))
+				throw util::exception("write error");
+			pos += csize;
+		}
+	}
+
+	if (fseek(f_, sizeof(MFI_FILE_HEADER), SEEK_SET) < 0)
+		throw util::exception("seek error");
+
+	for (int cyl = 0; cyl < tracks; ++cyl)
+	{
+		for (int head = 0; head < heads; ++head)
+		{
+			if (!fwrite(&track_lut[{cyl, head}], sizeof(MFI_TRACK_HEADER), 1, f_))
+				throw util::exception("write error");
+		}
+	}
 
 	return true;
 #endif
