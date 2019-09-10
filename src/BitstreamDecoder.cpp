@@ -1785,7 +1785,12 @@ void scan_bitstream_victor (TrackData &trackdata)
 			}
 
 			default:
-				Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				if (!track.empty())
+				{
+					Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
+						to_string(bitbuf.encoding).c_str(), am, am_offset,
+						CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				}
 				break;
 		}
 	}
