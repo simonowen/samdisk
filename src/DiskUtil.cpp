@@ -1088,10 +1088,6 @@ std::set<ChecksumType> ChecksumMethods (const uint8_t *buf, int len)
 	if (len <= 0x1800)
 		return methods;
 
-	// Check 6K of filler on unused tracks (Vigilante on CPC)
-	if (!memcmp(buf, buf + 1, 0x17ff))
-		methods.insert(ChecksumType::None);
-
 	// 2-byte CRC
 	{
 		// Check for CRC of 8C 15, which seems to be a strange fixed checksum found on some disks.
@@ -1140,6 +1136,11 @@ std::set<ChecksumType> ChecksumMethods (const uint8_t *buf, int len)
 				methods.insert(ChecksumType::XOR_18A0);
 		}
 	}
+
+	// Check 6K of filler on unused tracks (Vigilante on CPC)
+	// This is only done if we haven't yet matched another method.
+	if (methods.empty() && !memcmp(buf, buf + 1, 0x17ff))
+		methods.insert(ChecksumType::None);
 
 	return methods;
 }
