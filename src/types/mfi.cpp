@@ -261,14 +261,29 @@ bool WriteMFI (FILE* f_, std::shared_ptr<Disk> &disk)
 			CylHead cylhead(cyl, head);
 			auto &bitstream = bitstreams[cylhead];
 			auto track_size = bitstream[0].size() + 1;
-			int orient = 0, total = 0;
+			int orient = 0;
+			unsigned int total_sum = 0;
 
 			std::vector<uint32_t> track_data(track_size - 1);
 			Data compressed_data(track_size * 4 + 1000);
 
 			std::transform(bitstream[0].begin(), bitstream[0].end(), track_data.begin(),
-				[&orient, &total](uint32_t a) -> uint32_t { orient ^= 1; total += a; return (a) | (orient ? MG_B : MG_A); });
-			track_data.push_back((200000000 - total) | (orient ? MG_B : MG_A));
+				[&orient, &total_sum](uint32_t a) -> uint32_t {
+					orient ^= 1; total_sum += a; return (a) | (orient ? MG_B : MG_A);
+				});
+
+			// Normalize the times in a cell buffer to sum up to 200000000
+			unsigned int current_sum = 0;
+			for (unsigned int i=0; i != track_data.size(); i++) {
+				uint32_t time = track_data[i] & TIME_MASK;
+				track_data[i] = (track_data[i] & MG_MASK) | (200000000ULL * time / total_sum);
+				current_sum += (track_data[i] & TIME_MASK);
+			}
+
+			if (current_sum < 200000000)
+			{
+				track_data.push_back((200000000 - current_sum) | (orient ? MG_B : MG_A));
+			}
 
 			auto csize = static_cast<uLongf>(track_size * 4 + 1000);
 			int rc = compress(&compressed_data[0], &csize, (const Bytef *)&track_data[0], static_cast<uLongf>(track_size * 4));
