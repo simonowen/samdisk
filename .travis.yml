@@ -1,0 +1,43 @@
+branches:
+  except:
+  - appveyor
+
+language: cpp
+
+addons:
+  apt:
+    packages:
+    - libusb-1.0-0-dev
+    - libftdi-dev
+
+matrix:
+  include:
+    # Default macOS (currently Xcode 9.4.1 on macOS 10.13)
+    - os: osx
+
+    # Newer macOS (Xcode 11.2.1 on macOS 10.14)
+    - os: osx
+      osx_image: xcode11.2
+
+    # Ubuntu LTS, gcc, x64
+    - os: linux
+      dist: bionic
+      compiler: gcc
+
+    # Ubuntu LTS, Clang, x64
+    - os: linux
+      dist: bionic
+      compiler: clang
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install libftdi;
+    fi
+
+before_script:
+  - cmake --version
+
+script:
+  - mkdir build && cd build
+  - cmake ..
+  - make
