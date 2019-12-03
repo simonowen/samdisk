@@ -123,6 +123,7 @@
     </ClCompile>
     <ClCompile Include="src\types\1dd.cpp" />
     <ClCompile Include="src\types\2d.cpp" />
+    <ClCompile Include="src\types\a2r.cpp" />
     <ClCompile Include="src\types\adf.cpp" />
     <ClCompile Include="src\types\blk_dev.cpp" />
     <ClCompile Include="src\types\bpb.cpp" />
