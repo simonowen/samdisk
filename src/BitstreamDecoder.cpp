@@ -300,7 +300,7 @@ void scan_bitstream_apple (TrackData &trackdata)
 					id[m] = ((idraw[m << 1] & 0x55) << 1) | (idraw[1 + (m << 1)] & 0x55);
 				}
 
-				if (opt.debug && 1) util::cout << util::fmt ("  s_b_apple id (%02x %02x %02x %02x) [%02x %02x  %02x %02x  %02x %02x  %02x %02x  %02x %02x %02x] c %d\n",
+				if (opt.debug && 0) util::cout << util::fmt ("  s_b_apple id (%02x %02x %02x %02x) [%02x %02x  %02x %02x  %02x %02x  %02x %02x  %02x %02x %02x] c %d\n",
 					id[0], id[1], id[2], id[3],
 					idraw[0], idraw[1], idraw[2], idraw[3], idraw[4], idraw[5], idraw[6], idraw[7], idraw[8], idraw[9], idraw[10],
 					trackdata.cylhead.cyl);
@@ -498,7 +498,7 @@ void scan_bitstream_gcr (TrackData &trackdata)
 	{
 		dword = (dword << 1) | bitbuf.read1();
 
-		if (opt.debug && 1)
+		if (opt.debug && 0)
 		{
 			auto o = bitbuf.tell();
 			Data x(4);
@@ -526,7 +526,7 @@ void scan_bitstream_gcr (TrackData &trackdata)
 
 		if (!sync) continue;
 
-		if (opt.debug && 1) util::cout << util::fmt ("  s_b_gcr found SYNC at %u\n", bitbuf.tell());
+		if (opt.debug && 0) util::cout << util::fmt ("  s_b_gcr found SYNC at %u\n", bitbuf.tell());
 
 		sync = false;
 		bitbuf.seek(bitbuf.tell() - 1);
@@ -1785,7 +1785,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 			}
 
 			default:
-				if (!track.empty())
+				if (opt.debug && 0)
 				{
 					Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
 						to_string(bitbuf.encoding).c_str(), am, am_offset,
@@ -1863,8 +1863,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 					continue;
 				}
 
-				if (opt.debug)
-				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+				if (opt.debug) util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
 			}
 
 			// Read the full data field and verify its checksum
@@ -1886,7 +1885,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 				cksum += b;
 			bool bad_crc = cksum != stored_cksum;
 
-			if (opt.debug) util::cout << util::fmt ("cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
+			if (opt.debug && 0) util::cout << util::fmt ("cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
 
 			sector.add(std::move(data), bad_crc, 0xfb);
 
@@ -1896,7 +1895,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 		}
 	}
 
-	trackdata.add(std::move(track));
+	if (track.has_any_data())
+		trackdata.add(std::move(track));
 }
 
 // Vista Computer Company: hard-sectored disks with 10 sectors per track.
