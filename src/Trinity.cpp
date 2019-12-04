@@ -176,7 +176,7 @@ std::vector<uint8_t> Trinity::read_track (int cyl, int head)
 		data.insert(data.end(), ab + sizeof(cmd), ab + len);
 	}
 
-	return data;
+	return std::move(data);
 }
 
 void Trinity::send_file (const void *pv_, int len, int start_addr, int exec_addr)

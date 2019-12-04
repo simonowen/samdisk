@@ -159,7 +159,7 @@ bool ReadA2R (MemFile &file, std::shared_ptr<Disk> &disk)
 					if (!a2r_disk->has_track_data(cylhead))
 					{
 						a2r_disk->add_track_data(cylhead,
-							std::move(std::vector<uint8_t>(strm.begin() + pos, strm.begin() + pos + data_length)),
+							{ strm.begin() + pos, strm.begin() + pos + data_length },
 							util::le_value(sc.loop_point));
 					}
 				}

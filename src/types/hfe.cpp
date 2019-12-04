@@ -120,7 +120,7 @@ bool ReadHFE (MemFile &file, std::shared_ptr<Disk> &disk)
 		datarate = DataRate::_300K;
 	else if (data_bitrate >= 490 && data_bitrate <= 510)
 		datarate = DataRate::_500K;
-	else if (data_bitrate == -1)
+	else if (data_bitrate == 0xffff)
 		throw util::exception("variable bitrate images are not supported");
 	else
 		throw util::exception("unsupported data rate (", data_bitrate, "Kbps)");
