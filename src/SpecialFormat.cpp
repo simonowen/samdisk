@@ -716,8 +716,7 @@ bool IsPrehistorikTrack(const Track &track)
 	for (auto &s : track.sectors())
 	{
 		if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
-			s.header.size != ((s.header.cyl != 40) ? 5 : 2) ||
-			(s.has_baddatacrc() && s.header.size != 5))
+			s.header.size != (s.has_baddatacrc() ? 5 : 2))
 			return false;
 
 		// The 4K sector 12 contains the protection signature.

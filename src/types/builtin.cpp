@@ -608,7 +608,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			for (auto id : ids)
 			{
-				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(40, cylhead.head , id, 2));
 				if (id == 12)
 				{
 					sector.header.cyl = 90;
@@ -624,7 +624,32 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			disk->write(GeneratePrehistorikTrack(cylhead.next_cyl(), complete(track)));
 		}
+#if 0
+		// Titus the Fox (track 40), alt format with unused KBI sectors.
+		{
+			static constexpr uint8_t ids[]{ 193,198,194,199,195,202,12,3,6,9,12,15,18 };
+			Track track(arraysize(ids));
 
+			for (auto id : ids)
+			{
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(40, cylhead.head, id, 2));
+				if (id == 12)
+				{
+					sector.header.cyl = 90;
+					sector.header.size = 5;
+
+					std::string sig{ "Prehistorik Protection !!! Titus Software Nov 1991" };
+					Data data12(128, 0x4e);
+					std::copy(sig.begin(), sig.end(), data12.begin());
+					sector.add(std::move(data12), true);
+				}
+				track.add(std::move(sector));
+			}
+
+			// TODO: enhance GeneratePrehistorikTrack to handle this special case.
+			disk->write(GeneratePrehistorikTrack(cylhead.next_cyl(), complete(track)));
+		}
+#endif
 		// Prehistoric (track 39)
 		{
 			static constexpr uint8_t ids[]{ 193,198,194,199,195,200,196,201,197,202,12 };
@@ -632,7 +657,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 
 			for (auto id : ids)
 			{
-				Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, id, 2));
+				Sector sector(DataRate::_250K, Encoding::MFM, Header(39, cylhead.head, id, 2));
 				if (id == 12)
 				{
 					sector.header.cyl = 89;
@@ -646,7 +671,7 @@ bool ReadBuiltIn (const std::string &path, std::shared_ptr<Disk> &disk)
 				track.add(std::move(sector));
 			}
 
-			disk->write(cylhead.next_cyl(), std::move(complete(track)));
+			disk->write(GeneratePrehistorikTrack(cylhead.next_cyl(), complete(track)));
 		}
 
 		// Prehistoric 2 (track 30)
