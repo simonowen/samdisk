@@ -9,7 +9,7 @@ indent_size = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[{CMakeList.txt,*.cmake,.travis.yml}]
+[{CMakeList.txt,launch.vs.json,*.cmake,.travis.yml}]
 indent_style = space
 indent_size = 2
 

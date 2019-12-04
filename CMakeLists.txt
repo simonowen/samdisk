@@ -179,14 +179,10 @@ if (WINUSB_LIBRARY)
   target_link_libraries(${PROJECT_NAME} ${WINUSB_LIBRARY})
 endif()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_CONFIG_H=1)
-
 if (WIN32)
   set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_TITLE})
-  target_compile_definitions(${PROJECT_NAME} PRIVATE _WIN32=1)
   target_link_libraries(${PROJECT_NAME} setupapi ws2_32)
+  set(HAVE_FDRAWCMD_H 1)
 endif()
 
 if (APPLE)
@@ -197,3 +193,7 @@ if (APPLE)
   find_library(IOKIT_FRAMEWORK IOKit)
   target_link_libraries(${PROJECT_NAME} ${DA_FRAMEWORK} ${CF_FRAMEWORK} ${IOKIT_FRAMEWORK})
 endif()
+
+configure_file(config.h.in config.h)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_CONFIG_H=1)
