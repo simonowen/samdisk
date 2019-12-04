@@ -1,5 +1,4 @@
-#ifndef SPECIALFORMAT_H
-#define SPECIALFORMAT_H
+#pragma once
 
 bool IsEmptyTrack (const Track &track);
 bool IsKBI19Track (const Track &track);
@@ -28,5 +27,3 @@ TrackData Generate8KSectorTrack (const CylHead &cylhead, const Track &track);
 TrackData GeneratePrehistorikTrack(const CylHead &cylhead, const Track &track);
 TrackData Generate11SectorTrack(const CylHead &cylhead, const Track &track);
 TrackData GenerateReussirProtectedTrack (const CylHead &cylhead, const Track &track);
-
-#endif // SPECIALFORMAT_H

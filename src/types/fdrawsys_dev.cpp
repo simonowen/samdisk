@@ -12,394 +12,394 @@
 class FdrawSysDevDisk final : public DemandDisk
 {
 public:
-	FdrawSysDevDisk(const std::string &path, std::unique_ptr<FdrawcmdSys> fdrawcmd)
-		: m_fdrawcmd(std::move(fdrawcmd))
-	{
-		try
-		{
-			SetMetadata(path);
+    FdrawSysDevDisk(const std::string& path, std::unique_ptr<FdrawcmdSys> fdrawcmd)
+        : m_fdrawcmd(std::move(fdrawcmd))
+    {
+        try
+        {
+            SetMetadata(path);
 
-			auto srt = (opt.steprate >= 0) ? opt.steprate : (opt.newdrive ? 0xd : 0x8);
-			auto hut = 0x0f;
-			auto hlt = opt.newdrive ? 0x0f : 0x7f;
-			m_fdrawcmd->Specify(srt, hut, hlt);
+            auto srt = (opt.steprate >= 0) ? opt.steprate : (opt.newdrive ? 0xd : 0x8);
+            auto hut = 0x0f;
+            auto hlt = opt.newdrive ? 0x0f : 0x7f;
+            m_fdrawcmd->Specify(srt, hut, hlt);
 
-			m_fdrawcmd->SetMotorTimeout(0);
-			m_fdrawcmd->Recalibrate();
+            m_fdrawcmd->SetMotorTimeout(0);
+            m_fdrawcmd->Recalibrate();
 
-			if (!opt.newdrive)
-				m_fdrawcmd->SetDiskCheck(false);
-		}
-		catch (...)
-		{
-			throw util::exception("failed to initialise fdrawcmd.sys device");
-		}
-	}
+            if (!opt.newdrive)
+                m_fdrawcmd->SetDiskCheck(false);
+        }
+        catch (...)
+        {
+            throw util::exception("failed to initialise fdrawcmd.sys device");
+        }
+    }
 
 protected:
-	bool supports_retries() const override
-	{
-		return true;
-	}
+    bool supports_retries() const override
+    {
+        return true;
+    }
 
-	TrackData load(const CylHead &cylhead, bool /*first_read*/) override
-	{
-		m_fdrawcmd->Seek(cylhead.cyl);
+    TrackData load(const CylHead& cylhead, bool /*first_read*/) override
+    {
+        m_fdrawcmd->Seek(cylhead.cyl);
 
-		auto firstSectorSeen{0};
-		auto track = BlindReadHeaders(cylhead, firstSectorSeen);
+        auto firstSectorSeen{ 0 };
+        auto track = BlindReadHeaders(cylhead, firstSectorSeen);
 
-		int i;
-		for (i = 0; i < track.size(); i += 2)
-			ReadSector(cylhead, track, i, firstSectorSeen);
-		for (i = 1 ; i < track.size(); i += 2)
-			ReadSector(cylhead, track, i, firstSectorSeen);
+        int i;
+        for (i = 0; i < track.size(); i += 2)
+            ReadSector(cylhead, track, i, firstSectorSeen);
+        for (i = 1; i < track.size(); i += 2)
+            ReadSector(cylhead, track, i, firstSectorSeen);
 
-		if (opt.gaps >= GAPS_CLEAN)
-			ReadFirstGap(cylhead, track);
+        if (opt.gaps >= GAPS_CLEAN)
+            ReadFirstGap(cylhead, track);
 
-		return TrackData(cylhead, std::move(track));
-	}
+        return TrackData(cylhead, std::move(track));
+    }
 
-	bool preload(const Range &/*range*/, int /*cyl_step*/) override
-	{
-		return false;
-	}
+    bool preload(const Range&/*range*/, int /*cyl_step*/) override
+    {
+        return false;
+    }
 
 
 private:
-	void SetMetadata(const std::string &path);
-	bool DetectEncodingAndDataRate(int head);
-	Track BlindReadHeaders(const CylHead &cylhead, int &firstSectorSeen);
-	void ReadSector(const CylHead &cylhead, Track &track, int index, int firstSectorSeen=0);
-	void ReadFirstGap(const CylHead &cylhead, Track &track);
+    void SetMetadata(const std::string& path);
+    bool DetectEncodingAndDataRate(int head);
+    Track BlindReadHeaders(const CylHead& cylhead, int& firstSectorSeen);
+    void ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen = 0);
+    void ReadFirstGap(const CylHead& cylhead, Track& track);
 
-	std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
-	Encoding m_lastEncoding{Encoding::Unknown};
-	DataRate m_lastDataRate{DataRate::Unknown};
-	bool m_warnedMFM128{false};
+    std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
+    Encoding m_lastEncoding{ Encoding::Unknown };
+    DataRate m_lastDataRate{ DataRate::Unknown };
+    bool m_warnedMFM128{ false };
 };
 
 
-void FdrawSysDevDisk::SetMetadata(const std::string &path)
+void FdrawSysDevDisk::SetMetadata(const std::string& path)
 {
-	auto device_path = R"(\\.\)" + path;
-	Win32Handle hdev{
-		CreateFile(device_path.c_str(), 0, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, NULL) };
+    auto device_path = R"(\\.\)" + path;
+    Win32Handle hdev{
+        CreateFile(device_path.c_str(), 0, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, NULL) };
 
-	if (hdev.get() != INVALID_HANDLE_VALUE)
-	{
-		DWORD dwRet = 0;
-		DISK_GEOMETRY dg[8]{};
-		if (DeviceIoControl(hdev.get(), IOCTL_STORAGE_GET_MEDIA_TYPES,
-			nullptr, 0, &dg, sizeof(dg), &dwRet, NULL) && dwRet > sizeof(DISK_GEOMETRY))
-		{
-			auto count = dwRet / sizeof(dg[0]);
-			metadata["bios_type"] = to_string(dg[count - 1].MediaType);
-		}
-	}
+    if (hdev.get() != INVALID_HANDLE_VALUE)
+    {
+        DWORD dwRet = 0;
+        DISK_GEOMETRY dg[8]{};
+        if (DeviceIoControl(hdev.get(), IOCTL_STORAGE_GET_MEDIA_TYPES,
+            nullptr, 0, &dg, sizeof(dg), &dwRet, NULL) && dwRet > sizeof(DISK_GEOMETRY))
+        {
+            auto count = dwRet / sizeof(dg[0]);
+            metadata["bios_type"] = to_string(dg[count - 1].MediaType);
+        }
+    }
 
-	FD_FDC_INFO info{};
-	if (m_fdrawcmd->GetFdcInfo(info))
-	{
-		static const std::vector<std::string> fdc_types{
-			"Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
-		static const std::vector<std::string> data_rates{
-			"250K", "300K", "500K", "1M", "2M" };
+    FD_FDC_INFO info{};
+    if (m_fdrawcmd->GetFdcInfo(info))
+    {
+        static const std::vector<std::string> fdc_types{
+            "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
+        static const std::vector<std::string> data_rates{
+            "250K", "300K", "500K", "1M", "2M" };
 
-		std::stringstream ss;
-		for (size_t i = 0, n = 0; i < data_rates.size(); ++i)
-		{
-			if (!(info.SpeedsAvailable & (1U << i)))
-				continue;
+        std::stringstream ss;
+        for (size_t i = 0, n = 0; i < data_rates.size(); ++i)
+        {
+            if (!(info.SpeedsAvailable & (1U << i)))
+                continue;
 
-			if (n++) ss << " / ";
-			ss << data_rates[i];
-		}
+            if (n++) ss << " / ";
+            ss << data_rates[i];
+        }
 
-		metadata["fdc_type"] = (info.ControllerType < fdc_types.size()) ? fdc_types[info.ControllerType] : "???";
-		metadata["data_rates"] = ss.str();
-	}
+        metadata["fdc_type"] = (info.ControllerType < fdc_types.size()) ? fdc_types[info.ControllerType] : "???";
+        metadata["data_rates"] = ss.str();
+    }
 }
 
 // Detect encoding and data rate of the track under the given drive head.
 bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 {
-	FD_CMD_RESULT result{};
+    FD_CMD_RESULT result{};
 
-	if (m_lastEncoding != Encoding::Unknown && m_lastDataRate != DataRate::Unknown)
-	{
-		// Try the last successful encoding and data rate.
-		m_fdrawcmd->SetEncRate(m_lastEncoding, m_lastDataRate);
+    if (m_lastEncoding != Encoding::Unknown && m_lastDataRate != DataRate::Unknown)
+    {
+        // Try the last successful encoding and data rate.
+        m_fdrawcmd->SetEncRate(m_lastEncoding, m_lastDataRate);
 
-		// Return if we found a sector.
-		if (m_fdrawcmd->CmdReadId(head, result))
-			return true;
-	}
+        // Return if we found a sector.
+        if (m_fdrawcmd->CmdReadId(head, result))
+            return true;
+    }
 
-	for (auto encoding : {Encoding::MFM, Encoding::FM})
-	{
-		for (auto datarate : {DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K})
-		{
-			// Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
-			if (encoding == Encoding::FM && (opt.encoding == Encoding::MFM || datarate == DataRate::_1M))
-				continue;
+    for (auto encoding : { Encoding::MFM, Encoding::FM })
+    {
+        for (auto datarate : { DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K })
+        {
+            // Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
+            if (encoding == Encoding::FM && (opt.encoding == Encoding::MFM || datarate == DataRate::_1M))
+                continue;
 
-			// Skip rates not matching user selection.
-			if (opt.datarate != DataRate::Unknown && datarate != opt.datarate)
-				continue;
+            // Skip rates not matching user selection.
+            if (opt.datarate != DataRate::Unknown && datarate != opt.datarate)
+                continue;
 
-			// Skip 1Mbps if the FDC doesn't report it's supported.
-			if (datarate == DataRate::_1M)
-			{
-				FD_FDC_INFO fi{};
-				if (!m_fdrawcmd->GetFdcInfo(fi) || !(fi.SpeedsAvailable & FDC_SPEED_1M))
-				{
-					// Fail if user selected the rate.
-					if (opt.datarate == DataRate::_1M)
-						throw util::exception("FDC doesn't support 1Mbps data rate");
+            // Skip 1Mbps if the FDC doesn't report it's supported.
+            if (datarate == DataRate::_1M)
+            {
+                FD_FDC_INFO fi{};
+                if (!m_fdrawcmd->GetFdcInfo(fi) || !(fi.SpeedsAvailable & FDC_SPEED_1M))
+                {
+                    // Fail if user selected the rate.
+                    if (opt.datarate == DataRate::_1M)
+                        throw util::exception("FDC doesn't support 1Mbps data rate");
 
-					continue;
-				}
-			}
+                    continue;
+                }
+            }
 
-			m_fdrawcmd->SetEncRate(encoding, datarate);
+            m_fdrawcmd->SetEncRate(encoding, datarate);
 
-			// Retry in case of spurious header CRC errors.
-			for (auto i = 0; i <= opt.retries; ++i)
-			{
-				if (m_fdrawcmd->CmdReadId(head, result))
-				{
-					// Remember the settings for the first try next time.
-					m_lastEncoding = encoding;
-					m_lastDataRate = datarate;
-					return true;
-				}
+            // Retry in case of spurious header CRC errors.
+            for (auto i = 0; i <= opt.retries; ++i)
+            {
+                if (m_fdrawcmd->CmdReadId(head, result))
+                {
+                    // Remember the settings for the first try next time.
+                    m_lastEncoding = encoding;
+                    m_lastDataRate = datarate;
+                    return true;
+                }
 
-				// Give up on the current settings if nothing was found.
-				if (GetLastError() == ERROR_FLOPPY_ID_MARK_NOT_FOUND ||
-					GetLastError() == ERROR_SECTOR_NOT_FOUND)
-					break;
+                // Give up on the current settings if nothing was found.
+                if (GetLastError() == ERROR_FLOPPY_ID_MARK_NOT_FOUND ||
+                    GetLastError() == ERROR_SECTOR_NOT_FOUND)
+                    break;
 
-				// Fail for any reason except a CRC error
-				if (GetLastError() != ERROR_CRC)
-					throw win32_error(GetLastError(), "READ_ID");
-			}
-		}
-	}
+                // Fail for any reason except a CRC error
+                if (GetLastError() != ERROR_CRC)
+                    throw win32_error(GetLastError(), "READ_ID");
+            }
+        }
+    }
 
-	// Nothing detected.
-	return false;
+    // Nothing detected.
+    return false;
 }
 
-Track FdrawSysDevDisk::BlindReadHeaders(const CylHead &cylhead, int &firstSectorSeen)
+Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSectorSeen)
 {
-	Track track;
+    Track track;
 
-	auto scan_size = static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS);
-	MEMORY mem(scan_size);
-	auto scan_result = reinterpret_cast<FD_TIMED_SCAN_RESULT *>(mem.pb);
+    auto scan_size = static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS);
+    MEMORY mem(scan_size);
+    auto scan_result = reinterpret_cast<FD_TIMED_SCAN_RESULT*>(mem.pb);
 
-	if (m_lastEncoding == Encoding::Unknown || m_lastDataRate == DataRate::Unknown)
-		DetectEncodingAndDataRate(cylhead.head);
+    if (m_lastEncoding == Encoding::Unknown || m_lastDataRate == DataRate::Unknown)
+        DetectEncodingAndDataRate(cylhead.head);
 
-	if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-		throw win32_error(GetLastError(), "scan");
+    if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
+        throw win32_error(GetLastError(), "scan");
 
-	// If nothing was found and we have valid settings, they might have changed.
-	if (!scan_result->count && m_lastEncoding != Encoding::Unknown)
-	{
-		DetectEncodingAndDataRate(cylhead.head);
+    // If nothing was found and we have valid settings, they might have changed.
+    if (!scan_result->count && m_lastEncoding != Encoding::Unknown)
+    {
+        DetectEncodingAndDataRate(cylhead.head);
 
-		if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-			throw win32_error(GetLastError(), "scan");
-	}
+        if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
+            throw win32_error(GetLastError(), "scan");
+    }
 
-	// If the track time is slower than 200rpm, an index-halving cable must be present
-	if (scan_result->tracktime > RPM_TIME_200)
-		throw util::exception("index-halving cables are no longer supported");
+    // If the track time is slower than 200rpm, an index-halving cable must be present
+    if (scan_result->tracktime > RPM_TIME_200)
+        throw util::exception("index-halving cables are no longer supported");
 
-	firstSectorSeen = scan_result->firstseen;
+    firstSectorSeen = scan_result->firstseen;
 
-	if (scan_result->count > 0)
-	{
-		auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
-		track.tracktime = scan_result->tracktime;
-		track.tracklen = track.tracktime / bit_us;
+    if (scan_result->count > 0)
+    {
+        auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
+        track.tracktime = scan_result->tracktime;
+        track.tracklen = track.tracktime / bit_us;
 
-		for (int i = 0; i < scan_result->count; ++i)
-		{
-			const auto &scan_header = scan_result->Header[i];
-			Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
-			Sector sector(m_lastDataRate, m_lastEncoding, header);
+        for (int i = 0; i < scan_result->count; ++i)
+        {
+            const auto& scan_header = scan_result->Header[i];
+            Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
+            Sector sector(m_lastDataRate, m_lastEncoding, header);
 
-			sector.offset = scan_header.reltime / bit_us;
-			track.add(std::move(sector));
-		}
-	}
+            sector.offset = scan_header.reltime / bit_us;
+            track.add(std::move(sector));
+        }
+    }
 
-	return track;
+    return track;
 }
 
-void FdrawSysDevDisk::ReadSector(const CylHead &cylhead, Track &track, int index, int firstSectorSeen)
+void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen)
 {
-	auto &sector = track[index];
+    auto& sector = track[index];
 
-	if (sector.has_badidcrc() || sector.has_good_data())
-		return;
+    if (sector.has_badidcrc() || sector.has_good_data())
+        return;
 
-	auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(sector.header.size));
-	MEMORY mem(size);
+    auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(sector.header.size));
+    MEMORY mem(size);
 
-	for (int i = 0; i <= opt.retries; ++i)
-	{
-		// If the sector id occurs more than once on the track, synchronise to the correct one
-		if (track.is_repeated(sector))
-		{
-			auto offset{(index + track.size() - firstSectorSeen) % track.size()};
-			m_fdrawcmd->FdSetSectorOffset(offset);
-		}
+    for (int i = 0; i <= opt.retries; ++i)
+    {
+        // If the sector id occurs more than once on the track, synchronise to the correct one
+        if (track.is_repeated(sector))
+        {
+            auto offset{ (index + track.size() - firstSectorSeen) % track.size() };
+            m_fdrawcmd->FdSetSectorOffset(offset);
+        }
 
-		// Invalidate the content so misbehaving FDCs can be identififed.
-		memset(mem.pb, 0xee, mem.size);
+        // Invalidate the content so misbehaving FDCs can be identififed.
+        memset(mem.pb, 0xee, mem.size);
 
-		const Header &header = sector.header;
-		if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
-		{
-			// Reject errors other than CRC, sector not found and missing address marks
-			auto error{GetLastError()};
-			if (error != ERROR_CRC &&
-				error != ERROR_SECTOR_NOT_FOUND &&
-				error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
-			{
-				throw win32_error(error, "read");
-			}
-		}
+        const Header& header = sector.header;
+        if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
+        {
+            // Reject errors other than CRC, sector not found and missing address marks
+            auto error{ GetLastError() };
+            if (error != ERROR_CRC &&
+                error != ERROR_SECTOR_NOT_FOUND &&
+                error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+            {
+                throw win32_error(error, "read");
+            }
+        }
 
-		// Get the controller result for the read to find out more
-		FD_CMD_RESULT result{};
-		if (!m_fdrawcmd->GetResult(result))
-			throw win32_error(GetLastError(), "result");
+        // Get the controller result for the read to find out more
+        FD_CMD_RESULT result{};
+        if (!m_fdrawcmd->GetResult(result))
+            throw win32_error(GetLastError(), "result");
 
-		// Try again if header or data field are missing.
-		if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
-			continue;
+        // Try again if header or data field are missing.
+        if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
+            continue;
 
-		// Header match not found for a sector we scanned earlier?
-		if (result.st1 & STREG1_END_OF_CYLINDER)
-		{
-			// Warn the user if we suspect the FDC can't handle 128-byte MFM sectors.
-			if (!m_warnedMFM128 && sector.encoding == Encoding::MFM && sector.size() == 128)
-			{
-				Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
-				m_warnedMFM128 = true;
-			}
-			continue;
-		}
+        // Header match not found for a sector we scanned earlier?
+        if (result.st1 & STREG1_END_OF_CYLINDER)
+        {
+            // Warn the user if we suspect the FDC can't handle 128-byte MFM sectors.
+            if (!m_warnedMFM128 && sector.encoding == Encoding::MFM && sector.size() == 128)
+            {
+                Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
+                m_warnedMFM128 = true;
+            }
+            continue;
+        }
 
-		bool data_crc_error{ (result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0 };
-		uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? 0xf8 : 0xfb;
+        bool data_crc_error{ (result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0 };
+        uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? 0xf8 : 0xfb;
 
-		Data data(mem.pb, mem.pb + mem.size);
-		sector.add(std::move(data), data_crc_error, dam);
+        Data data(mem.pb, mem.pb + mem.size);
+        sector.add(std::move(data), data_crc_error, dam);
 
-		// If the read command was successful we're all done.
-		if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
-			break;
+        // If the read command was successful we're all done.
+        if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
+            break;
 
-		// Accept sectors that overlap the next field, as they're unlikely to succeed.
-		if (track.data_overlap(sector))
-			break;
+        // Accept sectors that overlap the next field, as they're unlikely to succeed.
+        if (track.data_overlap(sector))
+            break;
 
-		// Accept 8K sectors with a recognised checksum method.
-		if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
-			break;
-	}
+        // Accept 8K sectors with a recognised checksum method.
+        if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
+            break;
+    }
 }
 
-void FdrawSysDevDisk::ReadFirstGap(const CylHead &cylhead, Track &track)
+void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 {
-	if (track.empty())
-		return;
+    if (track.empty())
+        return;
 
-	auto &sector = track[0];
+    auto& sector = track[0];
 
-	if (sector.has_badidcrc() || track.data_overlap(sector))
-		return;
+    if (sector.has_badidcrc() || track.data_overlap(sector))
+        return;
 
-	// Read a size
-	auto size_code = sector.header.size + 1;
-	auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
-	MEMORY mem(size);
+    // Read a size
+    auto size_code = sector.header.size + 1;
+    auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
+    MEMORY mem(size);
 
-	for (int i = 0; i <= opt.retries; ++i)
-	{
-		// Invalidate the content so misbehaving FDCs can be identififed.
-		memset(mem.pb, 0xee, mem.size);
+    for (int i = 0; i <= opt.retries; ++i)
+    {
+        // Invalidate the content so misbehaving FDCs can be identififed.
+        memset(mem.pb, 0xee, mem.size);
 
-		if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
-		{
-			// Reject errors other than CRC, sector not found and missing address marks
-			auto error{ GetLastError() };
-			if (error != ERROR_CRC &&
-				error != ERROR_SECTOR_NOT_FOUND &&
-				error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
-			{
-				throw win32_error(error, "read_track");
-			}
-		}
+        if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
+        {
+            // Reject errors other than CRC, sector not found and missing address marks
+            auto error{ GetLastError() };
+            if (error != ERROR_CRC &&
+                error != ERROR_SECTOR_NOT_FOUND &&
+                error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+            {
+                throw win32_error(error, "read_track");
+            }
+        }
 
-		FD_CMD_RESULT result{};
-		if (!m_fdrawcmd->GetResult(result))
-			throw win32_error(GetLastError(), "result");
+        FD_CMD_RESULT result{};
+        if (!m_fdrawcmd->GetResult(result))
+            throw win32_error(GetLastError(), "result");
 
-		if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_END_OF_CYLINDER))
-			continue;
-		else if (result.st2 & STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD)
-			continue;
+        if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_END_OF_CYLINDER))
+            continue;
+        else if (result.st2 & STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD)
+            continue;
 
-		// Sanity check the start of the track against a good copy.
-		if (sector.has_good_data())
-		{
-			const auto data = sector.data_copy();
-			if (std::memcmp(data.data(), mem.pb, data.size()))
-			{
-				Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
-				break;
-			}
-		}
+        // Sanity check the start of the track against a good copy.
+        if (sector.has_good_data())
+        {
+            const auto data = sector.data_copy();
+            if (std::memcmp(data.data(), mem.pb, data.size()))
+            {
+                Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
+                break;
+            }
+        }
 
-		auto extent = track.data_extent_bytes(sector);
-		sector.add(Data(mem.pb, mem.pb + extent), sector.has_baddatacrc(), sector.dam);
-		break;
-	}
+        auto extent = track.data_extent_bytes(sector);
+        sector.add(Data(mem.pb, mem.pb + extent), sector.has_baddatacrc(), sector.dam);
+        break;
+    }
 }
 
-bool ReadFdrawcmdSys (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>& disk)
 {
-	if (!IsFloppyDevice(path))
-		return false;
+    if (!IsFloppyDevice(path))
+        return false;
 
-	auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
-	auto fdrawcmd = FdrawcmdSys::Open(devidx);
-	if (!fdrawcmd)
-		throw util::exception("failed to open fdrawcmd.sys device");
+    auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
+    auto fdrawcmd = FdrawcmdSys::Open(devidx);
+    if (!fdrawcmd)
+        throw util::exception("failed to open fdrawcmd.sys device");
 
-	auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevDisk>(path, std::move(fdrawcmd));
-	fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
+    auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevDisk>(path, std::move(fdrawcmd));
+    fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-	fdrawcmd_dev_disk->strType = "fdrawcmd.sys";
-	disk = fdrawcmd_dev_disk;
+    fdrawcmd_dev_disk->strType = "fdrawcmd.sys";
+    disk = fdrawcmd_dev_disk;
 
-	return true;
+    return true;
 }
 
-bool WriteFdrawcmdSys (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+bool WriteFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>&/*disk*/)
 {
-	if (!IsFloppyDevice(path))
-		return false;
+    if (!IsFloppyDevice(path))
+        return false;
 
-	throw util::exception("fdrawcmd.sys writing not yet implemented");
+    throw util::exception("fdrawcmd.sys writing not yet implemented");
 }
 
 #endif // HAVE_FDRAWCMD_H

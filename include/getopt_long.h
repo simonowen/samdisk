@@ -1,4 +1,4 @@
-/*	$NetBSD: getopt.h,v 1.7 2005/02/03 04:39:32 perry Exp $	*/
+/*  $NetBSD: getopt.h,v 1.7 2005/02/03 04:39:32 perry Exp $ */
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -36,17 +36,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * modified May 12, 2005 by Jim Basney <jbasney@ncsa.uiuc.edu>
- *
- * removed #include of non-POSIX <sys/cdefs.h> and <sys/featuretest.h>
- * removed references to _NETBSD_SOURCE and HAVE_NBTOOL_CONFIG_H
- * added #if !HAVE_GETOPT_LONG
- * removed __BEGIN_DECLS and __END_DECLS
- */
+ /*
+  * modified May 12, 2005 by Jim Basney <jbasney@ncsa.uiuc.edu>
+  *
+  * removed #include of non-POSIX <sys/cdefs.h> and <sys/featuretest.h>
+  * removed references to _NETBSD_SOURCE and HAVE_NBTOOL_CONFIG_H
+  * added #if !HAVE_GETOPT_LONG
+  * removed __BEGIN_DECLS and __END_DECLS
+  */
 
-#ifndef GETOPT_LONG_H
-#define GETOPT_LONG_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,32 +56,32 @@ extern "C" {
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #else
-extern char *optarg;
-extern int optind, opterr, optopt;
+    extern char* optarg;
+    extern int optind, opterr, optopt;
 #endif
 
-/*
- * Gnu like getopt_long() and BSD4.4 getsubopt()/optreset extensions
- */
+    /*
+     * Gnu like getopt_long() and BSD4.4 getsubopt()/optreset extensions
+     */
 #define no_argument        0
 #define required_argument  1
 #define optional_argument  2
 
-struct option {
-	/* name of long option */
-	const char *name;
-	/*
-	 * one of no_argument, required_argument, and optional_argument:
-	 * whether option takes an argument
-	 */
-	int has_arg;
-	/* if not NULL, set *flag to val when option found */
-	int *flag;
-	/* if flag not NULL, value to set *flag to; else return value */
-	int val;
-};
+    struct option {
+        /* name of long option */
+        const char* name;
+        /*
+         * one of no_argument, required_argument, and optional_argument:
+         * whether option takes an argument
+         */
+        int has_arg;
+        /* if not NULL, set *flag to val when option found */
+        int* flag;
+        /* if flag not NULL, value to set *flag to; else return value */
+        int val;
+    };
 
-int getopt_long(int, char * const *, const char *, const struct option *, int *);
+    int getopt_long(int, char* const*, const char*, const struct option*, int*);
 
 
 #endif /* !HAVE_GETOPT_LONG */
@@ -90,6 +89,3 @@ int getopt_long(int, char * const *, const char *, const struct option *, int *)
 #ifdef __cplusplus
 }
 #endif
-
-#endif	/* GETOPT_LONG_H */
-

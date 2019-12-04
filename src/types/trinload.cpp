@@ -11,60 +11,60 @@
 class TrinLoadDisk final : public DemandDisk
 {
 public:
-	explicit TrinLoadDisk (std::unique_ptr<Trinity> trinity)
-		: m_trinity(std::move(trinity))
-	{
-	}
+    explicit TrinLoadDisk(std::unique_ptr<Trinity> trinity)
+        : m_trinity(std::move(trinity))
+    {
+    }
 
 protected:
-	TrackData load (const CylHead &cylhead, bool /*first_read*/) override
-	{
-		auto data = m_trinity->read_track(cylhead.cyl, cylhead.head);
+    TrackData load(const CylHead& cylhead, bool /*first_read*/) override
+    {
+        auto data = m_trinity->read_track(cylhead.cyl, cylhead.head);
 
-		Track track;
-		track.format(cylhead, RegularFormat::MGT);
-		track.populate(data.begin(), data.end());
-		return TrackData(cylhead, std::move(track));
-	}
+        Track track;
+        track.format(cylhead, RegularFormat::MGT);
+        track.populate(data.begin(), data.end());
+        return TrackData(cylhead, std::move(track));
+    }
 
-	bool preload (const Range &/*range*/, int /*cyl_step*/) override
-	{
-		return false;
-	}
+    bool preload(const Range&/*range*/, int /*cyl_step*/) override
+    {
+        return false;
+    }
 
 private:
-	std::unique_ptr<Trinity> m_trinity;
+    std::unique_ptr<Trinity> m_trinity;
 };
 
 
-bool ReadTrinLoad (const std::string &path, std::shared_ptr<Disk> &disk)
+bool ReadTrinLoad(const std::string& path, std::shared_ptr<Disk>& disk)
 {
-	if (!IsTrinity(path))
-		return false;
+    if (!IsTrinity(path))
+        return false;
 
-	auto trinity = Trinity::Open();
+    auto trinity = Trinity::Open();
 
-	auto record = strtoul(path.c_str() + 4, nullptr, 10);
-	if (record != 0)
-		trinity->select_record(record);
+    auto record = strtoul(path.c_str() + 4, nullptr, 10);
+    if (record != 0)
+        trinity->select_record(record);
 
-	auto ip_addr_str = trinity->devices()[0];
-	auto trinload_disk = std::make_shared<TrinLoadDisk>(std::move(trinity));
+    auto ip_addr_str = trinity->devices()[0];
+    auto trinload_disk = std::make_shared<TrinLoadDisk>(std::move(trinity));
 
-	trinload_disk->fmt = Format(RegularFormat::MGT);
-	trinload_disk->extend(CylHead(trinload_disk->fmt.cyls - 1, trinload_disk->fmt.heads - 1));
-	trinload_disk->metadata["address"] = ip_addr_str;
-	trinload_disk->strType = "TrinLoad";
-	disk = trinload_disk;
+    trinload_disk->fmt = Format(RegularFormat::MGT);
+    trinload_disk->extend(CylHead(trinload_disk->fmt.cyls - 1, trinload_disk->fmt.heads - 1));
+    trinload_disk->metadata["address"] = ip_addr_str;
+    trinload_disk->strType = "TrinLoad";
+    disk = trinload_disk;
 
-	return true;
+    return true;
 }
 
 
-bool WriteTrinLoad (const std::string &path, std::shared_ptr<Disk> &/*disk*/)
+bool WriteTrinLoad(const std::string& path, std::shared_ptr<Disk>&/*disk*/)
 {
-	if (!IsTrinity(path))
-		return false;
+    if (!IsTrinity(path))
+        return false;
 
-	throw util::exception("TrinLoad writing not implemented");
+    throw util::exception("TrinLoad writing not implemented");
 }

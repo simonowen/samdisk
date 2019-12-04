@@ -2,21 +2,21 @@
 
 #include "SAMdisk.h"
 
-bool Read2D (MemFile &file, std::shared_ptr<Disk> &disk)
+bool Read2D(MemFile& file, std::shared_ptr<Disk>& disk)
 {
-	Format fmt { RegularFormat::_2D };
+    Format fmt{ RegularFormat::_2D };
 
-	if (!IsFileExt(file.name(), "2d") || file.size() != fmt.disk_size())
-		return false;
+    if (!IsFileExt(file.name(), "2d") || file.size() != fmt.disk_size())
+        return false;
 
-	file.rewind();
-	disk->format(fmt, file.data());
-	disk->strType = "2D";
+    file.rewind();
+    disk->format(fmt, file.data());
+    disk->strType = "2D";
 
-	return true;
+    return true;
 }
 
-bool Write2D (FILE* /*f_*/, std::shared_ptr<Disk> &/*disk*/)
+bool Write2D(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
 {
-	throw std::logic_error("2D writing not implemented");
+    throw std::logic_error("2D writing not implemented");
 }

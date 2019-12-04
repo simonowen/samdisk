@@ -1,5 +1,7 @@
 .*
+!.editorconfig
 !.gitignore
+!.gitattributes
 !.travis.yml
 Thumbs.db
 /build

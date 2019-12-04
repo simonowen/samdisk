@@ -3,22 +3,22 @@
 #include "SAMdisk.h"
 #include "types.h"
 
-bool ReadCPM (MemFile &file, std::shared_ptr<Disk> &disk)
+bool ReadCPM(MemFile& file, std::shared_ptr<Disk>& disk)
 {
-	Format fmt = RegularFormat::ProDos;
+    Format fmt = RegularFormat::ProDos;
 
-	// 720K images with a .cpm extension use the SAM Coupe Pro-Dos parameters
-	if (file.size() != fmt.disk_size() || !IsFileExt(file.name(), "cpm"))
-		return false;
+    // 720K images with a .cpm extension use the SAM Coupe Pro-Dos parameters
+    if (file.size() != fmt.disk_size() || !IsFileExt(file.name(), "cpm"))
+        return false;
 
-	file.rewind();
-	disk->format(fmt, file.data());
-	disk->strType = "Pro-DOS";
+    file.rewind();
+    disk->format(fmt, file.data());
+    disk->strType = "Pro-DOS";
 
-	return true;
+    return true;
 }
 
-bool WriteCPM (FILE *f_, std::shared_ptr<Disk> &disk)
+bool WriteCPM(FILE* f_, std::shared_ptr<Disk>& disk)
 {
-	return WriteRegularDisk(f_, *disk, RegularFormat::ProDos);
+    return WriteRegularDisk(f_, *disk, RegularFormat::ProDos);
 }
