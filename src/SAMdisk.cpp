@@ -138,7 +138,7 @@ extern "C" {
 enum {
 	OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
 	OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
-	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER };
+	OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG };
 
 struct option long_options[] =
 {
@@ -169,7 +169,7 @@ struct option long_options[] =
 	{ "encoding",   required_argument, nullptr, 'e' },
 	{ "datarate",   required_argument, nullptr, 't' },
 
-	{ "debug",            no_argument, &opt.debug, 1 },
+	{ "debug",      optional_argument, nullptr, OPT_DEBUG },
 	{ "dec",              no_argument, &opt.hex, 0 },
 	{ "hex-ish",		  no_argument, &opt.hex, 2 },
 	{ "calibrate",		  no_argument, &opt.calibrate, 1 },
@@ -428,6 +428,12 @@ bool ParseCommandLine (int argc_, char *argv_[])
 
 			case OPT_BYTES:
 				util::str_range(optarg, opt.bytes_begin, opt.bytes_end);
+				break;
+
+			case OPT_DEBUG:
+				opt.debug = util::str_value<int>(optarg);
+				if (opt.debug < 0)
+					throw util::exception("invalid debug level, expected >= 0");
 				break;
 
 			case OPT_VERSION:

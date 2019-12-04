@@ -268,7 +268,7 @@ void scan_bitstream_apple (TrackData &trackdata)
 			break;
 
 		dword = (dword << 1) | bitbuf.read1();
-		if (opt.debug && 0)
+		if (opt.debug && opt.encoding == Encoding::Apple)
 		{
 			auto o = bitbuf.tell();
 			Data x(4);
@@ -300,10 +300,13 @@ void scan_bitstream_apple (TrackData &trackdata)
 					id[m] = ((idraw[m << 1] & 0x55) << 1) | (idraw[1 + (m << 1)] & 0x55);
 				}
 
-				if (opt.debug && 0) util::cout << util::fmt ("  s_b_apple id (%02x %02x %02x %02x) [%02x %02x  %02x %02x  %02x %02x  %02x %02x  %02x %02x %02x] c %d\n",
-					id[0], id[1], id[2], id[3],
-					idraw[0], idraw[1], idraw[2], idraw[3], idraw[4], idraw[5], idraw[6], idraw[7], idraw[8], idraw[9], idraw[10],
-					trackdata.cylhead.cyl);
+				if (opt.debug && opt.encoding == Encoding::Apple)
+				{
+					util::cout << util::fmt("  s_b_apple id (%02x %02x %02x %02x) [%02x %02x  %02x %02x  %02x %02x  %02x %02x  %02x %02x %02x] c %d\n",
+						id[0], id[1], id[2], id[3],
+						idraw[0], idraw[1], idraw[2], idraw[3], idraw[4], idraw[5], idraw[6], idraw[7], idraw[8], idraw[9], idraw[10],
+						trackdata.cylhead.cyl);
+				}
 
 				// stadard epilogue is DE AA EB, but third byte is not validated by RWTS routine
 				if (idraw[8] == 0xde && (idraw[9] == 0xaa || idraw[9] == 0xab))
@@ -314,7 +317,8 @@ void scan_bitstream_apple (TrackData &trackdata)
 						Sector s(bitbuf.datarate, Encoding::Apple, Header(id[1], 0, id[2], SizeToCode(256)));
 						s.offset = bitbuf.track_offset(am_offset);
 
-						if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+						if (opt.debug)
+							util::cout << "s_b_apple IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
 						track.add(std::move(s));
 					}
 				}
@@ -330,7 +334,8 @@ void scan_bitstream_apple (TrackData &trackdata)
 			case 0xd5aaad:
 			{
 				auto am_offset = bitbuf.tell() - 24;
-				if (opt.debug) util::cout << "* DAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_apple DAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
@@ -348,7 +353,8 @@ void scan_bitstream_apple (TrackData &trackdata)
 		auto min_distance = ((3 + 8 + 3) << shift) + (gap2_size * 10);
 		auto max_distance = ((3 + 8 + 3) << shift) + ((gap2_size + 25) * 10);	// 25 is a guesstimate
 
-		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug)
+			util::cout << "  s_b_apple finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -399,12 +405,13 @@ void scan_bitstream_apple (TrackData &trackdata)
 				// If we've already got a copy, ignore the truncated version
 				if (sector.copies())
 				{
-					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					if (opt.debug)
+						util::cout << "  s_b_apple ignoring truncated sector copy\n";
 					continue;
 				}
 
 				if (opt.debug)
-				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+					util::cout << util::fmt ("  s_b_apple using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
 			}
 
 			// Read the full data field and verify its checksum
@@ -445,11 +452,14 @@ void scan_bitstream_apple (TrackData &trackdata)
 				outdata[byte] = (decdata[byte + 86] << 2) | ((bits & 2) >> 1) | ((bits & 1) << 1);
 			}
 
-			if (opt.debug) util::cout << util::fmt ("  cksum s %2d calc %02x  bytes %02x %02x (%02x %02x)  ep [%02x %02x %02x] invalid %d  distance %d (min %d max %d) extent %d\n",
-				sector.header.sector, cksum,
-				gcrdata[0], gcrdata[1], decdata[0], decdata[1],
-				gcrdata[343], gcrdata[344], gcrdata[345],
-				invalid, distance, min_distance, max_distance, extent_bytes);
+			if (opt.debug)
+			{
+				util::cout << util::fmt("  s_b_apple cksum s %2d calc %02x  bytes %02x %02x (%02x %02x)  ep [%02x %02x %02x] invalid %d  distance %d (min %d max %d) extent %d\n",
+					sector.header.sector, cksum,
+					gcrdata[0], gcrdata[1], decdata[0], decdata[1],
+					gcrdata[343], gcrdata[344], gcrdata[345],
+					invalid, distance, min_distance, max_distance, extent_bytes);
+			}
 			bool bad_crc = (0 != cksum);
 
 			sector.add(std::move(outdata), bad_crc, invalid ? 0xf8 : 0xfb);
@@ -498,7 +508,7 @@ void scan_bitstream_gcr (TrackData &trackdata)
 	{
 		dword = (dword << 1) | bitbuf.read1();
 
-		if (opt.debug && 0)
+		if (opt.debug && opt.encoding == Encoding::GCR)
 		{
 			auto o = bitbuf.tell();
 			Data x(4);
@@ -526,7 +536,8 @@ void scan_bitstream_gcr (TrackData &trackdata)
 
 		if (!sync) continue;
 
-		if (opt.debug && 0) util::cout << util::fmt ("  s_b_gcr found SYNC at %u\n", bitbuf.tell());
+		if (opt.debug && opt.encoding == Encoding::GCR)
+			util::cout << util::fmt ("  s_b_gcr found SYNC at %u\n", bitbuf.tell());
 
 		sync = false;
 		bitbuf.seek(bitbuf.tell() - 1);
@@ -548,7 +559,8 @@ void scan_bitstream_gcr (TrackData &trackdata)
 					Sector s(bitbuf.datarate, bitbuf.encoding, Header((id[2] - 1), 0, id[1], SizeToCode(256)));
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					if (opt.debug)
+						util::cout << "s_b_gcr IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 				}
 
@@ -557,15 +569,16 @@ void scan_bitstream_gcr (TrackData &trackdata)
 
 			case 0x07:	// DAM
 			{
-				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_gcr DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
 
 			default:
-				// Only complain about bad address marks if we've already seen a good header.
-				if (!track.empty())
-					Message(msgWarning, "unknown %s address mark (%02X) at offset %u on %s", to_string(bitbuf.encoding).c_str(), am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+				// Only complain about bad address marks if we've already found a header.
+				if (!track.empty() || opt.encoding == Encoding::GCR)
+					Message(msgWarning, "  s_b_gcr unknown AM (%02X) at offset %u on %s", am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
 				break;
 		}
 	}
@@ -581,7 +594,8 @@ void scan_bitstream_gcr (TrackData &trackdata)
 		auto min_distance = (1 + 3) * 10 + (gap2_size << shift);
 		auto max_distance = (1 + 3) * 10 + ((gap2_size + 16) << shift);	// 1=AM, 3=ID, gap2, 16=guesstimate
 
-		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug)
+			util::cout << "  s_b_gcr finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -634,12 +648,13 @@ void scan_bitstream_gcr (TrackData &trackdata)
 				// If we've already got a copy, ignore the truncated version
 				if (sector.copies())
 				{
-					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					if (opt.debug)
+						util::cout << "  s_b_gcr ignoring truncated sector copy\n";
 					continue;
 				}
 
 				if (opt.debug)
-				util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+					util::cout << util::fmt ("  s_b_gcr using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
 			}
 
 			// Read the full data field and verify its checksum
@@ -886,7 +901,8 @@ void scan_bitstream_mx (TrackData &trackdata)
 		{
 			case 0x88888888aaaa88aa:	// FM-encoded 0x00f3 (000363 octal)
 				sync = true;
-				if (opt.debug) util::cout << "  s_b_mx found sync at " << bitbuf.tell() << "\n";
+				if (opt.debug)
+					util::cout << "  s_b_mx found sync at " << bitbuf.tell() << "\n";
 				break;
 
 			default:
@@ -916,8 +932,9 @@ void scan_bitstream_mx (TrackData &trackdata)
 			stored_cksum  = bitbuf.read_byte() << 8;
 			stored_cksum |= bitbuf.read_byte();
 
-			if (opt.debug) util::cout << util::fmt ("cksum s %2d disk:calc %06o:%06o (%04x:%04x)\n",
-				s, stored_cksum, cksum, stored_cksum, cksum);
+			if (opt.debug)
+				util::cout << util::fmt("cksum s %2d disk:calc %06o:%06o (%04x:%04x)\n",
+					s, stored_cksum, cksum, stored_cksum, cksum);
 
 			/*
 			 * Flux stream on some marginal disks may decode as stream of zero bits instead of valid
@@ -942,8 +959,8 @@ void scan_bitstream_mx (TrackData &trackdata)
 		extra |= bitbuf.read_byte();
 
 		if (opt.debug)
-		util::cout << util::fmt ("  s_b_mx c:h %d:%d stored %d extra %06o\n",
-			trackdata.cylhead.cyl, trackdata.cylhead.head, stored_track, extra);
+			util::cout << util::fmt("  s_b_mx c:h %d:%d stored %d extra %06o\n",
+				trackdata.cylhead.cyl, trackdata.cylhead.head, stored_track, extra);
 	}
 
 	trackdata.add(std::move(track));
@@ -1071,7 +1088,8 @@ void scan_bitstream_amiga (TrackData &trackdata)
 		if (!amiga_read_dwords(bitbuf, reinterpret_cast<uint32_t*>(data.data()), data.size() / sizeof(uint32_t), calcsum))
 			continue;
 
-		if (opt.debug) util::cout << "* AmigaDOS (id=" << sector_nr << ") at offset " << sector_offset << " (" << bitbuf.track_offset(sector_offset) << ")\n";
+		if (opt.debug)
+			util::cout << "s_b_amiga (id=" << sector_nr << ") at offset " << sector_offset << " (" << bitbuf.track_offset(sector_offset) << ")\n";
 
 		bool bad_data = (calcsum & MFM_MASK) != 0;
 		sector.add(std::move(data), bad_data, 0x00);
@@ -1179,12 +1197,13 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 					s.set_badidcrc(crc != 0);
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* " << bitbuf.encoding << " IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					if (opt.debug)
+						util::cout << "s_b_mfm_fm " << bitbuf.encoding << " IDAM (id=" << header.sector << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 
 					if (opt.debug && crc != 0)
 					{
-						util::cout << util::fmt("Bad id CRC: %02X %02X, expected %02X %02X\n",
+						util::cout << util::fmt("  s_b_mfm_fm bad id CRC: %02X %02X, expected %02X %02X\n",
 							id[4], id[5], crc.msb(), crc.lsb());
 					}
 
@@ -1208,17 +1227,20 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 					last_fm_am = am;
 				}
 
-				if (opt.debug) util::cout << "* " << bitbuf.encoding << " DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_mfm_fm " << bitbuf.encoding << " DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
 
 			case 0xfc:	// IAM
-				if (opt.debug) util::cout << "* " << bitbuf.encoding << " IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_mfm_fm " << bitbuf.encoding << " IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				break;
 
 			default:
-				if (opt.debug) util::cout << "Unknown " << bitbuf.encoding << " address mark (" << std::hex << am << std::dec << ") at offset " << am_offset  << " on " << trackdata.cylhead << "\n";
+				if (opt.debug)
+					util::cout << "s_b_mfm_fm unknown " << bitbuf.encoding << " AM (" << std::hex << am << std::dec << ") at offset " << am_offset  << " on " << trackdata.cylhead << "\n";
 				break;
 		}
 	}
@@ -1238,7 +1260,8 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 		if (sector.has_badidcrc())
 			continue;
 
-		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug)
+			util::cout << "  s_b_mfm_fm finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -1307,11 +1330,13 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 				// If we've already got a copy, ignore the truncated version
 				if (sector.copies() && (!sector.is_8k_sector() || avail_bytes < 0x1802))	// ToDo: fix nasty check
 				{
-					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					if (opt.debug)
+						util::cout << "  s_b_mfm_fm ignoring truncated sector copy\n";
 					continue;
 				}
 
-				if (opt.debug) util::cout << "using truncated sector data as only copy\n";
+				if (opt.debug)
+					util::cout << "  s_b_mfm_fm using truncated sector data as only copy\n";
 			}
 
 			// Read the full data field and check its CRC
@@ -1320,7 +1345,7 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			bool bad_crc = crc.add(data.data(), normal_bytes) != 0;
 			if (opt.debug && bad_crc)
 			{
-				util::cout << util::fmt("Bad data CRC: %02X %02X, expected %02X %02X\n",
+				util::cout << util::fmt("  s_b_mfm_fm bad data CRC: %02X %02X, expected %02X %02X\n",
 					data[sector.size()], data[sector.size() + 1], crc.msb(), crc.lsb());
 			}
 
@@ -1352,24 +1377,28 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			{
 				if (has_gap2 && remove_gap2)
 				{
-					if (opt.debug) util::cout << "removing gap2 data\n";
+					if (opt.debug)
+						util::cout << "  s_b_mfm_fm removing gap2 data\n";
 					data.resize(next_idam_bytes - ((sector.encoding == Encoding::MFM) ? 3 : 0));
 				}
 				else if (has_gap2)
 				{
-					if (opt.debug) util::cout << "skipping gap2 removal\n";
+					if (opt.debug)
+						util::cout << "  s_b_mfm_fm skipping gap2 removal\n";
 				}
 
 				if (has_gap3_4b && remove_gap3_4b && (!has_gap2 || remove_gap2))
 				{
 					if (!final_sector)
 					{
-						if (opt.debug) util::cout << "removing gap3 data\n";
+						if (opt.debug)
+							util::cout << "  s_b_mfm_fm removing gap3 data\n";
 						data.resize(sector.size());
 					}
 					else
 					{
-						if (opt.debug) util::cout << "removing gap4b data\n";
+						if (opt.debug)
+							util::cout << "  s_b_mfm_fm removing gap4b data\n";
 						data.resize(sector.size());
 					}
 				}
@@ -1380,7 +1409,8 @@ void scan_bitstream_mfm_fm (TrackData &trackdata)
 			if (sector.is_8k_sector())
 			{
 				chk8k_methods = ChecksumMethods(data.data(), data.size());
-				if (opt.debug) util::cout << "chk8k_method = " << ChecksumName(chk8k_methods) << '\n';
+				if (opt.debug)
+					util::cout << "  s_b_mfm_fm chk8k_method = " << ChecksumName(chk8k_methods) << '\n';
 			}
 
 			// Consider good sectors overhanging the index
@@ -1475,9 +1505,9 @@ void scan_bitstream_agat (TrackData &trackdata)
 			break;
 
 		dword = (dword << 1) | bitbuf.read1();
-		if (opt.debug && 1)
-		util::cout << util::fmt ("  s_b_agat %016lx c:h %d:%d at %d\n",
-			dword, trackdata.cylhead.cyl, trackdata.cylhead.head, bitbuf.tell());
+		if (opt.debug && opt.encoding == Encoding::Agat)
+			util::cout << util::fmt ("  s_b_agat %016lx c:h %d:%d at %d\n",
+				dword, trackdata.cylhead.cyl, trackdata.cylhead.head, bitbuf.tell());
 
 		// MFM encoded address field prologue = 0x49111444; data field prologue = 0x14444911
 		switch (dword & 0x1ffffffff)
@@ -1485,7 +1515,8 @@ void scan_bitstream_agat (TrackData &trackdata)
 			case 0x89245555:	// 0100010010010010 0 0101010101010101 = MFM-encoded 0xa4, 2 us gap, 0xff
 			case 0x44922d55:	// 0100010010010010 0 0101 10101010101 (variant)
 			case 0x44905555:	// 01000100100100 0 0 0101010101010101 produced by agath-aim-to-hfe.pl
-				if (opt.debug && 1) util::cout << "  s_b_agat found sync at " << bitbuf.tell() << "\n";
+				if (opt.debug)
+					util::cout << "  s_b_agat found sync at " << bitbuf.tell() << "\n";
 				break;
 
 			default:
@@ -1510,7 +1541,8 @@ void scan_bitstream_agat (TrackData &trackdata)
 					Sector s(bitbuf.datarate, Encoding::Agat, Header(trackdata.cylhead, id[2], SizeToCode(256)));
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					if (opt.debug)
+						util::cout << "s_b_agat IDAM (id=" << id[2] << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 				}
 				else if (!track.empty())
@@ -1524,7 +1556,8 @@ void scan_bitstream_agat (TrackData &trackdata)
 
 			case 0x6a95:
 			{
-				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_agat DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
@@ -1551,7 +1584,8 @@ void scan_bitstream_agat (TrackData &trackdata)
 		auto min_distance = ((2 + 4 + gap2_size) << shift);
 		auto max_distance = ((2 + 4 + gap2_size + 16) << shift);	// 2=AM, 4=ID, gap2, 16=guesstimate
 
-		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug)
+			util::cout << "  s_b_agat finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -1599,11 +1633,13 @@ void scan_bitstream_agat (TrackData &trackdata)
 				// If we've already got a copy, ignore the truncated version
 				if (sector.copies())
 				{
-					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					if (opt.debug)
+						util::cout << "  s_b_agat ignoring truncated sector copy\n";
 					continue;
 				}
 
-				if (opt.debug) util::cout << "using truncated sector data as only copy\n";
+				if (opt.debug)
+					util::cout << "  s_b_agat using truncated sector data as only copy\n";
 			}
 
 			// Read the full data field and verify its checksum
@@ -1624,8 +1660,9 @@ void scan_bitstream_agat (TrackData &trackdata)
 			}
 			cksum &= 255;
 
-			if (opt.debug) util::cout << util::fmt ("cksum s %d disk:calc %02x:%02x distance %d (min %d max %d)\n",
-				sector.header.sector, stored_cksum, cksum, distance, min_distance, max_distance);
+			if (opt.debug)
+				util::cout << util::fmt ("  s_b_agat cksum s %d disk:calc %02x:%02x distance %d (min %d max %d)\n",
+					sector.header.sector, stored_cksum, cksum, distance, min_distance, max_distance);
 			bool bad_crc = (stored_cksum != cksum);
 
 			sector.add(std::move(data), bad_crc, dam);
@@ -1720,7 +1757,7 @@ void scan_bitstream_victor (TrackData &trackdata)
 	{
 		dword = (dword << 1) | bitbuf.read1();
 
-		if (opt.debug && 0)
+		if (opt.debug && opt.encoding == Encoding::Victor)
 		{
 			auto o = bitbuf.tell();
 			Data x(4);
@@ -1748,7 +1785,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 
 		if (!sync) continue;
 
-		if (opt.debug && 0) util::cout << util::fmt ("  s_b_victor found SYNC at %u\n", bitbuf.tell());
+		if (opt.debug && opt.encoding == Encoding::Victor)
+			util::cout << util::fmt ("  s_b_victor found SYNC at %u\n", bitbuf.tell());
 
 		sync = false;
 		bitbuf.seek(bitbuf.tell() - 1);
@@ -1770,7 +1808,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 					Sector s(bitbuf.datarate, bitbuf.encoding, Header(id[0], trackdata.cylhead.head, id[1], SizeToCode(512)));
 					s.offset = bitbuf.track_offset(am_offset);
 
-					if (opt.debug) util::cout << "* IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
+					if (opt.debug)
+						util::cout << "s_b_victor IDAM (id=" << id[1] << ") at offset " << am_offset << " (" << s.offset << ")\n";
 					track.add(std::move(s));
 				}
 
@@ -1779,13 +1818,14 @@ void scan_bitstream_victor (TrackData &trackdata)
 
 			case 0x08:	// DAM
 			{
-				if (opt.debug) util::cout << "* DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
+				if (opt.debug)
+					util::cout << "s_b_victor DAM (am=" << am << ") at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
 				data_fields.push_back(std::make_pair(am_offset, bitbuf.encoding));
 				break;
 			}
 
 			default:
-				if (opt.debug && 0)
+				if (opt.debug && opt.encoding == Encoding::Victor)
 				{
 					Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
 						to_string(bitbuf.encoding).c_str(), am, am_offset,
@@ -1806,7 +1846,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 		auto min_distance = (1 + 3) * 10 + (gap2_size << shift);
 		auto max_distance = (1 + 3) * 10 + ((gap2_size + 16) << shift);	// 1=AM, 3=ID, gap2, 16=guesstimate
 
-		if (opt.debug) util::cout << "Finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
+		if (opt.debug)
+			util::cout << "  s_b_victor finding " << trackdata.cylhead << " sector " << sector.header.sector << ":\n";
 
 		for (auto itData = data_fields.begin(); itData != data_fields.end(); ++itData)
 		{
@@ -1859,11 +1900,13 @@ void scan_bitstream_victor (TrackData &trackdata)
 				// If we've already got a copy, ignore the truncated version
 				if (sector.copies())
 				{
-					if (opt.debug) util::cout << "ignoring truncated sector copy\n";
+					if (opt.debug)
+						util::cout << "  s_b_victor ignoring truncated sector copy\n";
 					continue;
 				}
 
-				if (opt.debug) util::cout << util::fmt ("using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
+				if (opt.debug)
+					util::cout << util::fmt ("  s_b_victor using truncated sector data (%u < %u) as only copy\n", avail_bytes, normal_bytes);
 			}
 
 			// Read the full data field and verify its checksum
@@ -1885,7 +1928,8 @@ void scan_bitstream_victor (TrackData &trackdata)
 				cksum += b;
 			bool bad_crc = cksum != stored_cksum;
 
-			if (opt.debug && 0) util::cout << util::fmt ("cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
+			if (opt.debug)
+				util::cout << util::fmt ("  s_b_victor cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
 
 			sector.add(std::move(data), bad_crc, 0xfb);
 
@@ -1961,7 +2005,7 @@ void scan_bitstream_vista(TrackData &trackdata)
 		if (bad_crc && track_number != phys_cyl)
 		{
 			if (opt.debug)
-				util::cout << "ignoring bad sector with cyl=" << track_number << " but physical cyl=" << phys_cyl << "\n";
+				util::cout << "  s_b_vista ignoring bad sector with cyl=" << track_number << " but physical cyl=" << phys_cyl << "\n";
 			continue;
 		}
 
