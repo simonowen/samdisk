@@ -14,6 +14,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#include "config.h"
+
+#ifdef HAVE_ZLIB
+
 #include "ioapi.h"
 
 voidpf call_zopen64(const zlib_filefunc64_32_def* pfilefunc, const void* filename, int mode)
@@ -232,3 +236,5 @@ void fill_fopen64_filefunc(zlib_filefunc64_def* pzlib_filefunc_def)
     pzlib_filefunc_def->zerror_file = ferror_file_func;
     pzlib_filefunc_def->opaque = NULL;
 }
+
+#endif // HAVE_ZLIB

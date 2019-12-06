@@ -1,28 +1,6 @@
 #pragma once
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#elif defined(_WIN32)
-#define HAVE_ZLIB 1
-#define HAVE_BZIP2 1
-#define HAVE_LZMA 1
-
-#define HAVE_CAPSIMAGE 1
-#define HAVE_FTD2XX 1
-#define HAVE_WINUSB 1
-#define HAVE_FDRAWCMD_H 1
-
-#define HAVE_O_BINARY 1
-
-#define HAVE_SYS_TIMEB_H 1
-#define HAVE_IO_H 1
-#define HAVE_WINSOCK2_H 1
-#define HAVE_STDINT_H 1
-
-#define HAVE__LSEEKI64 1
-#define HAVE__STRCMPI 1
-#define HAVE__SNPRINTF 1
-#endif
 
 #if defined(_WIN32) && !defined(WINVER)
 #define WINVER 0x0500

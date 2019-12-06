@@ -1,37 +1,43 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
-#cmakedefine HAVE_SSIZE_T @HAVE_SSIZE_T@
+#cmakedefine HAVE_SSIZE_T
 
-#cmakedefine HAVE_O_BINARY @HAVE_O_BINARY@
+#cmakedefine HAVE_O_BINARY
 
-#cmakedefine HAVE_PATHS_H @HAVE_PATHS_H@
-#cmakedefine HAVE_UNISTD_H @HAVE_UNISTD_H@
-#cmakedefine HAVE_SYS_TIME_H @HAVE_SYS_TIME_H@
-#cmakedefine HAVE_SYS_IOCTL_H @HAVE_SYS_IOCTL_H@
-#cmakedefine HAVE_SYS_SOCKET_H @HAVE_SYS_SOCKET_H@
-#cmakedefine HAVE_SYS_DISK_H @HAVE_SYS_DISK_H@
-#cmakedefine HAVE_ARPA_INET_H @HAVE_ARPA_INET_H@
-#cmakedefine HAVE_NETINET_IN_H @HAVE_NETINET_IN_H@
-#cmakedefine HAVE_LINUX_HDREG_H @HAVE_LINUX_HDREG_H@
-#cmakedefine HAVE_LINUX_FS_H @HAVE_LINUX_FS_H@
-#cmakedefine HAVE_SCSI_SCSI_H @HAVE_SCSI_SCSI_H@
-#cmakedefine HAVE_SCSI_SG_H @HAVE_SCSI_SG_H@
-#cmakedefine HAVE_SYS_TIMEB_H @HAVE_SYS_TIMEB_H@
-#cmakedefine HAVE_IO_H @HAVE_IO_H@
-#cmakedefine HAVE_DISKARBITRATION_DISKARBITRATION_H @HAVE_DISKARBITRATION_DISKARBITRATION_H@
-#cmakedefine HAVE_WINSOCK2_H @HAVE_WINSOCK2_H@
-#cmakedefine HAVE_FDRAWCMD_H @HAVE_FDRAWCMD_H@
+#cmakedefine HAVE_PATHS_H
+#cmakedefine HAVE_UNISTD_H
+#cmakedefine HAVE_SYS_TIME_H
+#cmakedefine HAVE_SYS_IOCTL_H
+#cmakedefine HAVE_SYS_SOCKET_H
+#cmakedefine HAVE_SYS_DISK_H
+#cmakedefine HAVE_ARPA_INET_H
+#cmakedefine HAVE_NETINET_IN_H
+#cmakedefine HAVE_LINUX_HDREG_H
+#cmakedefine HAVE_LINUX_FS_H
+#cmakedefine HAVE_SCSI_SCSI_H
+#cmakedefine HAVE_SCSI_SG_H
+#cmakedefine HAVE_SYS_TIMEB_H
+#cmakedefine HAVE_IO_H
+#cmakedefine HAVE_DISKARBITRATION_DISKARBITRATION_H
+#cmakedefine HAVE_WINSOCK2_H
+#cmakedefine HAVE_FDRAWCMD_H
 
-#cmakedefine HAVE_STRLCPY @HAVE_STRLCPY@
-#cmakedefine HAVE_STRLCAT @HAVE_STRLCAT@
-#cmakedefine HAVE_SNPRINTF @HAVE_SNPRINTF@
-#cmakedefine HAVE_STRCASECMP @HAVE_STRCASECMP@
-#cmakedefine HAVE_GETTIMEOFDAY @HAVE_GETTIMEOFDAY@
-#cmakedefine HAVE_LSEEK64 @HAVE_LSEEK64@
-#cmakedefine HAVE__LSEEKI64 @HAVE__LSEEKI64@
-#cmakedefine HAVE__STRCMPI @HAVE__STRCMPI@
-#cmakedefine HAVE__SNPRINTF @HAVE_SNPRINTF@
-#cmakedefine HAVE_SYSCONF @HAVE_SYSCONF@
+#cmakedefine HAVE_STRLCPY
+#cmakedefine HAVE_STRLCAT
+#cmakedefine HAVE_SNPRINTF
+#cmakedefine HAVE_STRCASECMP
+#cmakedefine HAVE_GETTIMEOFDAY
+#cmakedefine HAVE_LSEEK64
+#cmakedefine HAVE__LSEEKI64
+#cmakedefine HAVE__STRCMPI
+#cmakedefine HAVE__SNPRINTF
+#cmakedefine HAVE_SYSCONF
 
-#endif // CONFIG_H
+#cmakedefine HAVE_ZLIB
+#cmakedefine HAVE_BZIP2
+#cmakedefine HAVE_LZMA
+#cmakedefine HAVE_WINUSB
+#cmakedefine HAVE_LIBUSB1
+#cmakedefine HAVE_FTD2XX
+#cmakedefine HAVE_FTDI
+#cmakedefine HAVE_CAPSIMAGE

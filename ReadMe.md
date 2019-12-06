@@ -1,6 +1,7 @@
 # SAMdisk
 
 [![Build Status](https://travis-ci.org/simonowen/samdisk.svg?branch=master)](https://travis-ci.org/simonowen/samdisk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Introduction
 
@@ -29,24 +30,18 @@ Linux and macOS, and should be portable to other systems. Building requires a
 C++ compiler with C++14 support, such as Visual Studio 2017, g++ 4.9+, or
 Clang 3.6+.
 
-All platforms can use the [CMake](https://cmake.org/) build system. A number
-of optional libraries are used if they are available at configuration time.
-Use `cmake -DCMAKE_BUILD_TARGET=Release .` to create the build scripts then
-`make` to build.
+All platforms require the [CMake](https://cmake.org/) build system. Windows
+users can use the _Open Folder_ option in Visual Studio 2017 or later to trigger
+the built-in CMake generator. A number of optional libraries will be used if
+detected at configuration time.
 
 Windows developers may wish to install [vcpkg](https://github.com/Microsoft/vcpkg)
 and add the zlib, bzip2 and liblzma packages. They will be found by CMake and
-automatically linked by the VS2017 project. `vcpkg` can also be used to create
-and build a CMake project. See the official site for details.
+automatically linked by the VS2017 project. See the official site for details.
 
 Install the [CAPSimage](http://www.softpres.org/download) library for
-IPF/CTRaw/KFStream/Draft support, and the [FTDI](http://www.ftdichip.com/Drivers/D2XX.htm))
-library for SuperCard Pro device support. libusb or WinUSB will be used for
-KryoFlux device support, depending on the platform.
-
-The provided Visual Studio 2017 project file expects all libraries mentioned
-above to be available at compile time. To disable individual support, comment
-out the appropriate `HAVE_*` entries in `SAMdisk.h`.
+IPF/CTRaw/KFStream/Draft support, and the [FTDI](http://www.ftdichip.com/Drivers/D2XX.htm)) library for SuperCard Pro device support. libusb or WinUSB will be
+used for KryoFlux device support, depending on the platform.
 
 ## License
 
