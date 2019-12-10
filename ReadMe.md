@@ -1,6 +1,7 @@
 # SAMdisk
 
-[![Build Status](https://travis-ci.org/simonowen/samdisk.svg?branch=master)](https://travis-ci.org/simonowen/samdisk)
+[![Linux/macOS build status](https://travis-ci.org/simonowen/samdisk.svg?branch=master)](https://travis-ci.org/simonowen/samdisk)
+[![Windows build status](https://ci.appveyor.com/api/projects/status/wmu7rs4v5t4melik/branch/master?svg=true)](https://ci.appveyor.com/project/simonowen/samdisk/branch/master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Introduction

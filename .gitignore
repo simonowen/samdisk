@@ -3,14 +3,9 @@
 !.gitignore
 !.gitattributes
 !.travis.yml
+!.appveyor.yml
 Thumbs.db
 /build
 /out
 /CMakeSettings.json
 /make_release.bat
-/*.vcproj.*.user
-/*.vcxproj.user
-/[Dd]ebug/
-/[Rr]elease/
-/Release (XP)/
-/x64

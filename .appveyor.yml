@@ -1,0 +1,54 @@
+version: "{build}"
+
+branches:
+  except:
+  - travis
+
+image:
+  - Visual Studio 2017
+
+environment:
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
+  matrix:
+  - CMAKE_GENERATOR: "Visual Studio 15 2017"
+    VCPKG_TRIPLET: x86-windows
+    LIBRARIES: true
+  - CMAKE_GENERATOR: "Visual Studio 15 2017 Win64"
+    VCPKG_TRIPLET: x64-windows
+    LIBRARIES: true
+  - CMAKE_GENERATOR: "Visual Studio 15 2017"
+    VCPKG_TRIPLET: x86-windows
+    LIBRARIES: false
+
+cache:
+  - C:\Tools\vcpkg\installed\
+
+install:
+  - set CMAKE_BUILD_PARALLEL_LEVEL=2
+  - vcpkg install --recurse --triplet %VCPKG_TRIPLET% zlib bzip2 liblzma
+  - rem if not exist C:\Tools\vcpkg\installed\x64-windows\bin\capsimage.dll curl --fail -O https://home.simonowen.com/vcpkg-export-samdisk.zip
+  - rem if exist vcpkg-export-samdisk.zip 7z x vcpkg-export.zip -oC:\Tools\vcpkg\
+
+before_build:
+  - if "%LIBRARIES%"=="false" (set CMAKE_FLAGS=) else (set CMAKE_FLAGS=-DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake)
+  - cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" %CMAKE_FLAGS%
+
+build_script:
+  - if "%APPVEYOR_REPO_TAG%"=="true" (set CONFIGURATION=RelWithDebInfo) else (set CONFIGURATION=Debug)
+  - cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
+
+# TODO
+#after_build:
+#  - cmake --build build --config "%CONFIGURATION%" --target package -- %MSBUILD_FLAGS%
+#
+#artifacts:
+#  - path: build/*.zip
+#
+#deploy:
+#  provider: GitHub
+#  auth_token:
+#    secure: XXX
+#  artifact: /.*\.zip/
+#  on:
+#    appveyor_repo_tag: true
