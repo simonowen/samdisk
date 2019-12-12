@@ -287,10 +287,8 @@ bool IsBuiltIn(const std::string& path)
 bool IsConsoleWindow()
 {
 #ifdef _WIN32
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-
-    return csbi.dwCursorPosition.X || csbi.dwCursorPosition.Y;
+    DWORD dwProcessId{};
+    return GetConsoleProcessList(&dwProcessId, 1) > 1;
 #else
     return true;
 #endif
