@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.3)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+  cmake_policy(SET CMP0091 NEW) # Allow MSVC_RUNTIME_LIBRARY override
+endif()
+
 project(samdisk)
 set(PROJECT_TITLE SAMdisk)
 
@@ -112,12 +116,11 @@ if (LIBLZMA_FOUND)
   set(HAVE_LZMA 1)
 endif()
 
-find_library(WINUSB_LIBRARY NAMES winusb)
-find_path(WINUSB_INCLUDE_DIR NAMES winusb.h)
-if (WINUSB_LIBRARY AND WINUSB_INCLUDE_DIR)
-  message(STATUS "Found WinUSB: ${LIBUSB1_LIBRARY}")
-  target_include_directories(${PROJECT_NAME} PRIVATE ${WINUSB_INCLUDE_DIR})
+find_library(WINUSB_LIBRARY NAMES winusb ENV LD_LIBRARY_PATH)
+if (WINUSB_LIBRARY)
+  message(STATUS "Found winusb: ${WINUSB_LIBRARY}")
   target_link_libraries(${PROJECT_NAME} ${WINUSB_LIBRARY})
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DELAYLOAD:winusb.dll")
   set(HAVE_WINUSB 1)
 endif()
 

@@ -2,7 +2,7 @@
 
 #ifdef HAVE_WINUSB
 
-#include <winusb.h>
+#include "winusb_defs.h" // just the definitions we need
 #include "KryoFlux.h"
 
 class KF_WinUsb final : public KryoFlux

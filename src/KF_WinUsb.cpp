@@ -8,6 +8,14 @@
 #include <codecvt>
 #include <setupapi.h>
 
+#ifndef INITGUID
+#define INITGUID
+#include <guiddef.h>
+#undef INITGUID
+#else
+#include <guiddef.h>
+#endif
+
 DEFINE_GUID(GUID_KRYOFLUX, 0x9E09C9CD, 0x5068, 0x4b31, 0x82, 0x89, 0xE3, 0x63, 0xE4, 0xE0, 0x62, 0xAC);
 
 /*static*/ std::string KF_WinUsb::GetDevicePath()

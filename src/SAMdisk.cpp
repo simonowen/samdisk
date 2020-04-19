@@ -47,7 +47,7 @@ int Usage()
         << "  -b, --base=N        override lowest sector number (default=" << fmtMGT.base << ")\n"
         << "  -0, --head[0|1]=N   override head 0 or 1 value\n"
         << "\n"
-        << "See " << colour::CYAN << "http://simonowen.com/samdisk/" << colour::none << " for further details.\n";
+        << "See " << colour::CYAN << "https://simonowen.com/samdisk/" << colour::none << " for further details.\n";
 
     exit(1);
 }
