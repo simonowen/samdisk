@@ -67,17 +67,16 @@ void bit_reverse(uint8_t* pb, int len)
 
 std::string resource_dir()
 {
-#ifdef RESOURCE_DIR
-    return RESOURCE_DIR;
-#elif defined(_WIN32)
+#if defined(_WIN32)
     char sz[MAX_PATH];
     if (GetModuleFileName(NULL, sz, arraysize(sz)))
     {
         auto s = std::string(sz);
         s.erase(s.find_last_of('\\') + 1);
         return s;
-
     }
+#elif defined(RESOURCE_DIR)
+    return RESOURCE_DIR;
 #endif
 
     return "";
