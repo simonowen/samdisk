@@ -37,37 +37,40 @@ Trinity::Trinity()
     int timeout = 250;
     setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeout), sizeof(timeout));
 
-    m_addr_to.sin_family = AF_INET;
-    m_addr_to.sin_port = htons(TRINLOAD_UDP_PORT);
-    m_addr_to.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    // TODO: determine broadcast addresses for all network interfaces.
+    // For now try 255.255.255.255, 192.168.0.255, 10.0.0.255 (usually treated as Class C).
+    std::vector<uint32_t> broadcast_addrs{ INADDR_BROADCAST, 0xc0a800ff, 0x0a0000ff };
 
-    // Send a single "?" to locate TrinLoad devices
-    Send("?", 1);
-
-    // Loop until there are no more responses
-    for (;;)
+    for (auto& broadcast_addr : broadcast_addrs)
     {
-        try
+        m_addr_to.sin_family = AF_INET;
+        m_addr_to.sin_port = htons(TRINLOAD_UDP_PORT);
+        m_addr_to.sin_addr.s_addr = htonl(broadcast_addr);
+
+        // Send a single "?" to locate TrinLoad devices
+        Send("?", 1);
+
+        while (m_devices.empty())
         {
-            char ab[1024];
-
-            // Wait for a TrinLoad response, and save any replying device IP addresses
-            int len = Recv(ab, sizeof(ab));
-            if (len >= 1 && ab[0] == '!')
-                m_devices.push_back(inet_ntoa(static_cast<in_addr>(m_addr_from.sin_addr)));
-
-            // We currently only use the first device, so don't wait for more responses
-            break;
+            try
+            {
+                char ab[1024];
+                int len = Recv(ab, sizeof(ab));
+                if (len >= 1 && ab[0] == '!')
+                    m_devices.push_back(inet_ntoa(static_cast<in_addr>(m_addr_from.sin_addr)));
+            }
+            catch (...)
+            {
+                break;
+            }
         }
-        catch (...)
-        {
-            // Timeout is only fatal if no devices responded
-            if (m_devices.empty())
-                throw util::exception("no TrinLoad devices found");
 
+        if (!m_devices.empty())
             break;
-        }
     }
+
+    if (m_devices.empty())
+        throw util::exception("no TrinLoad devices found");
 
     // Select the first device
     m_addr_to.sin_addr.s_addr = inet_addr(m_devices[0].c_str());
