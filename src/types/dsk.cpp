@@ -22,16 +22,16 @@ const int EDSK_DEFAULT_GAP3 = 0x4e;     // default EDSK gap3 size
 const int EDSK_DEFAULT_SIZE = 2;        // default EDSK sector size (pretty redundant now)
 const int CPC_DEFAULT_GAP3 = 0x52;      // default CPC gap size
 
-typedef struct
+struct EDSK_HEADER
 {
     char szSignature[34];       // one of the signatures above, depending on DSK/EDSK
     char szCreator[14];         // name of creator (utility/emulator)
     uint8_t bTracks;
     uint8_t bSides;
     uint8_t abTrackSize[2];     // fixed track size (DSK only)
-} EDSK_HEADER;
+};
 
-typedef struct
+struct EDSK_TRACK
 {
     char signature[13];         // Track-Info\r\n\0
     uint8_t unused[3];
@@ -43,20 +43,20 @@ typedef struct
     uint8_t sectors;
     uint8_t gap3;
     uint8_t fill;
-} EDSK_TRACK;
+};
 
-typedef struct
+struct EDSK_SECTOR
 {
     uint8_t track, side, sector, size;
     uint8_t status1, status2;
     uint8_t datalow, datahigh;
-} EDSK_SECTOR;
+};
 
-typedef struct
+struct EDSK_OFFSETS
 {
     char signature[14];         // Offset-Info\r\n\0
     uint8_t flags;              // reserved, must be zero
-} EDSK_OFFSETS;
+};
 
 #define SR1_SUCCESS                     0x00
 #define SR1_CANNOT_FIND_ID_ADDRESS      0x01

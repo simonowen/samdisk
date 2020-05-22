@@ -8,19 +8,19 @@
 #define SAP_SECTORS_PER_TRACK   16
 #define SAP_CRYPT_BYTE          0xb3    // data fields are XORed with this
 
-typedef struct
+struct SAP_HEADER
 {
     uint8_t version;
     char signature[sizeof(SAP_SIGNATURE) - 1];
-} SAP_HEADER;
+};
 
-typedef struct
+struct SAP_SECTOR
 {
     uint8_t format;
     uint8_t protection;
     uint8_t track;
     uint8_t sector;
-} SAP_SECTOR;
+};
 
 
 static uint16_t crc16(uint8_t b, uint16_t crc)

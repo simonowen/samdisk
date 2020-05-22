@@ -8,7 +8,7 @@
 #define UDI_SIGNATURE_COMPRESSED    "udi!"
 const int MAX_UDI_TRACK_SIZE = 8192;
 
-typedef struct
+struct UDI_HEADER
 {
     uint8_t signature[4];   // signature
     uint8_t filesize[4];    // fileSize-4 (last 4 bytes is checksum)
@@ -17,13 +17,13 @@ typedef struct
     uint8_t max_head;       // max head, 0x00 for single-sided, 0x01 for double-sided, 0x02..0xFF reserved
     uint8_t unused;         // unused (should be 00)
     uint8_t ext_hdr_len[4]; // EXTHDL - extended header size (should be 00)
-} UDI_HEADER;
+};
 
-typedef struct
+struct UDI_TRACK
 {
     uint8_t format;         // 0=MFM, 1=FM, 2=mixed MFM/FM
     uint8_t length[2];      // raw track size in bytes (usually 6250 bytes)
-} UDI_TRACK;
+};
 
 static uint32_t crc32(const uint8_t* buf, int len)
 {

@@ -6,35 +6,35 @@
 
 #define A2R_SIGNATURE   "A2R2"
 
-typedef struct
+struct A2R_HEADER
 {
     char sig[4];            // A2R2
     uint8_t ff;             // 0xff (8-bit test)
     uint8_t lfcrlf[3];      // \n\r\n (text conversion test)
-} A2R_HEADER;
+};
 
-typedef struct
+struct A2R_CHUNK
 {
     uint8_t type[4];        // chunk id
     uint8_t size[4];        // size of data following
-} A2R_CHUNK;
+};
 
-typedef struct
+struct INFO_CHUNK
 {
     uint8_t version;        // currently 1
     char creator[32];       // Creator application
     uint8_t disk_type;      // 1=5.25", 2=3.5"
     uint8_t write_protect;  // 1=write-protected
     uint8_t synchronised;   // 1=cross-track synchronised
-} INFO_CHUNK;
+};
 
-typedef struct
+struct STRM_CHUNK
 {
     uint8_t location;       // track/side
     uint8_t capture_type;   // 1=timing, 2=bits, 3=xtiming
     uint8_t data_length[4]; // captured data length
     uint8_t loop_point[4];  // duration until sync sensor was triggered at loop point
-} STRM_CHUNK;
+};
 
 constexpr uint32_t id_value(const char* str)
 {

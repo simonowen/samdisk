@@ -11,7 +11,7 @@
 #define TD0_SIGNATURE_HUFF      "td"    // Huffman compression also used for everything after TD0_HEADER
 
 // Overall file header, always uncompressed
-typedef struct
+struct TD0_HEADER
 {
     uint8_t abSignature[2];
     uint8_t bVolSequence;       // Volume sequence (zero for the first)
@@ -23,27 +23,27 @@ typedef struct
     uint8_t bDOSMode;           // Non-zero if disk was analysed according to DOS allocation
     uint8_t bSurfaces;          // Disk sides stored in the image
     uint8_t bCRCLow, bCRCHigh;  // 16-bit CRC for this header
-} TD0_HEADER;
+};
 
 // Optional comment block, present if bit 7 is set in bTrackDensity above
-typedef struct
+struct TD0_COMMENT
 {
     uint8_t bCRCLow, bCRCHigh;  // 16-bit CRC covering the comment block
     uint8_t bLenLow, bLenHigh;  // Comment block length
     uint8_t bYear, bMon, bDay;  // Date of disk creation
     uint8_t bHour, bMin, bSec;  // Time of disk creation
 //  uint8_t abData[];           // Comment data, in null-terminated blocks
-} TD0_COMMENT;
+};
 
-typedef struct
+struct TD0_TRACK
 {
     uint8_t sectors;            // Number of sectors in track
     uint8_t cyl;                // Physical track we read from
     uint8_t head;               // Physical side we read from
     uint8_t crc;                // Low 8-bits of track header CRC
-} TD0_TRACK;
+};
 
-typedef struct
+struct TD0_SECTOR
 {
     uint8_t cyl;                // Track number in ID field
     uint8_t head;               // Side number in ID field
@@ -51,13 +51,13 @@ typedef struct
     uint8_t size;               // Sector size indicator:  (128 << bSize) gives the real size
     uint8_t flags;              // Flags detailing special sector conditions
     uint8_t data_crc;           // Low 8-bits of sector data CRC
-} TD0_SECTOR;
+};
 
-typedef struct
+struct TD0_DATA
 {
     uint8_t bOffLow, bOffHigh;  // Offset to next sector, from after this offset value
     uint8_t bMethod;            // Storage method used for sector data (0 = raw, 1 = repeated 2-byte pattern, 2 = RLE block)
-} TD0_DATA;
+};
 
 
 // Namespace wrapper for the Huffman decompression code

@@ -11,17 +11,17 @@
 #endif
 
 // Note: all values are little-endian
-typedef struct
+struct MFI_FILE_HEADER
 {
     char signature[16]; // "MESSFLOPPYIMAGE"
     uint32_t cyl_count, head_count;
     uint32_t form_factor, variant;
-} MFI_FILE_HEADER;
+};
 
-typedef struct
+struct MFI_TRACK_HEADER
 {
     uint32_t offset, compressed_size, uncompressed_size, write_splice;
-} MFI_TRACK_HEADER;
+};
 
 //! Floppy format data
 enum {

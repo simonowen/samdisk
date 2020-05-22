@@ -16,7 +16,7 @@ const int D88_HEADS = 2;
 const int D88_CYLS_2D = 42;         // Low density wide tracks
 const int D88_CYLS_2DD2HD = 82;     // 82x2 in double-sided image
 
-typedef struct
+struct D88_HEADER
 {
     char     szTitle[17];
     uint8_t  abReserved[9];
@@ -24,9 +24,9 @@ typedef struct
     uint8_t  bDiskType;
     uint32_t dwDiskSize;
     uint32_t adwTrackOffsets[D88_CYLS_2DD2HD * D88_HEADS];
-} D88_HEADER;
+};
 
-typedef struct
+struct D88_SECTOR
 {
     uint8_t c, h, r, n;
     uint8_t bSectorsLow;
@@ -37,7 +37,7 @@ typedef struct
     uint8_t abReserved[5];
     uint8_t bLengthLow;
     uint8_t bLengthHigh;
-} D88_SECTOR;
+};
 
 
 bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)

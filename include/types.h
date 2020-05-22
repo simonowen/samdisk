@@ -5,19 +5,19 @@ using IMAGE_WRITEFUNC = bool (*)(FILE*, std::shared_ptr<Disk>&);
 using DEVICE_READFUNC = bool(*)(const std::string&, std::shared_ptr<Disk>&);
 using DEVICE_WRITEFUNC = bool(*)(const std::string&, std::shared_ptr<Disk>&);
 
-typedef struct
+struct IMAGE_ENTRY
 {
     const char* pszType;
     IMAGE_READFUNC pfnRead;
     IMAGE_WRITEFUNC pfnWrite;
-} IMAGE_ENTRY;
+};
 
-typedef struct
+struct DEVICE_ENTRY
 {
     const char* pszType;
     DEVICE_READFUNC pfnRead;
     DEVICE_WRITEFUNC pfnWrite;
-} DEVICE_ENTRY;
+};
 
 #define DECLARATIONS_ONLY
 #include "types.cpp"

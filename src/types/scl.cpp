@@ -5,20 +5,20 @@
 
 #define SCL_SIGNATURE   "SINCLAIR"
 
-typedef struct
+struct SCL_HEADER
 {
     uint8_t szSig[8];   // SINCLAIR
     uint8_t bFiles;     // number of files in archive
-} SCL_HEADER;
+};
 
-typedef struct
+struct SCL_FILE
 {
     uint8_t abName[8];      // filename
     uint8_t bType;          // file type
     uint8_t abStart[2];     // start address
     uint8_t abLength[2];    // length
     uint8_t bSectors;       // sector count
-} SCL_FILE;
+};
 
 
 static size_t SumBlock(void* p, size_t len)

@@ -4,11 +4,11 @@
 
 #define SAD_SIGNATURE       "Aley's disk backup"
 
-typedef struct
+struct SAD_HEADER
 {
     uint8_t abSignature[sizeof(SAD_SIGNATURE) - 1];
     uint8_t heads, cyls, sectors, size_div_64;
-} SAD_HEADER;
+};
 
 
 bool ReadSAD(MemFile& file, std::shared_ptr<Disk>& disk)

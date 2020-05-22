@@ -14,7 +14,7 @@ enum
     FLAG_FOOTER = 1 << 5    // set if footer block present, clear if absent
 };
 
-typedef struct
+struct SCP_FILE_HEADER
 {
     char signature[3];      // SCP
     uint8_t revision;       // (version << 4) | revision, 0x39 = v3.9
@@ -27,9 +27,9 @@ typedef struct
     uint8_t heads;          // 0 = both heads, 1 = head 0 only, 2 = head 1 only
     uint8_t reserved;       // should be zero?
     uint32_t checksum;      // 32-bit checksum from after header to EOF (unless FLAG_MODE is set)
-} SCP_FILE_HEADER;
+};
 
-typedef struct
+struct SCP_FILE_FOOTER
 {
     uint32_t manufacturer_offset;
     uint32_t model_offset;
@@ -44,13 +44,13 @@ typedef struct
     uint8_t firmware_version;
     uint8_t format_revision;
     char sig[4];
-} SCP_FILE_FOOTER;
+};
 
-typedef struct
+struct TRACK_DATA_HEADER
 {
     char signature[3];      // TRK
     uint8_t tracknr;
-} TRACK_DATA_HEADER;
+};
 
 std::string FooterString(MemFile& file, uint32_t offset)
 {

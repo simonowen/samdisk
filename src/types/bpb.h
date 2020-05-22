@@ -2,7 +2,7 @@
 
 // BIOS Parameter Block, for MS-DOS and compatible disks
 
-typedef struct
+struct BIOS_PARAMETER_BLOCK
 {
     uint8_t abJump[3];              // usually x86 jump (0xeb or 0xe9)
     uint8_t bOemName[8];            // OEM string
@@ -27,6 +27,6 @@ typedef struct
     uint8_t abFsInfoSector[2];
     uint8_t BackupBootSector[2];
     uint8_t abReserved[12];
-} BIOS_PARAMETER_BLOCK;
+};
 
 bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk);

@@ -5,19 +5,19 @@
 #include "DemandDisk.h"
 #include "BitstreamDecoder.h"
 
-typedef struct
+struct DFI_FILE_HEADER
 {
     char signature[4];      // "DFE2" for new-style or "DFER" for (unsupported) old-style
-} DFI_FILE_HEADER;
+};
 
-typedef struct
+struct DFI_TRACK_HEADER
 {
     // Note: all values are big-endian
     uint16_t cyl;           // physical cylinder
     uint16_t head;          // physical head
     uint16_t sector;        // physical sector (hard-sectored disks only)
     uint8_t  datalen[4];    // data length, as bytes due to struct alignment
-} DFI_TRACK_HEADER;
+};
 
 
 class DFIDisk final : public DemandDisk

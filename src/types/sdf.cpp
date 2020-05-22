@@ -13,17 +13,17 @@ const int SDF_SIZE_81_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 81;
 const int SDF_SIZE_82_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 82;
 const int SDF_SIZE_83_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 83;
 
-typedef struct
+struct SDF_TRACK
 {
     uint8_t sectors;
-} SDF_TRACK;
+};
 
-typedef struct
+struct SDF_SECTOR
 {
     uint8_t idstatus, datastatus;
     uint8_t cyl, head, sector, size;
     uint8_t crc1, crc2;
-} SDF_SECTOR;
+};
 
 
 bool ReadSDF(MemFile& file, std::shared_ptr<Disk>& disk)

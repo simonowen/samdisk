@@ -4,12 +4,12 @@
 
 #define THOMSON_SECTORS_PER_TRACK   16
 
-typedef struct
+struct FD_FORMAT
 {
     int cyls;
     int size_code;
     Encoding encoding;
-} FD_FORMAT;
+};
 
 bool ReadFD(MemFile& file, std::shared_ptr<Disk>& disk)
 {

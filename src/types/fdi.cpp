@@ -5,7 +5,7 @@
 
 #define FDI_SIGNATURE           "FDI"
 
-typedef struct
+struct FDI_HEADER
 {
     uint8_t abSignature[3];     // "FDI"
     uint8_t bWriteProtect;      // Non-zero if write-protected
@@ -17,17 +17,17 @@ typedef struct
 //  uint8_t abExtra[];          // Additional data
                                 // Description data here (if description offset is non-zero)
                                 // Main data starts here
-} FDI_HEADER;
+};
 
-typedef struct
+struct FDI_TRACK
 {
     uint8_t abTrackOffset[4];   // Track data offset, relative to start of main data block
     uint8_t abReserved[2];      // Reserved (should be zero)
     uint8_t sectors;            // Number of sectors in track
                                 // bSectors * FDI_SECTOR structures follow here
-} FDI_TRACK;
+};
 
-typedef struct
+struct FDI_SECTOR
 {
     uint8_t bTrack;             // Track number in ID field
     uint8_t bSide;              // Side number in ID field
@@ -35,7 +35,7 @@ typedef struct
     uint8_t bSize;              // Sector size indicator:  (128 << bSize) gives the real size
     uint8_t bFlags;             // Flags detailing special sector conditions
     uint8_t bSectorOffset[2];   // Offset of sector data, relative to start of track data
-} FDI_SECTOR;
+};
 
 
 bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)

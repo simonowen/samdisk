@@ -56,7 +56,7 @@ bool BlockDevice::Open(const std::string& path, bool uncached)
 #define FN_OPEN     2
 
 #pragma pack(push,1)
-        typedef struct
+        struct PIPEMESSAGE
         {
             union
             {
@@ -72,7 +72,7 @@ bool BlockDevice::Open(const std::string& path, bool uncached)
                     DWORD64 hDevice;
                 } Output;
             };
-        } PIPEMESSAGE;
+        };
 #pragma pack(pop)
 
         DWORD dwRead;

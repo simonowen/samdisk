@@ -3,18 +3,18 @@
 
 #include "SAMdisk.h"
 
-typedef struct
+struct IMD_TRACK
 {
     uint8_t mode;
     uint8_t cyl, head, sectors, size;
-} IMD_TRACK;
+};
 
-typedef struct
+struct IMD_SECTOR
 {
     uint8_t idstatus, datastatus;
     uint8_t cyl, head, sector, size;
     uint8_t crc1, crc2;
-} IMD_SECTOR;
+};
 
 
 bool ReadIMD(MemFile& file, std::shared_ptr<Disk>& disk)

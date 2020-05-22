@@ -7,7 +7,7 @@
 
 #define CQM_SIGNATURE   "CQ\x14"
 
-typedef struct
+struct CQM_HEADER
 {
     char sig[3];                    // CQ\x14 image signature   00-02
     uint8_t sector_size[2];         // bytes per sector         03-04
@@ -39,7 +39,7 @@ typedef struct
     uint8_t drv_type;               // source drive type (1-6)  76
     uint8_t unknown2[13];           // unused?                  77-83
     uint8_t header_crc;             // 8-bit sum                84
-} CQM_HEADER;
+};
 static_assert(sizeof(CQM_HEADER) == 133, "CQM_HEADER size is wrong");
 
 static std::string FormatTime(int dos_date, int dos_time)

@@ -5,21 +5,21 @@
 
 #define WOZ_SIGNATURE   "WOZ1"
 
-typedef struct
+struct WOZ_HEADER
 {
     char sig[4];            // WOZ1
     uint8_t ff;             // 0xff (8-bit test)
     uint8_t lfcrlf[3];      // \n\r\n (text conversion test)
     uint8_t crc32[4];       // CRC32 of remaining file dara
-} WOZ_HEADER;
+};
 
-typedef struct
+struct WOZ_CHUNK
 {
     uint8_t type[4];        // chunk id
     uint8_t size[4];        // size of data following
-} WOZ_CHUNK;
+};
 
-typedef struct
+struct INFO_CHUNK
 {
     uint8_t version;        // currently 1
     uint8_t disk_type;      // 1=5.25", 2=3.5"
@@ -27,14 +27,14 @@ typedef struct
     uint8_t synchronised;   // 1=cross-track synchronised
     uint8_t cleaned;        // 1=MC3470 fake bits removed
     char creator[32];       // Creator application
-} INFO_CHUNK;
+};
 
-typedef struct
+struct TMAP_CHUNK
 {
     std::array<uint8_t, 160> map;   // track map
-} TMAP_CHUNK;
+};
 
-typedef struct
+struct TRKS_CHUNK
 {
     uint8_t data[6646];
     uint8_t used_bytes[2];  // bytes used in bitstream
@@ -43,7 +43,7 @@ typedef struct
     uint8_t splice_nibble;  // nibble value for splice (write hint)
     uint8_t splice_bits;    // bit count of splice nibble (write hint)
     uint8_t reserved[2];
-} TRKS_CHUNK;
+};
 
 constexpr uint32_t id_value(const char* str)
 {

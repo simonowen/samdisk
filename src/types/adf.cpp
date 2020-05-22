@@ -7,12 +7,12 @@
 #define ADF_SECTOR_SIZE         512
 #define ADF_BOOTBLOCK_SIZE      (ADF_SECTOR_SIZE * 2)   // bootblock is 2 sectors
 
-typedef struct
+struct ADF_BOOTBLOCK
 {
     uint32_t disk_type;     // "DOS"+flags
     uint32_t checksum;      // calculated so bootblock checksum is ~0
     uint32_t rootblock;     // 880 for both DD and HD disks
-} ADF_BOOTBLOCK;
+};
 
 
 bool ReadADF(MemFile& file, std::shared_ptr<Disk>& disk)

@@ -6,7 +6,7 @@
 //
 // Note: all values are BIG ENDIAN!
 
-typedef struct
+struct QDOS_HEADER
 {
     char signature[4];
     char label[10];
@@ -25,9 +25,9 @@ typedef struct
     uint8_t log_phys_mapping[18];
     uint8_t phys_log_mapping[18];
     uint8_t unused[20];
-} QDOS_HEADER;
+};
 
-typedef struct
+struct QDOS_DIR
 {
     uint8_t unused0[64];
     uint32_t file_size;
@@ -40,4 +40,4 @@ typedef struct
     uint32_t file_date;
     uint32_t unused3;
     uint32_t unused4;
-} QDOS_DIR;
+};

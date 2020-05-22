@@ -10,10 +10,10 @@
 // - remove relative path from CapsLibAll.h header
 // - consider deferring track locking and processing?
 
-typedef struct
+struct IPF_HEADER
 {
     uint8_t abSignature[4];     // "CAPS" signature
-} IPF_HEADER;
+};
 
 
 #ifdef HAVE_CAPSIMAGE

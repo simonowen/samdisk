@@ -3,14 +3,14 @@
 
 #include "SAMdisk.h"
 
-typedef struct
+struct DSC_TRACK
 {
     uint8_t head : 1;   // b0 = head
     uint8_t cyl : 7;    // b7-1 = cyl
     uint8_t sectors;
-} DSC_TRACK;
+};
 
-typedef struct
+struct DSC_SECTOR
 {
     uint8_t cyl;
     uint8_t head;
@@ -18,12 +18,12 @@ typedef struct
     uint8_t size;
     uint8_t flags;      // b1 set to use fill value instead of reading sector data
     uint8_t fill;       // sector filler byte, if flag set above
-} DSC_SECTOR;
+};
 
-typedef struct
+struct DSC_DATA
 {
     uint8_t bOff256, bOff64K, bOff16M;
-} DSC_DATA;
+};
 
 
 bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)

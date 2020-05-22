@@ -7,7 +7,7 @@
 
 #define HFE_SIGNATURE   "HXCPICFE"
 
-typedef struct
+struct HFE_HEADER
 {
     char header_signature[8];
     uint8_t format_revision;
@@ -25,13 +25,13 @@ typedef struct
     uint8_t track0s0_encoding;          // override encoding for track 0 head 0
     uint8_t track0s1_altencoding;       // 0xff = ignore, otherwise use encoding below
     uint8_t track0s1_encoding;          // override encoding for track 0 head 1
-} HFE_HEADER;
+};
 
-typedef struct
+struct HFE_TRACK
 {
     uint16_t offset;
     uint16_t track_len;
-} HFE_TRACK;
+};
 
 enum FloppyInterfaceMode
 {

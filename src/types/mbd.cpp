@@ -4,7 +4,7 @@
 
 #include "SAMdisk.h"
 
-typedef struct
+struct MBD_BOOTSECTOR
 {
     uint8_t abJpBoot[2];        // Jump to boot routine
     uint8_t bUnused;
@@ -27,7 +27,7 @@ typedef struct
     char szDiskNameEx[16];
     char szSystemId[32];
     uint8_t abBootCode[88];
-} MBD_BOOTSECTOR;
+};
 
 
 bool ReadMBD(MemFile& file, std::shared_ptr<Disk>& disk)

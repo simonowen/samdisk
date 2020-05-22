@@ -6,26 +6,26 @@
 #define MSA_SIGNATURE   "\x0e\x0f"
 #define MSA_RLESTART    0xe5
 
-typedef struct
+struct MSA_HEADER
 {
     uint8_t abSig[2];           // should be 0x0e,0x0f
     uint8_t abSectors[2];       // MSB/LSB of sectors/track
     uint8_t abSides[2];         // MSB/LSB of sides-1
     uint8_t abStartTrack[2];    // MSB/LSB of start track (0-based)
     uint8_t abEndTrack[2];      // MSB/LSB of start track (0-based)
-} MSA_HEADER;
+};
 
-typedef struct
+struct MSA_TRACK
 {
     uint8_t abLength[2];        // LSB/MSB track length
-} MSA_TRACK;
+};
 
-typedef struct
+struct MSA_RLE
 {
     uint8_t bMarker;            // RLE start marker (0xE5)
     uint8_t bFill;              // Repeated byte
     uint8_t abLength[2];        // Length of repeated block
-} MSA_RLE;
+};
 
 
 bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)

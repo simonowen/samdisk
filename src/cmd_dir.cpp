@@ -143,7 +143,7 @@ bool DirMgtEntry(int n_, const MGT_DIR* p_, bool fHidden_)
 }
 
 
-typedef struct
+struct TRDOS_DIR
 {
     uint8_t abName[8];      // Name
     uint8_t bExt;           // Type/extension
@@ -152,8 +152,7 @@ typedef struct
     uint8_t bSectors;       // Length in sectors
     uint8_t bStartSector;   // Starting sector
     uint8_t bStartTrack;    // Starting track
-}
-TRDOS_DIR;
+};
 
 bool IsTrDosDirEntry(const TRDOS_DIR* pd_)
 {
@@ -516,7 +515,7 @@ bool DirDidaktik(Disk& disk)
 }
 
 
-typedef struct
+struct CPC_DPB
 {
     // extended DPB info, needed for format, in DPB_store
     uint8_t id;         // Identifier
@@ -537,10 +536,10 @@ typedef struct
     uint8_t al1;        // / (1 bit=1 block, 11000000/00000000 = 2 blocks)
     uint8_t cks[2];     // ChecK recordS,nb of rec in dir (8, >16, 32)
     uint8_t ofs[2];     // OFfSet, reserved tracks (1, >2, 3, 4)
-} CPC_DPB;
+};
 
 
-typedef struct
+struct CPM_DPB
 {
     uint8_t bFormat;        // format number: 0=SSSD, 3=DSDD, others bad (1+2 are CPC, but don't use DPB)
     uint8_t bSidedness;     // bits 0-1: 0=single-sided, 1=double-sided (flip), 2=double-sided (up-and-over)
@@ -555,7 +554,7 @@ typedef struct
     uint8_t bGap3;          // format gap3
 //  uint8_t abUnused[5];    // unused: should be zero
 //  uint8_t bCheckSum;      // Check sum byte: 1=PCW9512, 3=+3, 255=PCW8256
-} CPM_DPB;
+};
 
 
 bool IsCpmDpb(const uint8_t* pb_)
@@ -597,7 +596,7 @@ bool IsCpmDpb(const uint8_t* pb_)
     return true;
 }
 
-typedef struct
+struct CPM_DIR
 {
     uint8_t user;       // 0x00 to 0x0F = user number of file
                         // 0x10 to 0x1F = password (CP/M+ only)
@@ -611,7 +610,7 @@ typedef struct
     uint8_t s2;         // High byte of extent number, if required.
     uint8_t rc;         // Record count
     uint8_t blocks[16];
-} CPM_DIR;
+};
 
 bool IsCpmDirEntry(const uint8_t* pb_)
 {

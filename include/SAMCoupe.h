@@ -15,7 +15,7 @@ const int MGT_FILE_HEADER_SIZE = 9;
 const int MAX_SAM_FILE_SIZE = (MGT_TRACKS * MGT_SIDES - MGT_DIR_TRACKS) * MGT_SECTORS * (SECTOR_SIZE - 2) - MGT_FILE_HEADER_SIZE;
 
 
-typedef struct
+struct DIR_ZX
 {
     uint8_t abUnk1;         // +210
     uint8_t abTypeZX;       // +211  ZX type byte
@@ -25,18 +25,18 @@ typedef struct
     uint8_t abZXExec[2];    // +218  ZX autostart line number (BASIC) or address (code):
                             //       BASIC line active if b15+b14 are clear
                             //       CODE address active if not &0000 or &ffff
-} DIR_ZX;
+};
 
-typedef struct
+struct DIR_EXTRA
 {
     uint8_t bDirTag;            // +250 Directory tag for directory entry; BDOS uses next 6 chars for disk name (fi$
     uint8_t bReserved;          // +251 Reserved
     uint8_t abSerial[2];        // +252 Random word for serial number (first entry only)
     uint8_t bDirCode;           // +254 Directory tag number for non-directory entries
     uint8_t bExtraDirTracks;    // +255 Number of directory tracks minus 4 (first entry only)
-} DIR_EXTRA;
+};
 
-typedef struct
+struct MGT_DIR
 {
     uint8_t bType;              // +0   File type (b7=hidden, b6=protected)
     uint8_t abName[10];         // +1   Filename padded with spaces; first char is zero for unused
@@ -82,7 +82,7 @@ typedef struct
         DIR_EXTRA extra;
         char szLabelExtra[6];
     };
-} MGT_DIR;
+};
 
 static_assert(sizeof(MGT_DIR) == 256, "MGT_DIR size is wrong");
 
@@ -91,7 +91,7 @@ const int BDOS_SECTOR_SIZE = 512;
 const int BDOS_RECORD_SECTORS = MGT_DISK_SECTORS;
 
 
-typedef struct
+struct BDOS_CAPS
 {
     int list_sectors = 0;       // Sectors reserved for the record list
     int base_sectors = 0;       // Sectors used by boot sector plus record list
@@ -100,30 +100,30 @@ typedef struct
     bool need_byteswap = false; // True if this is an ATOM disk that needs byte-swapping
     bool bootable = false;      // True if the boot sector suggests the disk is bootable
     bool lba = false;           // True if disk needs LBA sector count instead of CHS
-} BDOS_CAPS;
+};
 
 
 const int PRODOS_SECTOR_SIZE = 512;
 const int PRODOS_BASE_SECTORS = 68;
 const int PRODOS_RECORD_SECTORS = 2048;
 
-typedef struct
+struct PRODOS_CAPS
 {
     int base_sectors;   // Sectors used by boot sector plus record list
     int records;        // Number of records, including possible partial last record
     bool bootable;      // True if the boot sector suggests the disk is bootable
-} PRODOS_CAPS;
+};
 
 
 enum class SamDosType { SAMDOS, MasterDOS, BDOS };
 
-typedef struct
+struct MGT_DISK_INFO
 {
     SamDosType dos_type = SamDosType::SAMDOS;   // SAMDOS, MasterDOS or BDOS
     int dir_tracks = MGT_DIR_TRACKS;            // Number of tracks in directory listing (min=4, max=39)
     std::string disk_label{};                   // Up to BDOS_LABEL_SIZE (16) characters
     int serial_number = 0;                      // Serial number (MasterDOS only)
-} MGT_DISK_INFO;
+};
 
 
 MGT_DISK_INFO* GetDiskInfo(const uint8_t* p, MGT_DISK_INFO& di);

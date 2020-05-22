@@ -4,7 +4,7 @@ class MEMORY;
 
 const int SECTOR_SIZE = 512;
 
-typedef struct
+struct IDENTIFYDEVICE
 {
     int len = 0;    // used size in bytes
 
@@ -13,8 +13,7 @@ typedef struct
         uint8_t byte[SECTOR_SIZE]{};
         uint16_t word[SECTOR_SIZE / 2];
     };
-}
-IDENTIFYDEVICE;
+};
 
 
 class HDD
@@ -64,7 +63,7 @@ public:
 
 // For v1.0 see: http://web.archive.org/web/20081016212030/http://www.ramsoft.bbk.org/tech/rs-hdf.txt
 // For v1.1 see: http://ramsoft.bbk.org.omegahg.com/hdfform.html
-typedef struct
+struct RS_IDE
 {
     char szSignature[6];                // RS-IDE
     uint8_t bEOF;                       // 0x1a
@@ -72,4 +71,4 @@ typedef struct
     uint8_t bFlags;                     // b0 = halved sector data
     uint8_t bOffsetLow, bOffsetHigh;    // Offset from start of file to HDD data
     uint8_t abReserved[11];             // Must be zero
-} RS_IDE;
+};

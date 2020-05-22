@@ -3,19 +3,19 @@
 
 #include "SAMdisk.h"
 
-typedef struct
+struct CWTOOL_FILE_HEADER
 {
     char signature[32]; // padded with nulls
-} CWTOOL_FILE_HEADER;
+};
 
-typedef struct
+struct CWTOOL_TRACK_HEADER
 {
     uint8_t magic;      // 0xCA
     uint8_t track;      // typically 0-165 for 80 cyls 2 heads
     uint8_t clock;      // 0=14MHz, 1=28, 2=56
     uint8_t flags;
     uint32_t size;      // little-endian
-} CWTOOL_TRACK_HEADER;
+};
 
 enum : uint8_t
 {

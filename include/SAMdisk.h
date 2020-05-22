@@ -240,7 +240,7 @@ bool ReportDriverVersion();
 
 enum class PreferredData { Unknown, Track, Bitstream, Flux };
 
-typedef struct
+struct OPTIONS
 {
     Range range{};
     int step = 1;
@@ -271,6 +271,6 @@ typedef struct
 
     char szSource[MAX_PATH], szTarget[MAX_PATH];
 
-} OPTIONS;
+};
 
 extern OPTIONS opt;

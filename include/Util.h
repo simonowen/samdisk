@@ -74,7 +74,7 @@ const int DOS_SECTORS = 9;
 const int DOS_TRACK_SIZE = DOS_SECTORS * SECTOR_SIZE;
 const int DOS_DISK_SIZE = NORMAL_SIDES * NORMAL_TRACKS * DOS_TRACK_SIZE;
 
-typedef struct
+struct DFS_DIR
 {
     uint8_t bLoadLow, bLoadHigh;        // Load address
     uint8_t bExecLow, bExecHigh;        // Execute address
@@ -84,8 +84,7 @@ typedef struct
                                         // b4-b5: file length b16-b17
                                         // b6-b7: file execution address b16-b17
     uint8_t bStartSector;               // File start sector b0-b7
-}
-DFS_DIR;
+};
 
 enum MsgType { msgStatus, msgInfo, msgFix, msgWarning, msgError };
 

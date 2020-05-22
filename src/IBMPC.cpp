@@ -3,14 +3,14 @@
 #include "SAMdisk.h"
 #include "IBMPC.h"
 
-typedef struct
+struct FORMATGAP
 {
     int drivespeed;
     DataRate datarate;
     Encoding encoding;
     int sectors, size;
     int gap3;
-} FORMATGAP;
+};
 
 static const FORMATGAP standard_gaps[] =
 {

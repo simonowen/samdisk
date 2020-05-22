@@ -9,21 +9,21 @@
 #define DTI_SIGNATURE   "H2G2"
 const int DTI_BLOCK_SIZE = 9 * 256; // 2304
 
-typedef struct
+struct DTI_HEADER
 {
     char    abSignature[4]; // H2G2
     uint8_t bTracks;        // 40 or 80
     uint8_t bSides;         // 1 or 2
     uint8_t bBlockLow;      // Track block size in bytes (LSB)
     uint8_t bBlockHigh;     // Track block size in bytes (MSB)
-} DTI_HEADER;
+};
 
-typedef struct
+struct DTI_TRACK
 {
     uint8_t flags;          // b0: framing/parity/checksum error found
     uint8_t bDataLow;       // Valid track data length (LSB)
     uint8_t bDataHigh;      // Valid track data length (MSB)
-} DTI_TRACK;
+};
 
 
 bool ReadDTI(MemFile& file, std::shared_ptr<Disk>& disk)

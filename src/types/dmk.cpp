@@ -8,7 +8,7 @@
 const int DMK_MAX_TRACK_LENGTH = 0x3fff;    // most images use 0x2940, a few have 0x29a0
 const int DMK_TRACK_INDEX_SIZE = 0x80;
 
-typedef struct
+struct DMK_HEADER
 {
     uint8_t protect;        // 0xff=write-protected, 0x00=read-write
     uint8_t cyls;           // cylinder count
@@ -16,7 +16,7 @@ typedef struct
     uint8_t flags;          // b7=ignore density, b6=single byte single density, b4=single sided
     uint8_t reserved[7];    // reserved for future use
     uint32_t realsig;       // 0=disk image, 0x12345678=real floppy access
-} DMK_HEADER;
+};
 
 
 bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
