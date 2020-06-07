@@ -4,6 +4,9 @@
 #include "SAMdisk.h"
 #include "DemandDisk.h"
 
+constexpr auto DEFAULT_TDH_ENTRIES = 166;
+constexpr auto MAX_TDH_ENTRIES = 168;
+
 enum
 {
     FLAG_INDEX = 1 << 0,    // set for index-synchronised, clear if not
@@ -157,24 +160,21 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
     /*if (!(fh.flags & FLAG_INDEX))
         throw util::exception("not an index-synchronised image");
     else*/ if (fh.revolutions == 0 || fh.revolutions > 10)
-    throw util::exception("invalid revolution count (", fh.revolutions, ")");
+        throw util::exception("invalid revolution count (", fh.revolutions, ")");
     else if (fh.bitcell_width != 0 && fh.bitcell_width != 16)
-    throw util::exception("unsupported bit cell width (", fh.bitcell_width, ")");
-    else if (fh.start_track > fh.end_track)
-    throw util::exception("start track (", fh.start_track, ") > end track (", fh.end_track, ")");
+        throw util::exception("unsupported bit cell width (", fh.bitcell_width, ")");
 
-    std::vector<uint32_t> tdh_offsets(fh.end_track + 1);
+    auto entries = (fh.end_track == MAX_TDH_ENTRIES - 1) ? MAX_TDH_ENTRIES : DEFAULT_TDH_ENTRIES;
+    std::vector<uint32_t> tdh_offsets(entries);
     if (!file.read(tdh_offsets))
         throw util::exception("short file reading track offset index");
 
     auto scp_disk = std::make_shared<SCPDisk>((fh.flags & FLAG_TYPE) != 0);
 
-    for (auto tracknr = fh.start_track; tracknr <= fh.end_track; ++tracknr)
+    for (int tracknr = 0; tracknr < static_cast<int>(tdh_offsets.size()); ++tracknr)
     {
         TRACK_DATA_HEADER tdh;
-        auto cyl = fh.heads == 0 ? (tracknr >> 1) : tracknr;
-        auto head = fh.heads == 0 ? (tracknr & 1) : (fh.heads - 1);
-        CylHead cylhead(cyl, head);
+        CylHead cylhead(tracknr / 2, tracknr & 1);
 
         if (!tdh_offsets[tracknr])
             continue;
@@ -195,7 +195,7 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
 
         for (uint8_t rev = 0; rev < fh.revolutions; ++rev)
         {
-            //          auto index_time  = util::letoh<uint32_t>(rev_index[rev * 3 + 0]);
+            // auto index_time  = util::letoh<uint32_t>(rev_index[rev * 3 + 0]);
             auto flux_count = util::letoh<uint32_t>(rev_index[rev * 3 + 1]);
             auto data_offset = util::letoh<uint32_t>(rev_index[rev * 3 + 2]);
 
