@@ -156,13 +156,13 @@ bool Track::has_good_data() const
     return it == end();
 }
 
-bool Track::has_any_data() const
+bool Track::has_any_good_data() const
 {
     if (empty())
         return false;
 
     auto it = std::find_if(begin(), end(), [](const Sector& sector) {
-        return sector.has_data();
+        return sector.has_good_data();
         });
 
     return it != end();

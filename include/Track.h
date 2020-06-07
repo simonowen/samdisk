@@ -26,7 +26,7 @@ public:
     bool is_8k_sector() const;
     bool is_repeated(const Sector& sector) const;
     bool has_good_data() const;
-    bool has_any_data() const;
+    bool has_any_good_data() const;
 
     void clear();
     void add(Track&& track);

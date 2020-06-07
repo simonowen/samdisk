@@ -1939,7 +1939,7 @@ void scan_bitstream_victor(TrackData& trackdata)
         }
     }
 
-    if (track.has_any_data())
+    if (track.has_any_good_data())
         trackdata.add(std::move(track));
 }
 
