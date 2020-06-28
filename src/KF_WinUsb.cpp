@@ -5,7 +5,6 @@
 
 #ifdef HAVE_WINUSB
 
-#include <codecvt>
 #include <setupapi.h>
 
 #ifndef INITGUID
@@ -136,10 +135,13 @@ std::string KF_WinUsb::GetProductName()
 
         if (ret && strdesc->bLength > 2)
         {
-            auto wchars = (strdesc->bLength - sizeof(USB_STRING_DESCRIPTOR)) / sizeof(WCHAR) + 1;
-            auto product = std::wstring(strdesc->bString, wchars);
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-            return conv.to_bytes(product);
+            int wchars = (strdesc->bLength - sizeof(USB_STRING_DESCRIPTOR)) / sizeof(WCHAR) + 1;
+            auto size_bytes = WideCharToMultiByte(
+                CP_ACP, 0, strdesc->bString, wchars, nullptr, 0, nullptr, nullptr);
+            std::string product(size_bytes, 0);
+            WideCharToMultiByte(
+                CP_ACP, 0, strdesc->bString, wchars, product.data(), size_bytes, nullptr, nullptr);
+            return product;
         }
     }
 

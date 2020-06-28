@@ -9,3 +9,5 @@ Thumbs.db
 /out
 /CMakeSettings.json
 /make_release.bat
+/build-*
+/SAMdisk4-*.zip
