@@ -11,8 +11,41 @@ if (CMAKE_TOOLCHAIN_FILE)
   include(${CMAKE_TOOLCHAIN_FILE})
 endif()
 
-file(GLOB CXXSRC src/*.cpp src/types/*.cpp)
-file(GLOB CSRC src/*.c)
+set(CXXSRC
+    src/BitBuffer.cpp src/BitstreamDecoder.cpp  src/BitstreamEncoder.cpp
+    src/BitstreamTrackBuilder.cpp src/BlockDevice.cpp src/cmd_copy.cpp
+    src/cmd_create.cpp src/cmd_dir.cpp src/cmd_format.cpp src/cmd_info.cpp
+    src/cmd_list.cpp src/cmd_rpm.cpp src/cmd_scan.cpp src/cmd_verify.cpp
+    src/cmd_view.cpp src/CrashDump.cpp src/CRC16.cpp src/DemandDisk.cpp
+    src/Disk.cpp src/DiskUtil.cpp src/Driver.cpp src/FdrawcmdSys.cpp
+    src/FluxDecoder.cpp src/FluxTrackBuilder.cpp src/Format.cpp src/HDD.cpp
+    src/HDFHDD.cpp src/Header.cpp src/IBMPC.cpp src/Image.cpp
+    src/JupiterAce.cpp src/KF_libusb.cpp src/KF_WinUsb.cpp src/KryoFlux.cpp
+    src/MemFile.cpp src/precompile.cpp src/Range.cpp src/SAMCoupe.cpp
+    src/SAMdisk.cpp src/SCP_FTD2XX.cpp src/SCP_FTDI.cpp src/SCP_USB.cpp
+    src/SCP_Win32.cpp src/Sector.cpp src/SpecialFormat.cpp
+    src/SpectrumPlus3.cpp src/SuperCardPro.cpp src/Track.cpp
+    src/TrackBuilder.cpp src/TrackData.cpp src/TrackDataParser.cpp
+    src/Trinity.cpp src/types.cpp src/Util.cpp src/utils.cpp
+    src/win32_error.cpp
+    src/types/1dd.cpp src/types/2d.cpp src/types/a2r.cpp src/types/adf.cpp
+    src/types/blk_dev.cpp src/types/bpb.cpp src/types/builtin.cpp
+    src/types/cfi.cpp src/types/cpm.cpp src/types/cqm.cpp src/types/cwtool.cpp
+    src/types/d2m.cpp src/types/d4m.cpp src/types/d80.cpp src/types/d81.cpp
+    src/types/d88.cpp src/types/dfi.cpp src/types/dmk.cpp src/types/do.cpp
+    src/types/ds2.cpp src/types/dsc.cpp src/types/dsk.cpp src/types/dti.cpp
+    src/types/fd.cpp src/types/fdi.cpp src/types/fdrawsys_ab_dev.cpp
+    src/types/fdrawsys_dev.cpp src/types/hfe.cpp src/types/imd.cpp
+    src/types/ipf.cpp src/types/kf_dev.cpp src/types/kf_stream.cpp
+    src/types/lif.cpp src/types/mbd.cpp src/types/mfi.cpp src/types/mgt.cpp
+    src/types/msa.cpp src/types/opd.cpp src/types/pdi.cpp src/types/qdos.cpp
+    src/types/raw.cpp src/types/record.cpp src/types/s24.cpp src/types/sad.cpp
+    src/types/sap.cpp src/types/sbt.cpp src/types/scl.cpp src/types/scp.cpp
+    src/types/scp_dev.cpp src/types/sdf.cpp src/types/st.cpp src/types/td0.cpp
+    src/types/trd.cpp src/types/trinload.cpp src/types/udi.cpp
+    src/types/unsupp.cpp src/types/woz.cpp)
+
+set(CSRC src/getopt_long.c src/ioapi.c src/unzip.c)
 
 add_executable(${PROJECT_NAME} ${CXXSRC} ${CSRC})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
