@@ -4,17 +4,19 @@
 #include "SAMdisk.h"
 #include "DemandDisk.h"
 
-constexpr auto DEFAULT_TDH_ENTRIES = 166;
-constexpr auto MAX_TDH_ENTRIES = 168;
+constexpr auto STANDARD_TDH_OFFSET = 0x10;
+constexpr auto EXTENDED_TDH_OFFSET = 0x80;
 
 enum
 {
     FLAG_INDEX = 1 << 0,    // set for index-synchronised, clear if not
-    FLAG_TPI = 1 << 1,  // set for 96tpi, clear for 48tpi
-    FLAG_RPM = 1 << 2,  // set for 360rpm, clear for 300rpm
-    FLAG_TYPE = 1 << 3, // set for normalised flux, clear for preservation quality
-    FLAG_MODE = 1 << 4, // set for read/write image, clear for read-only
-    FLAG_FOOTER = 1 << 5    // set if footer block present, clear if absent
+    FLAG_TPI = 1 << 1,      // set for 96tpi, clear for 48tpi
+    FLAG_RPM = 1 << 2,      // set for 360rpm, clear for 300rpm
+    FLAG_TYPE = 1 << 3,     // set for normalised flux, clear for preservation quality
+    FLAG_MODE = 1 << 4,     // set for read/write image, clear for read-only
+    FLAG_FOOTER = 1 << 5,   // set if footer block present, clear if absent
+    FLAG_EXTENDED = 1 << 6, // set for extended image, clear for floppy-only image
+    FLAG_CREATOR = 1 << 7,  // set for non-SCP source device, clear for SuperCard Pro device
 };
 
 struct SCP_FILE_HEADER
@@ -152,39 +154,71 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
 
     if (!(fh.flags & FLAG_MODE) && fh.checksum)
     {
-        auto checksum = std::accumulate(file.data().begin() + 0x10, file.data().end(), uint32_t(0));
+        auto checksum = std::accumulate(file.data().begin() + STANDARD_TDH_OFFSET, file.data().end(), uint32_t(0));
         if (checksum != util::letoh(fh.checksum))
             Message(msgWarning, "file checksum is incorrect!");
     }
 
     /*if (!(fh.flags & FLAG_INDEX))
         throw util::exception("not an index-synchronised image");
-    else*/ if (fh.revolutions == 0 || fh.revolutions > 10)
+    else*/ if (fh.flags & FLAG_EXTENDED)
+        throw util::exception("unsupported extended/non-floppy image type");
+    else if (fh.revolutions == 0 || fh.revolutions > 10)
         throw util::exception("invalid revolution count (", fh.revolutions, ")");
     else if (fh.bitcell_width != 0 && fh.bitcell_width != 16)
         throw util::exception("unsupported bit cell width (", fh.bitcell_width, ")");
+    else if (fh.heads > 2)
+        throw util::exception("unsupported heads value (", fh.heads, ")");
 
-    auto entries = (fh.end_track == MAX_TDH_ENTRIES - 1) ? MAX_TDH_ENTRIES : DEFAULT_TDH_ENTRIES;
-    std::vector<uint32_t> tdh_offsets(entries);
+    std::vector<uint32_t> tdh_offsets(fh.end_track + 1);
     if (!file.read(tdh_offsets))
         throw util::exception("short file reading track offset index");
+
+    auto track_mult = 1;
+    if (fh.heads > 0)
+    {
+        const auto head_match = (fh.heads == 1) ? 0 : 1;
+
+        auto tdx_index = 0;
+        auto is_valid_index =
+            std::all_of(tdh_offsets.begin() + head_match, tdh_offsets.end(),
+                [&](auto offset)
+                {
+                    return ((tdx_index++ & 1) == head_match) || offset == 0;
+                });
+
+        if (!is_valid_index && opt.fix != 0)
+        {
+            std::vector<uint32_t> tdh_offsets_fix(tdh_offsets.size() * 2);
+            tdx_index = head_match;
+            for (auto offset : tdh_offsets)
+            {
+                tdh_offsets_fix.at(tdx_index) = offset;
+                tdx_index += 2;
+            }
+
+            Message(msgFix, "re-built TDH index for legacy single-sided image");
+            tdh_offsets = std::move(tdh_offsets_fix);
+            track_mult = 2;
+        }
+    }
 
     auto scp_disk = std::make_shared<SCPDisk>((fh.flags & FLAG_TYPE) != 0);
 
     for (int tracknr = 0; tracknr < static_cast<int>(tdh_offsets.size()); ++tracknr)
     {
-        TRACK_DATA_HEADER tdh;
-        CylHead cylhead(tracknr / 2, tracknr & 1);
-
         if (!tdh_offsets[tracknr])
             continue;
+
+        TRACK_DATA_HEADER tdh{};
+        CylHead cylhead(tracknr >> 1, tracknr & 1);
 
         if (!file.seek(tdh_offsets[tracknr]) || !file.read(&tdh, sizeof(tdh)))
             throw util::exception("short file reading ", cylhead, " track header");
         else if (std::string(tdh.signature, 3) != "TRK")
             throw util::exception("invalid track signature on ", cylhead);
-        else if (tdh.tracknr != tracknr)
-            throw util::exception("track number mismatch (", tdh.tracknr, " != ", tracknr, ") in ", cylhead, " header");
+        else if (tdh.tracknr * track_mult != tracknr)
+            throw util::exception("track number mismatch (", tdh.tracknr * track_mult, " != ", tracknr, ") in ", cylhead, " header");
 
         std::vector<uint32_t> rev_index(fh.revolutions * 3);
         if (!file.read(rev_index))
@@ -237,7 +271,7 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
     else
     {
         scp_disk->metadata["app_version"] = FooterVersion(fh.revision);
-        scp_disk->metadata["application"] = "SuperCard Pro software";
+        scp_disk->metadata["creator"] = (fh.flags & FLAG_CREATOR) ? "Unknown" : "SuperCard Pro";
 
         std::stringstream ss;
         for (uint8_t b; file.read(&b, sizeof(b)) && std::isprint(b); )
@@ -250,6 +284,7 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
     scp_disk->metadata["rpm"] = (fh.flags & FLAG_RPM) ? "360 rpm" : "300 rpm";
     scp_disk->metadata["quality"] = (fh.flags & FLAG_TYPE) ? "normalised" : "preservation";
     scp_disk->metadata["mode"] = (fh.flags & FLAG_MODE) ? "read/write" : "read-only";
+    scp_disk->metadata["media"] = (fh.flags & FLAG_EXTENDED) ? "extended/non-floppy" : "floppy disk image";
 
     scp_disk->strType = "SCP";
     disk = scp_disk;
