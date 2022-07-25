@@ -5,7 +5,7 @@
 #include "DemandDisk.h"
 
 constexpr auto STANDARD_TDH_OFFSET = 0x10;
-constexpr auto EXTENDED_TDH_OFFSET = 0x80;
+//constexpr auto EXTENDED_TDH_OFFSET = 0x80;
 
 enum
 {

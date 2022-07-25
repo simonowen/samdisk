@@ -17,7 +17,7 @@ OPTIONS opt;
 void Version()
 {
     util::cout << colour::WHITE << "SAMdisk 4.0 ALPHA (" __DATE__ ")" <<
-        colour::none << ", (c) 2002-" << (__DATE__ + 9) << " Simon Owen\n";
+        colour::none << ", (c) 2002-" << (&__DATE__[9]) << " Simon Owen\n";
 }
 
 int Usage()
