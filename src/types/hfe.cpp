@@ -5,7 +5,7 @@
 
 // Note: currently only format revision 00 is supported.
 
-#define HFE_SIGNATURE   "HXCPICFE"
+constexpr std::string_view HFE_SIGNATURE{ "HXCPICFE" };
 
 struct HFE_HEADER
 {
@@ -101,7 +101,7 @@ std::string to_string(TrackEncoding track_encoding)
 bool ReadHFE(MemFile& file, std::shared_ptr<Disk>& disk)
 {
     HFE_HEADER hh;
-    if (!file.rewind() || !file.read(&hh, sizeof(hh)) || memcmp(&hh.header_signature, HFE_SIGNATURE, sizeof(hh.header_signature)))
+    if (!file.rewind() || !file.read(&hh, sizeof(hh)) || std::string_view(hh.header_signature, sizeof(hh.header_signature)) != HFE_SIGNATURE)
         return false;
 
     if (hh.format_revision != 0)
@@ -261,7 +261,7 @@ bool WriteHFE(FILE* f_, std::shared_ptr<Disk>& disk)
 
     auto& track0 = disk->read_track({ 0, 0 });
 
-    strncpy(hh.header_signature, HFE_SIGNATURE, sizeof(hh.header_signature));
+    std::copy(HFE_SIGNATURE.begin(), HFE_SIGNATURE.end(), hh.header_signature);
     hh.format_revision = 0x00;
     hh.number_of_tracks = static_cast<uint8_t>(disk->cyls());
     hh.number_of_sides = static_cast<uint8_t>(disk->heads());
