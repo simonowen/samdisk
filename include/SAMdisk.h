@@ -262,6 +262,7 @@ struct OPTIONS
     int retries = 5, maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
+    int bitskip = -1;
 
     Encoding encoding{ Encoding::Unknown };
     DataRate datarate{ DataRate::Unknown };

@@ -138,7 +138,8 @@ extern "C" {
 enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
-    OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG
+    OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
+    OPT_BITSKIP
 };
 
 struct option long_options[] =
@@ -243,6 +244,7 @@ struct option long_options[] =
     { "scale",      required_argument, nullptr, OPT_SCALE },
     { "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
+    { "bit-skip",   required_argument, nullptr, OPT_BITSKIP },
 
     { 0, 0, 0, 0 }
 };
@@ -420,6 +422,11 @@ bool ParseCommandLine(int argc_, char* argv_[])
             opt.pllphase = util::str_value<int>(optarg);
             if (opt.pllphase <= 0 || opt.pllphase > MAX_PLL_PHASE)
                 throw util::exception("invalid pll phase '", optarg, "', expected 1-", MAX_PLL_PHASE);
+            break;
+        case OPT_BITSKIP:
+            opt.bitskip = util::str_value<int>(optarg);
+            if (opt.bitskip < 0 || opt.bitskip > 15)
+                throw util::exception("invalid bit skip '", optarg, "', expected 0-15");
             break;
         case OPT_STEPRATE:
             opt.steprate = util::str_value<int>(optarg);

@@ -142,7 +142,7 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
 
             if (encoding == Encoding::MFM && found_am)
             {
-                // A1 sync byte (red if aligned to bitstream, magenta if not).
+                // A1 sync byte (bright yellow if aligned to bitstream, dark yellow if not).
                 colours.push_back((bits == 16) ? colour::YELLOW : colour::yellow);
                 ++a1;
             }
@@ -199,6 +199,35 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
     }
 }
 
+void ViewTrack_Bitstream(BitBuffer& bitbuf)
+{
+    Data track_data;
+    auto max_size = (bitbuf.track_bitsize() + 15) / 16;
+    track_data.reserve(max_size);
+
+    bitbuf.seek(opt.bitskip);
+    while (!bitbuf.wrapped())
+    {
+        uint8_t b = 0, c = 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            c = (c << 1) | bitbuf.read1();
+            b = (b << 1) | bitbuf.read1();
+        }
+
+        track_data.push_back(b);
+    }
+
+    auto show_begin = std::max(opt.bytes_begin, 0);
+    auto show_end = (opt.bytes_end < 0) ? track_data.size() :
+        std::min(opt.bytes_end, track_data.size());
+    if (show_end > show_begin)
+    {
+        util::cout << "Bitstream Decode(" << (bitbuf.track_bitsize() - opt.bitskip) << " bits) :\n";
+        util::hex_dump(track_data.begin(), track_data.begin() + show_end, show_begin);
+    }
+}
+
 bool ViewImage(const std::string& path, Range range)
 {
     util::cout << "[" << path << "]\n";
@@ -221,20 +250,27 @@ bool ViewImage(const std::string& path, Range range)
                 auto encoding = (opt.encoding == Encoding::Unknown) ?
                     bitbuf.encoding : opt.encoding;
 
-                switch (encoding)
+                if (opt.bitskip >= 0)
                 {
-                case Encoding::MFM:
-                case Encoding::Amiga:
-                case Encoding::Agat:
-                case Encoding::MX:
-                    ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
-                    break;
-                case Encoding::FM:
-                case Encoding::RX02:
-                    ViewTrack_MFM_FM(Encoding::FM, bitbuf);
-                    break;
-                default:
-                    throw util::exception("unsupported track view encoding");
+                    ViewTrack_Bitstream(bitbuf);
+                }
+                else
+                {
+                    switch (encoding)
+                    {
+                    case Encoding::MFM:
+                    case Encoding::Amiga:
+                    case Encoding::Agat:
+                    case Encoding::MX:
+                        ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
+                        break;
+                    case Encoding::FM:
+                    case Encoding::RX02:
+                        ViewTrack_MFM_FM(Encoding::FM, bitbuf);
+                        break;
+                    default:
+                        throw util::exception("unsupported track view encoding");
+                    }
                 }
             }
             }, true);
