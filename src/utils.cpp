@@ -89,7 +89,7 @@ bool is_stdout_a_tty()
 #else
     static bool ret = isatty(fileno(stdout)) != 0;
 #endif
-    return ret;
+    return ret || opt.tty;
 }
 
 
