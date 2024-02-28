@@ -343,6 +343,32 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             disk->write(cylhead.next_cyl(), std::move(complete(track)));
         }
 
+        // KBI-10 weak sector (alt)
+        {
+            static constexpr uint8_t ids[]{ 65,70,66,71,67,72,68,73,69,74 };
+            Track track(arraysize(ids));
+
+            for (i = 0; i < 10; ++i)
+            {
+                Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, ids[i], (i == 9) ? 1 : 2));
+                track.add(std::move(sector));
+            }
+
+            Data data9(256, 0xe5);
+            const std::string sig{ "KBI." };
+            std::copy(sig.begin(), sig.end(), data9.begin());
+            track[9].add(Data(data9), true);
+
+            iota(data9, 4, 4 + 4, 5);
+            iota(data9, 4 + 4 + 124, 4 + 4 + 124 + 4, 125);
+            track[9].add(Data(data9), true);
+            iota(data9, 4, 4 + 4, 4);
+            iota(data9, 4 + 4 + 124, 4 + 4 + 124 + 4, 124);
+            track[9].add(Data(data9), true);
+
+            disk->write(cylhead.next_cyl(), std::move(complete(track)));
+        }
+
         // Missing data fields
         {
             Track track(10);

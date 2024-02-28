@@ -26,7 +26,7 @@ int Usage()
     Format fmtMGT = RegularFormat::MGT;
 
     util::cout << "\n"
-        << " SAMDISK [copy|scan|format|list|view|info|dir|rpm] <args>\n"
+        << " SAMDISK [copy|scan|format|create|list|view|info|dir|rpm] <args>\n"
         << "\n"
         << "  -c, --cyls=N        cylinder count (N) or range (A-B)\n"
         << "  -h, --head=N        single head select (0 or 1)\n"
