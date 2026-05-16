@@ -32,7 +32,7 @@ Version 3.8.5 (2014-12-21)
 - Fixed user cyl range being ignored when writing extended TRD images
 - Fixed crash when reading UDI images containing blank tracks
 - Fixed potential crash when removing duplicate sector copies
-- Fixed comment and label propogation from source to target
+- Fixed comment and label propagation from source to target
 
 Version 3.8.4 (2014-08-26)
 --------------------------

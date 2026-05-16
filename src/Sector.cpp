@@ -87,7 +87,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc, uint8_t new_dam)
     }
 #endif
 
-    // If the exising sector has good data, ignore supplied data if it's bad
+    // If the existing sector has good data, ignore supplied data if it's bad
     if (bad_crc && has_good_data())
         return Merge::Unchanged;
 

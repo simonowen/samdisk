@@ -273,7 +273,7 @@ bool BlockDevice::SafetyCheck()
         std::string sVolume = lVolumes.at(i);
         std::string sRoot = sVolume + "\\";
 
-        // Only accept drives with a known filesystem, as drive letters exist for removeable
+        // Only accept drives with a known filesystem, as drive letters exist for removable
         // media even if no disk is preset, or if the filesystem is unknown
         if (GetVolumeInformation(sRoot.c_str(), szVolName, sizeof(szVolName), nullptr, nullptr, nullptr, nullptr, 0))
         {

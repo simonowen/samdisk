@@ -91,7 +91,7 @@ bool MemFile::open(const std::string& path_, bool uncompress)
                     break;
                 }
 
-                // Rememeber the largest uncompressed file size
+                // Remember the largest uncompressed file size
                 if (sInfo.uncompressed_size > ulMaxSize)
                     ulMaxSize = sInfo.uncompressed_size;
             }

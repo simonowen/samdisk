@@ -43,7 +43,7 @@ void FluxTrackBuilder::addWeakBlock(int length)
     addRawBit(1);
     addRawBit(1);
 
-    // Approximately 11 ambigious reversals per weak byte.
+    // Approximately 11 ambiguous reversals per weak byte.
     length = length * 21 / 2;
 
     while (length-- > 0)

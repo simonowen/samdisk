@@ -58,7 +58,7 @@ public:
 private:
     std::vector<Sector> m_sectors{};
 
-    // Max bitstream position difference for sectors to be considerd the same.
+    // Max bitstream position difference for sectors to be considered the same.
     // Used to match sectors between revolutions, and needs to cope with the
     // larger sync differences after weak sectors. We still require the header
     // to match, so only close repeated headers should be a problem.

@@ -383,7 +383,7 @@ bool ListDrives(int nVerbose_)
 
     else if (!num_opened)
 #ifdef _WIN32
-        util::cout << "No drives found. Run as Adminstrator to list system drives.\n";
+        util::cout << "No drives found. Run as Administrator to list system drives.\n";
 #else
         util::cout << "No drives found -- need root?\n";
 #endif

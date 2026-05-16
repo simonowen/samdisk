@@ -417,7 +417,7 @@ bool DirOpus(Disk& disk)
 
 
 /*
-128-191 System variables with format informations (this section is a BIG garbage, only few people can understand it)
+128-191 System variables with format information (this section is a BIG garbage, only few people can understand it)
 192-201 Name of disk (10 chars)
 202,203 randomly generated 16-bit number for recognize two disks with same name
 204-207 MDOS identification bytes, here staying text "SDOS", so MDOS can identify his format on disk

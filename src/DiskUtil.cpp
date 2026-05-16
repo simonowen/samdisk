@@ -609,7 +609,7 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
         if (src_track.is_repeated(src_sector))
             continue;
 
-        // In real-world use 250Kbps/300Kbps are interchangable due to 300rpm/360rpm.
+        // In real-world use 250Kbps/300Kbps are interchangeable due to 300rpm/360rpm.
         if (!track.empty() &&
             (track[0].datarate == DataRate::_250K || track[0].datarate == DataRate::_300K) &&
             (src_sector.datarate == DataRate::_250K || src_sector.datarate == DataRate::_300K))
