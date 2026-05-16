@@ -210,6 +210,8 @@ struct option long_options[] =
     { "no-special",       no_argument, &opt.nospecial, 1 },     // undocumented
     { "byte-swap",        no_argument, &opt.byteswap, 1 },
     { "atom",             no_argument, &opt.byteswap, 1 },
+    { "lba",              no_argument, &opt.lba, 1 },
+    { "trinity",          no_argument, &opt.lba, 1 },
     { "ace",              no_argument, nullptr, OPT_ACE },
     { "mx",               no_argument, nullptr, OPT_MX },
     { "agat",             no_argument, nullptr, OPT_AGAT },

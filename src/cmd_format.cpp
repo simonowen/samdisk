@@ -128,12 +128,14 @@ bool FormatHdd(const std::string& path)
         Error("open");
     else if (hdd->SafetyCheck() && hdd->Lock())
     {
+        int64_t hdd_sectors = opt.lba ? hdd->total_sectors : (hdd->cyls * hdd->heads * hdd->sectors);
+
         BDOS_CAPS bdc;
-        GetBDOSCaps(hdd->total_sectors, bdc);
-        bdc.need_byteswap = !!opt.byteswap;
+        GetBDOSCaps(hdd_sectors, bdc);
+        bdc.need_byteswap = opt.byteswap && !opt.lba;
 
         // A quick format stops after the MGT boot sector in record 1
-        int64_t total_sectors = opt.quick ? bdc.base_sectors + MGT_DIR_TRACKS * MGT_SECTORS + 1 : hdd->total_sectors;
+        int64_t total_sectors = opt.quick ? bdc.base_sectors + (MGT_DIR_TRACKS * MGT_SECTORS) + 1 : hdd_sectors;
 
         // Format the boot sector and record list
         f = hdd->Copy(nullptr, bdc.base_sectors, 0, 0, total_sectors, "Formatting");
@@ -145,7 +147,7 @@ bool FormatHdd(const std::string& path)
         for (int64_t uPos = bdc.base_sectors; ; uPos += MGT_DISK_SECTORS)
         {
             // Determine how much to transfer in one go
-            if (uPos > total_sectors) uPos = total_sectors;
+            uPos = std::min(uPos, total_sectors);
             auto block_size = std::min(static_cast<int>(total_sectors - uPos), MGT_DISK_SECTORS);
 
             Message(msgStatus, "Formatting... %u%%", static_cast<unsigned>(uPos * 100 / total_sectors));

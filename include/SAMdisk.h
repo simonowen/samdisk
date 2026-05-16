@@ -254,7 +254,7 @@ struct OPTIONS
     int merge = 0, repair = 0, trim = 0, calibrate = 0, newdrive = 0, byteswap = 0;
     int noweak = 0, nosig = 0, nodata = 0, nocfa = 0, noidentify = 0, nospecial = 0;
     int nozip = 0, nodiff = 0, noformat = 0, nodups = 0, nowobble = 0, nottb = 0;
-    int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
+    int lba = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
     int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
     int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
     int a1sync = 0;
