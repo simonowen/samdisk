@@ -677,11 +677,11 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argHDD)
-                FormatHdd(opt.szSource);
+                f = FormatHdd(opt.szSource);
             else if (nSource == argBootSector)
-                FormatBoot(opt.szSource);
+                f = FormatBoot(opt.szSource);
             else if (nSource == argDisk)
-                FormatImage(opt.szSource, opt.range);
+                f = FormatImage(opt.szSource, opt.range);
             else
                 Usage();
 
