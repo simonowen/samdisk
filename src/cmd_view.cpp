@@ -202,6 +202,116 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
     }
 }
 
+void ViewTrack_Agat(BitBuffer& bitbuf)
+{
+    auto max_size = bitbuf.track_bitsize() * 110 / 100;
+
+    Data track_data;
+    std::vector<colour> colours;
+    track_data.reserve(max_size);
+    colours.reserve(max_size);
+
+    uint64_t dword = ~0L;
+    int bits = 0, a1 = 0, am_dist = 0xffff, data_size = 256;
+    uint8_t am = 0;
+
+    bitbuf.seek(opt.bitskip > 0 ? opt.bitskip : 0);
+    while (!bitbuf.wrapped())
+    {
+        dword = (dword << 1) | bitbuf.read1();
+        ++bits;
+
+        bool found_am = false;
+        switch (dword & 0x1ffffffff)
+        {
+        case 0x89245555:    // 0100010010010010 0 0101010101010101 = MFM-encoded 0xa4, 2 us gap, 0xff
+        case 0x44922d55:    // 0100010010010010 0 0101 10101010101 (variant)
+        case 0x44905555:    // 01000100100100 0 0 0101010101010101 produced by agath-aim-to-hfe.pl
+            found_am = true;
+            break;
+        }
+
+        if (found_am || bits == 16)
+        {
+            // Decode data byte.
+            uint8_t b = 0;
+            {
+                for (int i = 7; i >= 0; --i)
+                    b |= static_cast<uint8_t>(((dword >> (i * 2)) & 1) << i);
+            }
+            track_data.push_back(b);
+            ++am_dist;
+
+            if (found_am)
+            {
+                // A1 sync byte (bright yellow if aligned to bitstream, dark yellow if not).
+                colours.push_back((bits == 16) ? colour::YELLOW : colour::yellow);
+                ++a1;
+
+                // Invalidate window contents to prevent early false sync match.
+                dword = 0xffff;
+            }
+            else
+            {
+                if (a1 == 1)
+                {
+                    colours.push_back(colour::RED);
+                    am = b;
+                    am_dist = 0;
+                }
+                else if (found_am)
+                {
+                    colours.push_back((bits == 32) ? colour::RED : colour::red);
+                    am = b;
+                    am_dist = 0;
+                }
+                else if (am_dist == 1)
+                {
+                    colours.push_back(colour::RED);
+                }
+                else if (am == 0x95 && am_dist >= 2 && am_dist <= 4)
+                {
+                    colours.push_back((am_dist == 2) ? colour::GREEN : colour::green);
+                }
+                else if (am == 0x95 && am_dist == 5)
+                {
+                    colours.push_back(colour::BLUE);
+                }
+                else if (am == 0x6a && am_dist >= 2 && am_dist < (data_size + 2))
+                {
+                    colours.push_back(colour::white);
+                }
+                else if (am == 0x6a && am_dist == (data_size + 2))
+                {
+                    colours.push_back(colour::MAGENTA);
+                }
+                else if (am == 0x6a && am_dist == (data_size + 3)) // epilogue
+                {
+                    colours.push_back(colour::BLUE);
+                }
+                else
+                {
+                    colours.push_back(colour::grey);
+                }
+
+                a1 = 0;
+            }
+
+            bits = 0;
+        }
+    }
+
+    auto show_begin = std::max(opt.bytes_begin, 0);
+    auto show_end = (opt.bytes_end < 0) ? track_data.size() :
+        std::min(opt.bytes_end, track_data.size());
+    if (show_end > show_begin)
+    {
+        util::cout << "MFM Decode (" << bitbuf.track_bitsize() << " bits):\n";
+        util::hex_dump(track_data.begin(), track_data.begin() + show_end,
+            show_begin, colours.data());
+    }
+}
+
 bool ViewImage(const std::string& path, Range range)
 {
     util::cout << "[" << path << "]\n";
@@ -228,7 +338,6 @@ bool ViewImage(const std::string& path, Range range)
                 {
                 case Encoding::MFM:
                 case Encoding::Amiga:
-                case Encoding::Agat:
                 case Encoding::MX:
                     ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
                     break;
@@ -236,6 +345,8 @@ bool ViewImage(const std::string& path, Range range)
                 case Encoding::RX02:
                     ViewTrack_MFM_FM(Encoding::FM, bitbuf);
                     break;
+                case Encoding::Agat:
+                    ViewTrack_Agat(bitbuf);
                 default:
                     throw util::exception("unsupported track view encoding");
                 }
