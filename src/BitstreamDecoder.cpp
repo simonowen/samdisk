@@ -914,7 +914,7 @@ void scan_bitstream_mx(TrackData& trackdata)
         stored_track |= bitbuf.read_byte();
 
         // read sectors
-        for (auto s = 0; s < 11; s++) {
+        for (auto s = 1; s < 12; s++) {
             Sector sector(bitbuf.datarate, Encoding::MX, Header(stored_track, trackdata.cylhead.head, s, SizeToCode(256)));
             sector.offset = bitbuf.track_offset(bitbuf.tell());
 
@@ -942,7 +942,7 @@ void scan_bitstream_mx(TrackData& trackdata)
              */
             if (cksum != stored_cksum)
             {
-                sector.add(std::move(block), true, 0);
+                sector.add(std::move(block), true, 0xfb);
                 if (stored_cksum == 0)
                 {
                     zero_cksum = true;
@@ -950,7 +950,7 @@ void scan_bitstream_mx(TrackData& trackdata)
             }
             else
             {
-                sector.add(std::move(block), (zero_cksum && stored_cksum == 0), 0);
+                sector.add(std::move(block), (zero_cksum && stored_cksum == 0), 0xfb);
             }
             track.add(std::move(sector));
         }
@@ -1602,7 +1602,7 @@ void scan_bitstream_agat(TrackData& trackdata)
 
             bitbuf.seek(dam_offset);
 
-            auto dam = bitbuf.read_byte();
+            bitbuf.read_byte();
             bitbuf.read_byte();
 
             // Determine the offset and distance to the next IDAM, taking care of track wrap if it's the final sector
@@ -1665,7 +1665,7 @@ void scan_bitstream_agat(TrackData& trackdata)
                     sector.header.sector, stored_cksum, cksum, distance, min_distance, max_distance);
             bool bad_crc = (stored_cksum != cksum);
 
-            sector.add(std::move(data), bad_crc, dam);
+            sector.add(std::move(data), bad_crc, 0xfb);
 
             // If the data is good there's no need to search for more data fields
             if (!bad_crc)
